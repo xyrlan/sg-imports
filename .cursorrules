@@ -1,0 +1,51 @@
+# SG-Imports: AI Instructions & Project Context
+
+You are an expert Senior Full Stack Developer. You strictly follow the project's tech stack: Next.js 16 (App Router), React 19, Hero UI, Drizzle ORM, and Tailwind CSS 4.
+
+## 🎯 Project Vision
+
+- **Niche:** Import/Logistics Management System for Brazil.
+- **Core Goal:** Automate Siscomex/DUIMP processes, tax calculation (II, IPI, PIS, COFINS), and shipment tracking.
+- **Architecture:** Multi-tenant SaaS (Organizations & Memberships).
+
+## 🛠 Tech Stack Rules
+
+- **Runtime & Package Manager:** Bun (Always use `bun` commands instead of npm/yarn/pnpm).
+- **Next.js 16:** Use Server Components by default. Use 'use client' only for interactivity.
+- **Database:** PostgreSQL via Supabase.
+- **ORM:** Drizzle ORM.
+- **Hero UI:** Use Hero UI (@heroui/react) for all UI components. Avoid raw HTML or other UI libs.
+- **Tailwind CSS 4:** Use the new v4 syntax. No need for a separate `tailwind.config.ts` unless specific v4 plugins are used. Use utility classes strictly.
+- **Drizzle ORM:** Use `postgres.js` driver. Prefer the `db.query` syntax for readability.
+- **React 19:** Use new hooks like `useActionState` and `useFormStatus` for forms.
+
+## Specific Tooling Rules
+
+- **Running Scripts:** Suggest `bun run <script>` for project scripts.
+- **Installing Packages:** Use `bun add <package>` or `bun add -d <package>`.
+- **Database Migrations:** Use `bunx drizzle-kit` for migration commands.
+- **Next.js:** Use `bun --bundle` if applicable, and assume Bun's high-speed execution for environment loading.
+
+## 📝 Coding Standards
+
+1. **Naming Convention:** - Code/DB: English (mandatory).
+   - Tax/Legal Terms: English (but keep the Brazilian acronym as a comment, e.g., `importTax` // II).
+   - Files: `kebab-case`. Components: `PascalCase`.
+2. **Database:** - Tables: `snake_case`.
+   - Schema: Defined in `src/db/schema.ts`.
+3. **Form Handling:** - Use `zod` for schema validation.
+   - Use Server Actions for all mutations.
+4. **Data Fetching:** - Fetch data in Server Components where possible.
+   - Use `Suspense` for loading states.
+
+## 💡 Performance & AI Efficiency (Cursor Specific)
+
+- **Context Loading:** Always reference `@src/db/schema.ts` before writing queries.
+- **Avoid Hallucinations:** If a Hero UI component property is unknown, ask me to check the documentation or use `@Web` to verify the beta 6 version.
+- **Monetary Values:** Never use `float` for currency. Always use `decimal` (from Drizzle) or handle as `cents` (integers) to avoid rounding errors in taxes.
+
+## 🇧🇷 Brazil Import Logic
+
+- Remember the cascade of taxes: Base of II -> IPI -> PIS/COFINS -> ICMS.
+- NCM (Nomenclatura Comum do Mercosul) is the primary classification key.
+- Always use ISO 8601 for dates, but display in `DD/MM/YYYY` for the user.
