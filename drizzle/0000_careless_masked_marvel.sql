@@ -4,7 +4,7 @@ CREATE TYPE "public"."document_type" AS ENUM('COMMERCIAL_INVOICE', 'PACKING_LIST
 CREATE TYPE "public"."expense_type" AS ENUM('TAX_II', 'TAX_IPI', 'TAX_PIS', 'TAX_COFINS', 'TAX_ICMS', 'FREIGHT_INTL', 'FREIGHT_LOCAL', 'STORAGE', 'HANDLING', 'CUSTOMS_BROKER', 'OTHER');--> statement-breakpoint
 CREATE TYPE "public"."incoterm" AS ENUM('EXW', 'FOB', 'CIF', 'DDP');--> statement-breakpoint
 CREATE TYPE "public"."order_type" AS ENUM('ORDER', 'DIRECT_ORDER');--> statement-breakpoint
-CREATE TYPE "public"."organization_role" AS ENUM('OWNER', 'ADMIN', 'OPERATOR', 'VIEWER');--> statement-breakpoint
+CREATE TYPE "public"."organization_role" AS ENUM('OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'SELLER', 'CUSTOMS_BROKER', 'VIEWER');--> statement-breakpoint
 CREATE TYPE "public"."payment_status" AS ENUM('PENDING', 'PAID', 'OVERDUE', 'WAITING_EXCHANGE', 'EXCHANGED');--> statement-breakpoint
 CREATE TYPE "public"."quote_status" AS ENUM('DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CONVERTED');--> statement-breakpoint
 CREATE TYPE "public"."quote_type" AS ENUM('STANDARD', 'PROFORMA', 'SIMULATION');--> statement-breakpoint

@@ -46,7 +46,14 @@ export type ProductSnapshot = {
 // ==========================================
 // 1. ENUMS (Postgres Types)
 // ==========================================
-export const organizationRoleEnum = pgEnum('organization_role', ['OWNER', 'ADMIN', 'OPERATOR', 'VIEWER']);
+export const organizationRoleEnum = pgEnum('organization_role', [
+  'OWNER',           // O dono da conta/empresa (Cliente principal)
+  'ADMIN',           // Super usuário (Você/Sua equipe com controle total)
+  'ADMIN_EMPLOYEE',  // Funcionário que trabalha para o Admin
+  'SELLER',          // Vendedor/Fornecedor (Possui o "Marketplace")
+  'CUSTOMS_BROKER',  // Despachante Aduaneiro (Acesso logístico/fiscal)
+  'VIEWER'           // Acesso apenas leitura
+]);
 export const orderTypeEnum = pgEnum('order_type', ['ORDER', 'DIRECT_ORDER']);
 export const quoteTypeEnum = pgEnum('quote_type', [
   'STANDARD',   // O antigo "Carrinho" que vira Pedido
@@ -518,6 +525,18 @@ export const organizationsRelations = relations(organizations, ({ many, one }) =
   }),
   billingAddress: one(addresses, { fields: [organizations.billingAddressId], references: [addresses.id] }),
   deliveryAddress: one(addresses, { fields: [organizations.deliveryAddressId], references: [addresses.id] }),
+}));
+
+export const membershipsRelations = relations(memberships, ({ one }) => ({
+  organization: one(organizations, { fields: [memberships.organizationId], references: [organizations.id] }),
+  profile: one(profiles, { fields: [memberships.profileId], references: [profiles.id] }),
+}));
+
+export const profilesRelations = relations(profiles, ({ many }) => ({
+  memberships: many(memberships),
+  uploadedDocuments: many(shipmentDocuments),
+  changeRequests: many(shipmentChangeRequests),
+  notifications: many(notifications),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({

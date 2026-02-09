@@ -1,1 +1,13 @@
-{}
+{
+  "Organization": {
+    "select": "Selecionar Organização",
+    "noOrganizations": "Nenhuma organização encontrada",
+    "switchSuccess": "Organização alterada com sucesso",
+    "role": {
+      "OWNER": "Proprietário",
+      "ADMIN": "Administrador",
+      "OPERATOR": "Operador",
+      "VIEWER": "Visualizador"
+    }
+  }
+}

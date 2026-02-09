@@ -1,5 +1,5 @@
 {
-  "id": "50604730-ff8a-4d15-abaf-2f27c7b3a797",
+  "id": "1c30944e-6c70-4325-9d43-07a7462299c8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2323,7 +2323,9 @@
       "values": [
         "OWNER",
         "ADMIN",
-        "OPERATOR",
+        "ADMIN_EMPLOYEE",
+        "SELLER",
+        "CUSTOMS_BROKER",
         "VIEWER"
       ]
     },
