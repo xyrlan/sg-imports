@@ -36,6 +36,10 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
    - Tables: snake_case.
    - Schema: Defined in src/db/schema.ts.
    - Use \`jsonb\` for flexible data (e.g., \`simulatedProduct\`).
+     **i18n (next-intl):**
+   - **DO NOT** hardcode strings in components. Always use \`useTranslations\` or \`getTranslations\`.
+   - When generating new components or pages, only provide/update the \`messages/pt.json\` dictionary. Do not generate other languages unless requested.
+   - Use structured keys in JSON (e.g., \`"Shipments.List.title"\`).
 3. **JSON Data Consistency (CRITICAL):**
    - When using \`jsonb\` columns for adhoc items (Simulations), the structure MUST mirror the \`products\` table entity.
    - Use a \`ProductSnapshot\` type: store resolved values (e.g., \`hsCode: "8504.40"\`) instead of Foreign Keys inside JSONs.
