@@ -63,5 +63,90 @@
       "CUSTOMS_BROKER": "Despachante Aduaneiro",
       "VIEWER": "Visualizador"
     }
+  },
+  "Onboarding": {
+    "title": "Configure sua Organização",
+    "subtitle": "Complete as informações para começar a usar o sistema",
+    "step": "Etapa {current} de {total}",
+    "next": "Próximo",
+    "back": "Voltar",
+    "finish": "Finalizar",
+    "loading": "Carregando...",
+    "saving": "Salvando...",
+    "Step1": {
+      "title": "Dados da Empresa",
+      "description": "Informe os dados básicos da sua organização",
+      "tradeName": "Nome Fantasia",
+      "tradeNamePlaceholder": "Nome comercial da empresa",
+      "stateRegistry": "Inscrição Estadual",
+      "stateRegistryPlaceholder": "000.000.000.000 (opcional)",
+      "taxRegime": "Regime Tributário",
+      "taxRegimePlaceholder": "Selecione o regime",
+      "email": "E-mail da Empresa",
+      "emailPlaceholder": "contato@empresa.com.br",
+      "phone": "Telefone",
+      "phonePlaceholder": "(00) 0000-0000",
+      "taxRegimes": {
+        "SIMPLES_NACIONAL": "Simples Nacional",
+        "LUCRO_PRESUMIDO": "Lucro Presumido",
+        "LUCRO_REAL": "Lucro Real"
+      }
+    },
+    "Step2": {
+      "title": "Endereço",
+      "description": "Informe o endereço de faturamento e entrega",
+      "postalCode": "CEP",
+      "postalCodePlaceholder": "00000-000",
+      "fetchCEP": "Buscar CEP",
+      "fetchingCEP": "Buscando...",
+      "street": "Logradouro",
+      "streetPlaceholder": "Rua, Avenida, etc.",
+      "number": "Número",
+      "numberPlaceholder": "000",
+      "complement": "Complemento",
+      "complementPlaceholder": "Apto, Sala, etc. (opcional)",
+      "neighborhood": "Bairro",
+      "neighborhoodPlaceholder": "Nome do bairro",
+      "city": "Cidade",
+      "cityPlaceholder": "Nome da cidade",
+      "state": "Estado (UF)",
+      "statePlaceholder": "SP",
+      "country": "País",
+      "sameAsDelivery": "Endereço de entrega é o mesmo",
+      "cepNotFound": "CEP não encontrado. Verifique e tente novamente.",
+      "cepFetchError": "Erro ao buscar CEP. Preencha manualmente."
+    },
+    "Step3": {
+      "title": "Configurações de Taxa",
+      "description": "Configure as taxas de serviço padrão para sua organização",
+      "percentage": "Percentual (%)",
+      "percentagePlaceholder": "2.5",
+      "percentageHelp": "Percentual aplicado sobre o valor da mercadoria",
+      "minimumValue": "Valor Mínimo (R$)",
+      "minimumValuePlaceholder": "3060.00",
+      "minimumValueHelp": "Valor mínimo cobrado independente do percentual",
+      "currency": "Moeda",
+      "applyToChinaProducts": "Aplicar taxa a produtos da China",
+      "applyToChinaProductsHelp": "Desmarque se não desejar cobrar taxa em produtos chineses",
+      "useDefaults": "Usar valores padrão do sistema",
+      "defaultsInfo": "Sistema utilizará 2.5% com mínimo de R$ 3.060,00"
+    },
+    "Errors": {
+      "requiredField": "Este campo é obrigatório",
+      "invalidCEP": "CEP inválido. Use o formato 00000-000",
+      "invalidEmail": "E-mail inválido",
+      "invalidState": "Estado deve ter 2 caracteres (UF)",
+      "cepFetchError": "Erro ao buscar CEP",
+      "genericError": "Ocorreu um erro. Tente novamente.",
+      "organizationNotFound": "Organização não encontrada",
+      "addressCreationError": "Erro ao criar endereço",
+      "configSaveError": "Erro ao salvar configurações"
+    },
+    "Success": {
+      "step1": "Dados da empresa salvos com sucesso!",
+      "step2": "Endereço cadastrado com sucesso!",
+      "step3": "Configurações salvas com sucesso!",
+      "complete": "Onboarding concluído! Redirecionando..."
+    }
   }
 }

@@ -15,6 +15,7 @@ export interface SelectOption {
 
 export interface AppSelectProps<T = SelectOption> {
   label?: string;
+  name?: string;
   items: T[];
   getKey?: (item: T) => string;
   getLabel?: (item: T) => string;
@@ -33,6 +34,7 @@ export interface AppSelectProps<T = SelectOption> {
 
 export function AppSelect<T = SelectOption>({
   label,
+  name,
   items,
   getKey = (item: T) => (item as SelectOption).id,
   getLabel = (item: T) => (item as SelectOption).label,
@@ -50,6 +52,7 @@ export function AppSelect<T = SelectOption>({
 }: AppSelectProps<T>) {
   return (
     <Select
+      name={name}
       variant={variant}
       fullWidth={fullWidth}
       placeholder={placeholder}

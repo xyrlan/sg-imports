@@ -56,6 +56,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect('/select-organization');
   }
 
+  // Step 6.5: Check if organization needs onboarding
+  // Organization needs onboarding if missing billing or delivery address
+  const needsOnboarding = 
+    !currentOrgData.organization.billingAddressId || 
+    !currentOrgData.organization.deliveryAddressId;
+
+  if (needsOnboarding) {
+    redirect('/onboarding');
+  }
+
   // Step 7: Prepare initial state for client provider
   const initialData = {
     currentOrganization: currentOrgData.organization,

@@ -63,3 +63,65 @@ export async function getOrganizationById(
     membership,
   };
 }
+
+export interface UpdateOrganizationData {
+  tradeName?: string;
+  email?: string;
+  phone?: string;
+  taxRegime?: string;
+  stateRegistry?: string;
+  billingAddressId?: string;
+  deliveryAddressId?: string;
+}
+
+/**
+ * Update organization details
+ * Validates that the user has access to the organization
+ * @param orgId - Organization UUID
+ * @param userId - Profile ID from Supabase Auth
+ * @param data - Updated organization data
+ * @returns Updated organization or null if no access
+ */
+export async function updateOrganization(
+  orgId: string,
+  userId: string,
+  data: UpdateOrganizationData
+): Promise<Organization | null> {
+  // First verify user has access to this organization
+  const access = await getOrganizationById(orgId, userId);
+  
+  if (!access) {
+    return null;
+  }
+
+  // Update the organization
+  const [updatedOrg] = await db
+    .update(organizations)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(organizations.id, orgId))
+    .returning();
+
+  return updatedOrg || null;
+}
+
+/**
+ * Check if organization has completed onboarding
+ * An organization needs onboarding if it lacks billing or delivery address
+ * @param orgId - Organization UUID
+ * @returns True if onboarding is complete, false otherwise
+ */
+export async function checkOnboardingStatus(orgId: string): Promise<boolean> {
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.id, orgId),
+  });
+
+  if (!org) {
+    return false;
+  }
+
+  // Organization needs onboarding if missing addresses
+  return !!(org.billingAddressId && org.deliveryAddressId);
+}
