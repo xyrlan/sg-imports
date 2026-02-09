@@ -64,8 +64,8 @@ export async function registerSeller(
       return { error: 'Erro ao criar conta. Tente novamente.' };
     }
 
-    // Success - redirect to verify email page
-    redirect('/auth/verify-email');
+    // Success - redirect to verify email page with email parameter
+    redirect(`/verify-email?email=${encodeURIComponent(validatedData.email)}`);
   } catch (error) {
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'issues' in error) {

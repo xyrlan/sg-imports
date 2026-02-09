@@ -41,14 +41,17 @@
       "description": "Enviamos um link de confirmação para seu e-mail. Clique no link para ativar sua conta.",
       "resend": "Reenviar e-mail",
       "success": "E-mail reenviado com sucesso!",
-      "checkSpam": "Não recebeu? Verifique sua caixa de spam."
+      "checkSpam": "Não recebeu? Verifique sua caixa de spam.",
+      "backToLogin": "Voltar para o Login",
+      "footer": "Após confirmar seu e-mail, você poderá fazer login no sistema."
     },
     "Errors": {
       "invalidCredentials": "E-mail ou senha inválidos",
       "emailAlreadyExists": "Este e-mail já está cadastrado",
       "genericError": "Ocorreu um erro. Tente novamente.",
       "weakPassword": "A senha deve ter no mínimo 8 caracteres",
-      "invalidEmail": "E-mail inválido"
+      "invalidEmail": "E-mail inválido",
+      "resendFailed": "Ocorreu um erro ao reenviar o e-mail. Tente novamente."
     }
   },
   "Organization": {

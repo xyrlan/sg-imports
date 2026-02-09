@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AppCard } from '@/components/ui/card';
 import { AppButton } from '@/components/ui/button';
@@ -14,11 +15,35 @@ import { createClient } from '@/lib/supabase/client';
  */
 export default function VerifyEmailPage() {
   const t = useTranslations('Auth.VerifyEmail');
+  const tErrors = useTranslations('Auth.Errors');
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState<string>('');
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Get email from URL params or localStorage
+    const emailFromParams = searchParams.get('email');
+    const emailFromStorage = typeof window !== 'undefined' ? localStorage.getItem('pendingVerificationEmail') : null;
+    
+    if (emailFromParams) {
+      setEmail(emailFromParams);
+      // Store in localStorage for persistence
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pendingVerificationEmail', emailFromParams);
+      }
+    } else if (emailFromStorage) {
+      setEmail(emailFromStorage);
+    }
+  }, [searchParams]);
+
   const handleResendEmail = async () => {
+    if (!email) {
+      setResendError(tErrors('invalidEmail'));
+      return;
+    }
+
     setIsResending(true);
     setResendSuccess(false);
     setResendError(null);
@@ -27,7 +52,7 @@ export default function VerifyEmailPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: '', // User must provide their email - we could store it in localStorage
+        email,
       });
 
       if (error) {
@@ -35,15 +60,15 @@ export default function VerifyEmailPage() {
       } else {
         setResendSuccess(true);
       }
-    } catch (error) {
-      setResendError('Ocorreu um erro. Tente novamente.');
+    } catch {
+      setResendError(tErrors('resendFailed'));
     } finally {
       setIsResending(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <AppCard className="w-full max-w-md p-8 text-center">
         {/* Icon */}
         <div className="flex justify-center mb-6">
@@ -97,17 +122,17 @@ export default function VerifyEmailPage() {
 
         {/* Actions */}
         <div className="space-y-3">
-          {/* Note: Resend functionality requires storing user email in localStorage or similar
-              For now, we'll disable it as it requires additional implementation */}
-          {/* <AppButton
-            color="primary"
-            className="w-full"
-            onClick={handleResendEmail}
-            isLoading={isResending}
-            size="lg"
-          >
-            {t('resend')}
-          </AppButton> */}
+          {email && (
+            <AppButton
+              variant="primary"
+              className="w-full"
+              onClick={handleResendEmail}
+              isLoading={isResending}
+              size="lg"
+            >
+              {t('resend')}
+            </AppButton>
+          )}
 
           <Link href="/login">
             <AppButton
@@ -115,7 +140,7 @@ export default function VerifyEmailPage() {
               className="w-full"
               size="lg"
             >
-              Voltar para o Login
+              {t('backToLogin')}
             </AppButton>
           </Link>
         </div>
@@ -123,7 +148,7 @@ export default function VerifyEmailPage() {
         {/* Footer Info */}
         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <p className="text-xs text-gray-500 dark:text-gray-500">
-            Após confirmar seu e-mail, você poderá fazer login no sistema.
+            {t('footer')}
           </p>
         </div>
       </AppCard>

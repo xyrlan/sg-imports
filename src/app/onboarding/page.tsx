@@ -57,7 +57,6 @@ export default async function OnboardingPage() {
   // Step 6: Render onboarding form
   return (
     <OnboardingForm
-      organizationId={organization.id}
       organizationName={organization.name}
       role={membership.role}
     />

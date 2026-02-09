@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useActionState, useTransition } from 'react';
+import { useState, useActionState, useTransition, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Checkbox, Switch } from '@heroui/react';
 import { AppCard } from '@/components/ui/card';
@@ -17,12 +17,11 @@ import {
 import type { ActionState } from './actions';
 
 interface OnboardingFormProps {
-  organizationId: string;
   organizationName: string;
   role: string;
 }
 
-export function OnboardingForm({ organizationId, organizationName, role }: OnboardingFormProps) {
+export function OnboardingForm({ organizationName, role }: OnboardingFormProps) {
   const t = useTranslations('Onboarding');
   const [currentStep, setCurrentStep] = useState(1);
   const [isPending, startTransition] = useTransition();
@@ -30,6 +29,11 @@ export function OnboardingForm({ organizationId, organizationName, role }: Onboa
   // Determine if user is a seller and total steps
   const isSeller = role === 'SELLER';
   const totalSteps = isSeller ? 2 : 3;
+
+  // Track if we've processed success states to avoid duplicate processing
+  const step1ProcessedRef = useRef(false);
+  const step2ProcessedRef = useRef(false);
+  const step3ProcessedRef = useRef(false);
 
   // Step 1: Organization Details
   const [step1State, step1Action, step1Pending] = useActionState<ActionState | null, FormData>(
@@ -51,38 +55,41 @@ export function OnboardingForm({ organizationId, organizationName, role }: Onboa
     null
   );
 
-  // Handle step 1 submission
-  const handleStep1Submit = async (formData: FormData) => {
-    const result = await step1Action(formData);
-    if (result?.success) {
-      setCurrentStep(2);
+  // Monitor step 1 state changes and advance to step 2 on success
+  useEffect(() => {
+    if (step1State?.success && !step1ProcessedRef.current) {
+      step1ProcessedRef.current = true;
+      startTransition(() => {
+        setCurrentStep(2);
+      });
     }
-  };
+  }, [step1State]);
 
-  // Handle step 2 submission
-  const handleStep2Submit = async (formData: FormData) => {
-    const result = await step2Action(formData);
-    if (result?.success) {
+  // Monitor step 2 state changes and advance to step 3 or complete
+  useEffect(() => {
+    if (step2State?.success && !step2ProcessedRef.current) {
+      step2ProcessedRef.current = true;
       if (isSeller) {
-        // Seller goes directly to completion
         startTransition(() => {
           completeOnboarding();
         });
       } else {
-        setCurrentStep(3);
+        startTransition(() => {
+          setCurrentStep(3);
+        });
       }
     }
-  };
+  }, [step2State, isSeller]);
 
-  // Handle step 3 submission (OWNER only)
-  const handleStep3Submit = async (formData: FormData) => {
-    const result = await step3Action(formData);
-    if (result?.success) {
+  // Monitor step 3 state changes and complete onboarding
+  useEffect(() => {
+    if (step3State?.success && !step3ProcessedRef.current) {
+      step3ProcessedRef.current = true;
       startTransition(() => {
         completeOnboarding();
       });
     }
-  };
+  }, [step3State]);
 
   // Handle CEP fetch
   const handleFetchCEP = async (cep: string) => {
@@ -110,7 +117,7 @@ export function OnboardingForm({ organizationId, organizationName, role }: Onboa
       if (stateInput) stateInput.value = data.uf;
       
       setFetchingCEP(false);
-    } catch (error) {
+    } catch {
       setCepError(t('Step2.cepFetchError'));
       setFetchingCEP(false);
     }
@@ -157,7 +164,7 @@ export function OnboardingForm({ organizationId, organizationName, role }: Onboa
         <AppCard className="p-6">
           {/* Step 1: Organization Details */}
           {currentStep === 1 && (
-            <form action={handleStep1Submit}>
+            <form action={step1Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step1.title')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -230,7 +237,7 @@ export function OnboardingForm({ organizationId, organizationName, role }: Onboa
 
           {/* Step 2: Address */}
           {currentStep === 2 && (
-            <form action={handleStep2Submit}>
+            <form action={step2Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step2.title')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -363,7 +370,7 @@ export function OnboardingForm({ organizationId, organizationName, role }: Onboa
 
           {/* Step 3: Service Fee Config (OWNER only) */}
           {currentStep === 3 && !isSeller && (
-            <form action={handleStep3Submit}>
+            <form action={step3Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step3.title')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
