@@ -125,7 +125,7 @@ export const organizations = pgTable('organizations', {
 });
 
 export const memberships = pgTable('memberships', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuid('id').defaultRandom(),
   role: organizationRoleEnum('role').notNull(),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
   profileId: uuid('profile_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
