@@ -7,17 +7,62 @@ import {
   decimal,
   timestamp,
   pgEnum,
-  primaryKey
+  primaryKey,
+  jsonb
 } from 'drizzle-orm/pg-core';
+
+export type ProductSnapshot = {
+  // Identificação
+  sku?: string;          // Opcional na simulação
+  name: string;
+  nameEnglish?: string;  // Importante para Siscomex
+  description?: string;
+  photos?: string[];
+
+  // Logística (Crucial para cálculo de frete)
+  boxQuantity: number;   // Qtd por caixa master
+  boxWeight: number;     // Peso da caixa master (kg)
+  netWeight?: number;    // Peso líquido unitário
+  
+  // Dimensões (Opcional, mas bom ter)
+  height?: number;
+  width?: number;
+  length?: number;
+
+  // Fiscal & Origem (A GRANDE DIFERENÇA)
+  // No banco real é 'hsCodeId' (UUID). Aqui guardamos o CÓDIGO e os IMPOSTOS do momento.
+  hsCode: string;        // Ex: "8504.40.10"
+  taxSnapshot?: {        // Opcional: Congelar os impostos usados na simulação
+    ii: number;
+    ipi: number;
+    pis: number;
+    cofins: number;
+  };
+
+  supplierName?: string; // Em vez de supplierId
+};
 
 // ==========================================
 // 1. ENUMS (Postgres Types)
 // ==========================================
 export const organizationRoleEnum = pgEnum('organization_role', ['OWNER', 'ADMIN', 'OPERATOR', 'VIEWER']);
 export const orderTypeEnum = pgEnum('order_type', ['ORDER', 'DIRECT_ORDER']);
+export const quoteTypeEnum = pgEnum('quote_type', [
+  'STANDARD',   // O antigo "Carrinho" que vira Pedido
+  'PROFORMA',   // Criado pelo Admin como modelo/sugestão
+  'SIMULATION'  // Rascunho mão-livre (itens não cadastrados)
+]);
 export const quoteStatusEnum = pgEnum('quote_status', ['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CONVERTED']);
 export const shipmentStatusEnum = pgEnum('shipment_status', ['PENDING', 'PRODUCTION', 'BOOKED', 'IN_TRANSIT', 'CUSTOMS_CLEARANCE', 'RELEASED', 'DELIVERED', 'CANCELED']);
 export const containerTypeEnum = pgEnum('container_type', ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40']);
+export const shipmentStepEnum = pgEnum('shipment_step', [
+  'CONTRACT_CREATION',
+  'MERCHANDISE_PAYMENT',
+  'DOCUMENT_PREPARATION',
+  'SHIPPING',
+  'DELIVERY',
+  'COMPLETION'
+]);
 export const shipmentTypeEnum = pgEnum('shipment_type', ['FCL', 'FCL_PARTIAL', 'LCL']);
 export const expenseTypeEnum = pgEnum('expense_type', ['TAX_II', 'TAX_IPI', 'TAX_PIS', 'TAX_COFINS', 'TAX_ICMS', 'FREIGHT_INTL', 'FREIGHT_LOCAL', 'STORAGE', 'HANDLING', 'CUSTOMS_BROKER', 'OTHER']);
 export const currencyEnum = pgEnum('currency', ['BRL', 'USD', 'CNY', 'EUR']);
@@ -113,7 +158,6 @@ export const products = pgTable('products', {
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
   sku: text('internal_code').notNull(),
   name: text('name').notNull(),
-  nameEnglish: text('name_english').notNull(),
   description: text('description'),
   photos: text('photos').array(),
 
@@ -149,6 +193,7 @@ export const productVariants = pgTable('product_variants', {
 export const quotes = pgTable('quotes', {
   id: uuid('id').defaultRandom().primaryKey(),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  type: quoteTypeEnum('type').default('STANDARD').notNull(),
   status: quoteStatusEnum('status').default('DRAFT').notNull(),
   name: text('name').notNull(),
 
@@ -159,6 +204,10 @@ export const quotes = pgTable('quotes', {
   portDestId: uuid('port_dest_id'),     // Relacionado futuramente
 
   generatedShipmentId: uuid('generated_shipment_id'), // Preenchido se virar shipment
+
+  metadata: jsonb('metadata'),
+
+  simulatedProduct: jsonb('simulated_product').$type<ProductSnapshot>(),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -181,7 +230,8 @@ export const shipments = pgTable('shipments', {
   // Logística
   bookingNumber: text('booking_number'),
   masterBl: text('master_bl'),
-  carrierId: uuid('carrier_id'), // Relacionado abaixo
+  carrierId: uuid('carrier_id'), // Relacionado abaixo  
+  shipmentType: shipmentTypeEnum('shipment_type').default('FCL').notNull(),
 
   // Financeiro Macro
   totalProductsUsd: decimal('total_products_usd', { precision: 12, scale: 2 }).default('0'),
@@ -190,8 +240,25 @@ export const shipments = pgTable('shipments', {
   etd: timestamp('etd'),
   eta: timestamp('eta'),
 
+  currentStep: shipmentStepEnum('current_step').default('CONTRACT_CREATION').notNull(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const shipmentStepHistory = pgTable('shipment_step_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  shipmentId: uuid('shipment_id').references(() => shipments.id, { onDelete: 'cascade' }).notNull(),
+  step: shipmentStepEnum('step').notNull(),
+  
+  status: text('status').$type<'PENDING' | 'COMPLETED' | 'FAILED'>().notNull(),
+  
+  startedAt: timestamp('started_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+  completedById: uuid('completed_by_id').references(() => profiles.id), // Quem finalizou?
+  
+  // Metadados específicos da etapa (ex: ID da transação do câmbio)
+  metadata: jsonb('metadata'),
 });
 
 export const shipmentContainers = pgTable('shipment_containers', {

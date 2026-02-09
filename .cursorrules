@@ -35,12 +35,28 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 2. **Database:**
    - Tables: snake_case.
    - Schema: Defined in src/db/schema.ts.
-3. **Form Handling:**
+   - Use \`jsonb\` for flexible data (e.g., \`simulatedProduct\`).
+3. **JSON Data Consistency (CRITICAL):**
+   - When using \`jsonb\` columns for adhoc items (Simulations), the structure MUST mirror the \`products\` table entity.
+   - Use a \`ProductSnapshot\` type: store resolved values (e.g., \`hsCode: "8504.40"\`) instead of Foreign Keys inside JSONs.
+   - Always strictly type Drizzle JSON columns using \`.$type<Interface>()\`.
+4. **Form Handling:**
    - Use zod for schema validation.
    - Use Server Actions for all mutations.
-4. **Data Fetching:**
+5. **Data Fetching:**
    - Fetch data in Server Components where possible.
    - Use Suspense for loading states.
+
+   ## ⚡ Inngest & Workflow Rules (CRITICAL)
+
+- **Directory Structure:**
+  - Functions: \`src/inngest/functions/\*.ts\`
+  - Client: \`src/inngest/client.ts\`
+  - API Route: \`src/app/api/inngest/route.ts\`
+- **Pattern:** Use "Step Functions" (\`step.run\`) for all side effects (DB writes, API calls).
+- **Concurrency:** Use \`concurrency\` keys based on \`shipmentId\` to prevent race conditions in the same shipment.
+- **Events:** Naming convention: \`app/domain.action\` (e.g., \`shipment/contract.signed\`).
+- **Idempotency:** All steps must be idempotent. If a step fails and retries, it should not duplicate data (use \`ON CONFLICT DO NOTHING\` or check existence).
 
 ## 💡 Performance & AI Efficiency (Cursor Specific)
 
