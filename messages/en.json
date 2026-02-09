@@ -1,1 +1,67 @@
-{}
+{
+  "Auth": {
+    "Register": {
+      "Owner": {
+        "title": "Importer Client Registration",
+        "fullName": "Full Name",
+        "email": "Email",
+        "password": "Password",
+        "cnpj": "CNPJ",
+        "submit": "Create Account",
+        "hasAccount": "Already have an account?",
+        "login": "Sign in",
+        "orRegisterAs": "Or register as",
+        "seller": "Seller"
+      },
+      "Seller": {
+        "title": "Seller/Marketplace Registration",
+        "fullName": "Full Name",
+        "storeName": "Store Name",
+        "email": "Email",
+        "password": "Password",
+        "taxId": "Tax Document (TIN/Tax ID)",
+        "submit": "Create Account",
+        "hasAccount": "Already have an account?",
+        "login": "Sign in",
+        "orRegisterAs": "Or register as",
+        "owner": "Importer Client"
+      }
+    },
+    "Login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "registerOwner": "Register as Client",
+      "registerSeller": "Register as Seller"
+    },
+    "VerifyEmail": {
+      "title": "Verify Your Email",
+      "description": "We've sent a confirmation link to your email. Click the link to activate your account.",
+      "resend": "Resend Email",
+      "success": "Email successfully resent!",
+      "checkSpam": "Didn't receive it? Check your spam folder."
+    },
+    "Errors": {
+      "invalidCredentials": "Invalid email or password",
+      "emailAlreadyExists": "This email is already registered",
+      "genericError": "An error occurred. Please try again.",
+      "weakPassword": "Password must be at least 8 characters",
+      "invalidEmail": "Invalid email"
+    }
+  },
+  "Organization": {
+    "select": "Select Organization",
+    "noOrganizations": "No organizations found",
+    "switchSuccess": "Organization switched successfully",
+    "role": {
+      "OWNER": "Owner",
+      "ADMIN": "Administrator",
+      "ADMIN_EMPLOYEE": "Admin Employee",
+      "SELLER": "Seller",
+      "CUSTOMS_BROKER": "Customs Broker",
+      "VIEWER": "Viewer"
+    }
+  }
+}

@@ -1,1 +1,67 @@
-{}
+{
+  "Auth": {
+    "Register": {
+      "Owner": {
+        "title": "进口客户注册",
+        "fullName": "全名",
+        "email": "电子邮件",
+        "password": "密码",
+        "cnpj": "CNPJ",
+        "submit": "创建账户",
+        "hasAccount": "已有账户？",
+        "login": "登录",
+        "orRegisterAs": "或注册为",
+        "seller": "卖家"
+      },
+      "Seller": {
+        "title": "卖家/市场注册",
+        "fullName": "全名",
+        "storeName": "店铺名称",
+        "email": "电子邮件",
+        "password": "密码",
+        "taxId": "税务文件 (TIN/Tax ID)",
+        "submit": "创建账户",
+        "hasAccount": "已有账户？",
+        "login": "登录",
+        "orRegisterAs": "或注册为",
+        "owner": "进口客户"
+      }
+    },
+    "Login": {
+      "title": "登录",
+      "email": "电子邮件",
+      "password": "密码",
+      "submit": "登录",
+      "noAccount": "还没有账户？",
+      "registerOwner": "注册为客户",
+      "registerSeller": "注册为卖家"
+    },
+    "VerifyEmail": {
+      "title": "验证您的电子邮件",
+      "description": "我们已向您的电子邮件发送了确认链接。点击链接激活您的账户。",
+      "resend": "重新发送电子邮件",
+      "success": "电子邮件已成功重新发送！",
+      "checkSpam": "没有收到？请检查您的垃圾邮件文件夹。"
+    },
+    "Errors": {
+      "invalidCredentials": "电子邮件或密码无效",
+      "emailAlreadyExists": "此电子邮件已被注册",
+      "genericError": "发生错误。请重试。",
+      "weakPassword": "密码至少需要8个字符",
+      "invalidEmail": "电子邮件无效"
+    }
+  },
+  "Organization": {
+    "select": "选择组织",
+    "noOrganizations": "未找到组织",
+    "switchSuccess": "组织切换成功",
+    "role": {
+      "OWNER": "所有者",
+      "ADMIN": "管理员",
+      "ADMIN_EMPLOYEE": "管理员员工",
+      "SELLER": "卖家",
+      "CUSTOMS_BROKER": "报关行",
+      "VIEWER": "查看者"
+    }
+  }
+}

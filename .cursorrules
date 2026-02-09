@@ -12,7 +12,7 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 
 - **Runtime:** Bun (Always use `bun` commands).
 - **Frontend:** Next.js 16 (App Router) + React 19 (Server Components by default).
-- **UI:** Hero UI 3.0.0 (@heroui/react) for ALL components. Use Tailwind CSS 4 utility classes.
+- **UI:** Hero UI 3.0.0 (@heroui/react) for ALL components, but use the components of `src/components/ui/*.tsx`.
 - **Hero UI Table Limitation:** Hero UI v3 beta 6 lacks a native Table component. Use the custom wrapper `src/components/ui/data-table.tsx`. If a table is needed, implement it with native HTML tags + Tailwind classes or @tanstack/react-table.
 - **Database:** PostgreSQL (Supabase) + Drizzle ORM (`postgres.js` driver).
 - **Workflows:** Inngest for durable execution and complex sagas.

@@ -1,4 +1,56 @@
 {
+  "Auth": {
+    "Register": {
+      "Owner": {
+        "title": "Cadastro de Cliente Importador",
+        "fullName": "Nome Completo",
+        "email": "E-mail",
+        "password": "Senha",
+        "cnpj": "CNPJ",
+        "submit": "Criar Conta",
+        "hasAccount": "Já tem uma conta?",
+        "login": "Fazer login",
+        "orRegisterAs": "Ou cadastrar-se como",
+        "seller": "Vendedor"
+      },
+      "Seller": {
+        "title": "Cadastro de Vendedor/Marketplace",
+        "fullName": "Nome Completo",
+        "storeName": "Nome da Loja",
+        "email": "E-mail",
+        "password": "Senha",
+        "taxId": "Documento Fiscal (TIN/Tax ID)",
+        "submit": "Criar Conta",
+        "hasAccount": "Já tem uma conta?",
+        "login": "Fazer login",
+        "orRegisterAs": "Ou cadastrar-se como",
+        "owner": "Cliente Importador"
+      }
+    },
+    "Login": {
+      "title": "Login",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Entrar",
+      "noAccount": "Não tem uma conta?",
+      "registerOwner": "Cadastrar como Cliente",
+      "registerSeller": "Cadastrar como Vendedor"
+    },
+    "VerifyEmail": {
+      "title": "Verifique seu e-mail",
+      "description": "Enviamos um link de confirmação para seu e-mail. Clique no link para ativar sua conta.",
+      "resend": "Reenviar e-mail",
+      "success": "E-mail reenviado com sucesso!",
+      "checkSpam": "Não recebeu? Verifique sua caixa de spam."
+    },
+    "Errors": {
+      "invalidCredentials": "E-mail ou senha inválidos",
+      "emailAlreadyExists": "Este e-mail já está cadastrado",
+      "genericError": "Ocorreu um erro. Tente novamente.",
+      "weakPassword": "A senha deve ter no mínimo 8 caracteres",
+      "invalidEmail": "E-mail inválido"
+    }
+  },
   "Organization": {
     "select": "Selecionar Organização",
     "noOrganizations": "Nenhuma organização encontrada",
@@ -6,7 +58,9 @@
     "role": {
       "OWNER": "Proprietário",
       "ADMIN": "Administrador",
-      "OPERATOR": "Operador",
+      "ADMIN_EMPLOYEE": "Funcionário Admin",
+      "SELLER": "Vendedor",
+      "CUSTOMS_BROKER": "Despachante Aduaneiro",
       "VIEWER": "Visualizador"
     }
   }

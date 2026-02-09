@@ -1,23 +1,50 @@
 "use client";
 
-import { Input, type InputProps } from "@heroui/react";
-import { forwardRef } from "react";
+import { TextField, Label, Input } from "@heroui/react";
+import { forwardRef, type InputHTMLAttributes } from "react";
 
-export const AppInput = forwardRef<HTMLInputElement, InputProps>(
+export interface AppInputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  variant?: 'primary' | 'secondary';
+  isDisabled?: boolean;
+  isRequired?: boolean;
+  classNames?: {
+    base?: string;
+    label?: string;
+    input?: string;
+  };
+}
+
+export const AppInput = forwardRef<HTMLInputElement, AppInputProps>(
   (props, ref) => {
     const {
+      label,
       variant = "primary",
       className,
+      classNames,
+      isDisabled,
+      isRequired,
       ...rest
     } = props;
 
+    // Default classes
+    const defaultBaseClass = "w-full";
+    const defaultLabelClass = "text-gray-700 dark:text-gray-300";
+
     return (
-      <Input
-        ref={ref}
+      <TextField
         variant={variant}
-        className={className}
-        {...rest}
-      />
+        className={classNames?.base || className || defaultBaseClass}
+        isDisabled={isDisabled}
+        isRequired={isRequired}
+      >
+        {label && <Label className={classNames?.label || defaultLabelClass}>{label}</Label>}
+        <Input
+          ref={ref}
+          className={classNames?.input}
+          {...rest}
+        />
+      </TextField>
     );
   }
 );
