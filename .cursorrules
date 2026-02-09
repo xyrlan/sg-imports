@@ -28,24 +28,28 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 
 ## 📝 Coding Standards
 
-1. **Naming Convention:** - Code/DB: English (mandatory).
-   - Tax/Legal Terms: English (but keep the Brazilian acronym as a comment, e.g., `importTax` // II).
-   - Files: `kebab-case`. Components: `PascalCase`.
-2. **Database:** - Tables: `snake_case`.
-   - Schema: Defined in `src/db/schema.ts`.
-3. **Form Handling:** - Use `zod` for schema validation.
+1. **Naming Convention:**
+   - Code/DB: English (mandatory).
+   - Tax/Legal Terms: English (but keep the Brazilian acronym as a comment, e.g., importTax // II).
+   - Files: kebab-case. Components: PascalCase.
+2. **Database:**
+   - Tables: snake_case.
+   - Schema: Defined in src/db/schema.ts.
+3. **Form Handling:**
+   - Use zod for schema validation.
    - Use Server Actions for all mutations.
-4. **Data Fetching:** - Fetch data in Server Components where possible.
-   - Use `Suspense` for loading states.
+4. **Data Fetching:**
+   - Fetch data in Server Components where possible.
+   - Use Suspense for loading states.
 
 ## 💡 Performance & AI Efficiency (Cursor Specific)
 
-- **Context Loading:** Always reference `@src/db/schema.ts` before writing queries.
-- **Avoid Hallucinations:** If a Hero UI component property is unknown, ask me to check the documentation or use `@Web` to verify the beta 6 version.
-- **Monetary Values:** Never use `float` for currency. Always use `decimal` (from Drizzle) or handle as `cents` (integers) to avoid rounding errors in taxes.
+- **Context Loading:** Always reference @src/db/schema.ts before writing queries.
+- **Avoid Hallucinations:** If a Hero UI component property is unknown, ask me to check the documentation or use @Web to verify the beta 6 version.
+- **Monetary Values:** Never use float for currency. Always use decimal (from Drizzle) or handle as cents (integers) to avoid rounding errors.
 
 ## 🇧🇷 Brazil Import Logic
 
 - Remember the cascade of taxes: Base of II -> IPI -> PIS/COFINS -> ICMS.
 - NCM (Nomenclatura Comum do Mercosul) is the primary classification key.
-- Always use ISO 8601 for dates, but display in `DD/MM/YYYY` for the user.
+- Always use ISO 8601 for dates, but display in DD/MM/YYYY for the user.
