@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { sellerRegistrationSchema } from '../../schemas';
+import { ensureUserSetup } from '@/services/user-setup.service';
 
 export interface RegistrationState {
   error?: string;
@@ -12,7 +13,7 @@ export interface RegistrationState {
 /**
  * Server Action for SELLER registration
  * Validates input, creates Supabase Auth user with metadata
- * The database trigger will automatically create profile, organization, and membership
+ * Ensures profile, organization, and membership are created (fallback for trigger)
  */
 export async function registerSeller(
   prevState: RegistrationState | null,
@@ -35,6 +36,7 @@ export async function registerSeller(
     const supabase = await createClient();
 
     // Sign up user with metadata
+    // Set emailRedirectTo for post-verification redirect
     const { data, error } = await supabase.auth.signUp({
       email: validatedData.email,
       password: validatedData.password,
@@ -64,13 +66,37 @@ export async function registerSeller(
       return { error: 'Erro ao criar conta. Tente novamente.' };
     }
 
-    // Success - redirect to verify email page with email parameter
+    // Fallback: Ensure profile, organization, and membership are created
+    // This runs even if the database trigger is disabled or fails
+    const setupResult = await ensureUserSetup(
+      data.user.id,
+      validatedData.email,
+      {
+        role: 'SELLER',
+        fullName: validatedData.fullName,
+        document: validatedData.taxId,
+        organizationName: validatedData.storeName,
+      }
+    );
+
+    if (!setupResult.success) {
+      console.error('User setup failed:', setupResult.error);
+      // Continue anyway - the trigger might have succeeded
+    }
+
+    // Supabase sends verification email automatically via configured SMTP (Mailtrap)
+    // User will be redirected to /verify-email page to see instructions and resend option
     redirect(`/verify-email?email=${encodeURIComponent(validatedData.email)}`);
   } catch (error) {
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'issues' in error) {
       const zodError = error as { issues: Array<{ message: string }> };
       return { error: zodError.issues[0]?.message || 'Dados inválidos' };
+    }
+
+    // Re-throw redirect errors (Next.js internal mechanism)
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
     }
 
     // Generic error

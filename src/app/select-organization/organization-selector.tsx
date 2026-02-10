@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@heroui/react';
+import { AppCard } from '@/components/ui/card';
 import { AppButton } from '@/components/ui/button';
 import { AppChip } from '@/components/ui/chip';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
@@ -68,14 +68,10 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
             key={organization.id}
             onClick={() => handleSelectOrganization(organization.id)}
             disabled={isLoading}
-            className={`text-left transition-all hover:scale-[1.02] ${
-              selectedOrgId === organization.id
-                ? 'border-2 border-primary'
-                : 'border border-gray-200 dark:border-gray-700'
-            }`}
+            className={`text-left transition-all hover:scale-[1.02]`}
           >
-            <Card className="h-full">
-              <Card.Header className="flex-col items-start">
+            <AppCard className="h-full">
+              <div className="flex-col items-start">
                 <div className="flex justify-between w-full items-start mb-2">
                   <h3 className="text-lg font-semibold line-clamp-1">
                     {organization.name}
@@ -93,10 +89,9 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
                     {organization.tradeName}
                   </p>
                 )}
-              </Card.Header>
+              </div>
               
-              <Card.Content>
-                <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-gray-500 dark:text-gray-400">CNPJ:</span>
                     <span className="ml-2 font-mono">{organization.document}</span>
@@ -119,9 +114,8 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
                   >
                     {isLoading && selectedOrgId === organization.id ? 'Carregando...' : 'Acessar'}
                   </AppButton>
-                </div>
-              </Card.Content>
-            </Card>
+              </div>
+            </AppCard>
           </button>
         ))}
       </div>

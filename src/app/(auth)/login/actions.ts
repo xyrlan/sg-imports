@@ -67,6 +67,12 @@ export async function loginAction(
       redirect('/select-organization');
     }
   } catch (error) {
+    // NEXT_REDIRECT is a special error thrown by Next.js redirect()
+    // It has a 'digest' property and should be re-thrown, not handled
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
+
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'issues' in error) {
       const zodError = error as { issues: Array<{ message: string }> };

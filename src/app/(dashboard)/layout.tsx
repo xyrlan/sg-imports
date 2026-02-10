@@ -51,8 +51,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // Step 6: Security check - Ensure user has access to selected org
   if (!currentOrgData) {
     // Cookie contains invalid org ID or user lost access
-    // Clear the invalid cookie and redirect to selection
-    cookieStore.delete('active_organization_id');
+    // Redirect to selection page (it will set a new valid cookie)
     redirect('/select-organization');
   }
 

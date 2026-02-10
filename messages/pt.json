@@ -38,12 +38,44 @@
     },
     "VerifyEmail": {
       "title": "Verifique seu e-mail",
-      "description": "Enviamos um link de confirmação para seu e-mail. Clique no link para ativar sua conta.",
+      "description": "Foi enviado um email de verificação para sua caixa de mensagens. Clique no link do email para verificar sua conta.",
       "resend": "Reenviar e-mail",
       "success": "E-mail reenviado com sucesso!",
       "checkSpam": "Não recebeu? Verifique sua caixa de spam.",
       "backToLogin": "Voltar para o Login",
-      "footer": "Após confirmar seu e-mail, você poderá fazer login no sistema."
+      "footer": "Após confirmar seu e-mail, você poderá fazer login no sistema.",
+      "userHeader": {
+        "logout": "Sair",
+        "pendingVerification": "Email pendente de verificação"
+      },
+      "states": {
+        "verifying": {
+          "title": "Verificando seu email...",
+          "description": "Processando sua verificação, aguarde um momento."
+        },
+        "verified": {
+          "title": "Email verificado com sucesso!",
+          "description": "Seu email foi verificado. Você será redirecionado automaticamente em alguns segundos.",
+          "redirecting": "Redirecionando..."
+        },
+        "error": {
+          "title": "Erro na verificação",
+          "canRetry": "Você pode solicitar um novo email de verificação:"
+        },
+        "waiting": {
+          "title": "Verifique seu email",
+          "noReceived": "Não recebeu o email? Verifique sua caixa de spam ou solicite um novo:"
+        },
+        "tokenExpired": {
+          "title": "Token expirado",
+          "description": "Seu token de verificação expirou. Solicitamos automaticamente um novo email de verificação para você.",
+          "checkInbox": "Verifique sua caixa de mensagens ou solicite um novo email:"
+        }
+      },
+      "resendButton": {
+        "waiting": "Aguarde {seconds}s",
+        "ready": "Reenviar email"
+      }
     },
     "Errors": {
       "invalidCredentials": "E-mail ou senha inválidos",
@@ -51,7 +83,41 @@
       "genericError": "Ocorreu um erro. Tente novamente.",
       "weakPassword": "A senha deve ter no mínimo 8 caracteres",
       "invalidEmail": "E-mail inválido",
-      "resendFailed": "Ocorreu um erro ao reenviar o e-mail. Tente novamente."
+      "resendFailed": "Ocorreu um erro ao reenviar o e-mail. Tente novamente.",
+      "tokenInvalid": "Token inválido ou expirado",
+      "serverError": "Erro no servidor. Tente novamente mais tarde.",
+      "connectionError": "Erro de conexão. Verifique sua internet e tente novamente.",
+      "sessionExpired": "Sessão expirou. Faça login novamente.",
+      "alreadyVerified": "Seu email já foi verificado!"
+    },
+    "Email": {
+      "VerificationEmail": {
+        "subject": "Confirme seu e-mail - SoulGlobal",
+        "title": "Bem-vindo à SoulGlobal!",
+        "body": "Clique no botão abaixo para verificar seu e-mail",
+        "button": "Verificar E-mail",
+        "expiry": "Este link expira em 24 horas",
+        "securityNotice": "Informação de Segurança",
+        "securityText": "Este link de verificação expira em 24 horas por motivos de segurança. Se você não solicitou este cadastro, pode ignorar este e-mail com segurança.",
+        "alternativeText": "Se o botão acima não funcionar, copie e cole este link no seu navegador:"
+      },
+      "WelcomeEmail": {
+        "subject": "Conta ativada - Bem-vindo à SoulGlobal!",
+        "title": "Sua conta está ativa!",
+        "subtitle": "Sua conta está ativa e pronta para uso",
+        "bodyOwner": "Agora você pode começar a gerenciar suas importações com facilidade.",
+        "bodySeller": "Agora você pode começar a vender seus produtos no marketplace.",
+        "congratulations": "Parabéns! Seu e-mail foi verificado com sucesso e agora você tem acesso completo à plataforma SoulGlobal.",
+        "dashboardButton": "Acessar Dashboard",
+        "helpTitle": "Precisa de Ajuda?",
+        "helpText": "Nossa equipe de suporte está sempre pronta para ajudá-lo.",
+        "features": {
+          "management": "Gestão Completa: Acompanhe todas as suas importações em tempo real",
+          "calculation": "Cálculo Automático: Impostos e taxas calculados automaticamente",
+          "reports": "Relatórios Detalhados: Dashboards completos com análises financeiras",
+          "notifications": "Notificações: Fique informado sobre cada etapa do processo"
+        }
+      }
     }
   },
   "Organization": {

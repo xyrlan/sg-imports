@@ -2,11 +2,12 @@
 
 import { useState, useActionState, useTransition, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Checkbox, Switch } from '@heroui/react';
+import { Switch } from '@heroui/react';
 import { AppCard } from '@/components/ui/card';
 import { AppInput } from '@/components/ui/input';
 import { AppSelect } from '@/components/ui/select';
 import { AppButton } from '@/components/ui/button';
+import { AppCheckbox } from '@/components/ui/checkbox';
 import {
   updateOrganizationDetails,
   createAddressAction,
@@ -48,6 +49,13 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
   );
   const [fetchingCEP, setFetchingCEP] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
+
+  // Controlled state for address inputs
+  const [postalCode, setPostalCode] = useState('');
+  const [street, setStreet] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
 
   // Step 3: Service Fee Config (OWNER only)
   const [step3State, step3Action, step3Pending] = useActionState<ActionState | null, FormData>(
@@ -105,16 +113,11 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
         return;
       }
 
-      // Fill address fields
-      const streetInput = document.querySelector<HTMLInputElement>('input[name="street"]');
-      const neighborhoodInput = document.querySelector<HTMLInputElement>('input[name="neighborhood"]');
-      const cityInput = document.querySelector<HTMLInputElement>('input[name="city"]');
-      const stateInput = document.querySelector<HTMLInputElement>('input[name="state"]');
-
-      if (streetInput) streetInput.value = data.logradouro;
-      if (neighborhoodInput) neighborhoodInput.value = data.bairro;
-      if (cityInput) cityInput.value = data.localidade;
-      if (stateInput) stateInput.value = data.uf;
+      // Update state with fetched address data
+      setStreet(data.logradouro || '');
+      setNeighborhood(data.bairro || '');
+      setCity(data.localidade || '');
+      setState(data.uf || '');
       
       setFetchingCEP(false);
     } catch {
@@ -130,10 +133,10 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
           key={index}
           className={`h-2 w-12 rounded-full transition-colors ${
             index + 1 === currentStep
-              ? 'bg-blue-600'
+              ? 'bg-accent'
               : index + 1 < currentStep
-              ? 'bg-blue-400'
-              : 'bg-gray-300 dark:bg-gray-600'
+              ? 'bg-accent-soft'
+              : 'bg-muted'
           }`}
         />
       ))}
@@ -141,23 +144,23 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             {t('title')}
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+          <p className="text-sm text-muted mb-1">
             {t('subtitle')}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-500">
+          <p className="text-xs text-muted">
             {organizationName}
           </p>
         </div>
 
         {renderProgressIndicator()}
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-center text-sm text-muted mb-6">
           {t('step', { current: currentStep, total: totalSteps })}
         </p>
 
@@ -167,14 +170,14 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
             <form action={step1Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step1.title')}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted">
                   {t('Step1.description')}
                 </p>
               </div>
 
               {step1State?.error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400">{step1State.error}</p>
+                <div className="mb-4 p-3 bg-danger/10 border border-danger rounded-lg">
+                  <p className="text-sm text-danger-foreground">{step1State.error}</p>
                 </div>
               )}
 
@@ -240,20 +243,20 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
             <form action={step2Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step2.title')}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted">
                   {t('Step2.description')}
                 </p>
               </div>
 
               {step2State?.error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400">{step2State.error}</p>
+                <div className="mb-4 p-3 bg-danger/10 border border-danger rounded-lg">
+                  <p className="text-sm text-danger-foreground">{step2State.error}</p>
                 </div>
               )}
 
               {cepError && (
-                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-600 dark:text-yellow-400">{cepError}</p>
+                <div className="mb-4 p-3 bg-warning/10 border border-warning rounded-lg">
+                  <p className="text-sm text-warning-foreground">{cepError}</p>
                 </div>
               )}
 
@@ -266,7 +269,8 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                       placeholder={t('Step2.postalCodePlaceholder')}
                       required
                       isDisabled={step2Pending}
-                      id="cep-input"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
                     />
                   </div>
                   <div className="flex items-end">
@@ -275,9 +279,8 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                       variant="secondary"
                       isLoading={fetchingCEP}
                       onClick={() => {
-                        const cepInput = document.querySelector<HTMLInputElement>('#cep-input');
-                        if (cepInput?.value) {
-                          handleFetchCEP(cepInput.value);
+                        if (postalCode) {
+                          handleFetchCEP(postalCode);
                         }
                       }}
                       size="lg"
@@ -293,6 +296,8 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   placeholder={t('Step2.streetPlaceholder')}
                   required
                   isDisabled={step2Pending}
+                  value={street}
+                  onChange={(e) => setStreet(e.target.value)}
                 />
 
                 <div className="grid grid-cols-2 gap-4">
@@ -318,6 +323,8 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   placeholder={t('Step2.neighborhoodPlaceholder')}
                   required
                   isDisabled={step2Pending}
+                  value={neighborhood}
+                  onChange={(e) => setNeighborhood(e.target.value)}
                 />
 
                 <div className="grid grid-cols-2 gap-4">
@@ -327,6 +334,8 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                     placeholder={t('Step2.cityPlaceholder')}
                     required
                     isDisabled={step2Pending}
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                   />
 
                   <AppInput
@@ -336,20 +345,22 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                     required
                     maxLength={2}
                     isDisabled={step2Pending}
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
                   />
                 </div>
 
                 <input type="hidden" name="country" value="Brazil" />
 
-                <Checkbox name="sameAsDelivery" defaultSelected>
+                <AppCheckbox name="sameAsDelivery" defaultSelected>
                   {t('Step2.sameAsDelivery')}
-                </Checkbox>
+                </AppCheckbox>
               </div>
 
               <div className="flex justify-between gap-3 mt-6">
                 <AppButton
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setCurrentStep(1)}
                   isDisabled={step2Pending}
                   size="lg"
@@ -373,20 +384,20 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
             <form action={step3Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step3.title')}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted">
                   {t('Step3.description')}
                 </p>
               </div>
 
               {step3State?.error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400">{step3State.error}</p>
+                <div className="mb-4 p-3 bg-danger/10 border border-danger rounded-lg">
+                  <p className="text-sm text-danger-foreground">{step3State.error}</p>
                 </div>
               )}
 
               <div className="space-y-4">
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                <div className="p-4 bg-accent/10 rounded-lg">
+                  <p className="text-sm text-accent-foreground">
                     {t('Step3.defaultsInfo')}
                   </p>
                 </div>
@@ -402,7 +413,7 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   max="100"
                   isDisabled={step3Pending}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                <p className="text-xs text-muted -mt-2">
                   {t('Step3.percentageHelp')}
                 </p>
 
@@ -416,16 +427,16 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   min="0"
                   isDisabled={step3Pending}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                <p className="text-xs text-muted -mt-2">
                   {t('Step3.minimumValueHelp')}
                 </p>
 
                 <input type="hidden" name="currency" value="BRL" />
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
                   <div>
                     <p className="font-medium">{t('Step3.applyToChinaProducts')}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-muted">
                       {t('Step3.applyToChinaProductsHelp')}
                     </p>
                   </div>
@@ -436,7 +447,7 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
               <div className="flex justify-between gap-3 mt-6">
                 <AppButton
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setCurrentStep(2)}
                   isDisabled={step3Pending || isPending}
                   size="lg"

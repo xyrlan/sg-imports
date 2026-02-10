@@ -1,0 +1,4 @@
+{"location":"login/actions.ts:59","message":"Organizations check result","data":{"count":1,"willRedirectTo":"/dashboard"},"timestamp":1770680922752,"hypothesisId":"F,G,H"}
+{"location":"login/actions.ts:73","message":"Redirecting to dashboard","data":{"orgId":"74d5e852-b993-4d18-8049-c6f7268faf0b"},"timestamp":1770680922753,"hypothesisId":"G"}
+{"location":"login/actions.ts:90","message":"Error caught in loginAction","data":{"errorType":"Error","errorMsg":"NEXT_REDIRECT","isNextRedirect":true,"digest":"NEXT_REDIRECT;push;/dashboard;307;"},"timestamp":1770680922753,"hypothesisId":"F,G,H,I"}
+{"location":"login/actions.ts:94","message":"Re-throwing NEXT_REDIRECT","data":{"digest":"NEXT_REDIRECT;push;/dashboard;307;"},"timestamp":1770680922753,"hypothesisId":"F"}
