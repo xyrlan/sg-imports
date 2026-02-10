@@ -33,13 +33,13 @@ export default function OwnerRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <AppCard className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             {t('title')}
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted">
             SG-Imports - Sistema de Gerenciamento de Importações
           </p>
         </div>
@@ -47,8 +47,8 @@ export default function OwnerRegisterPage() {
         <form action={formAction} className="space-y-4">
           {/* Error Message */}
           {state?.error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
+            <div className="p-3 bg-danger/10 border border-danger rounded-lg">
+              <p className="text-sm text-danger">{state.error}</p>
             </div>
           )}
 
@@ -106,15 +106,15 @@ export default function OwnerRegisterPage() {
 
         {/* Footer Links */}
         <div className="mt-6 text-center space-y-2">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted">
             {t('hasAccount')}{' '}
-            <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+            <Link href="/login" className="text-accent hover:underline font-medium">
               {t('login')}
             </Link>
           </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted">
             {t('orRegisterAs')}{' '}
-            <Link href="/register/seller" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+            <Link href="/register/seller" className="text-accent hover:underline font-medium">
               {t('seller')}
             </Link>
           </p>

@@ -63,5 +63,26 @@
       "CUSTOMS_BROKER": "报关行",
       "VIEWER": "查看者"
     }
+  },
+  "Navbar": {
+    "quotes": "报价",
+    "orders": "订单",
+    "shipments": "货运",
+    "products": "产品",
+    "Profile": {
+      "noOrganization": "无组织",
+      "myProfile": "我的资料",
+      "settings": "设置",
+      "logout": "退出登录",
+      "loggingOut": "正在退出...",
+      "role": {
+        "OWNER": "所有者",
+        "ADMIN": "管理员",
+        "ADMIN_EMPLOYEE": "管理员员工",
+        "SELLER": "卖家",
+        "CUSTOMS_BROKER": "报关行",
+        "VIEWER": "查看者"
+      }
+    }
   }
 }

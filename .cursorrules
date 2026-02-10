@@ -17,6 +17,15 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 - **Database:** PostgreSQL (Supabase) + Drizzle ORM (`postgres.js` driver).
 - **Workflows:** Inngest for durable execution and complex sagas.
 
+## 🧩 Engineering Principles & Clean Code
+
+- **Componentization:** Break down UI into small, reusable components. If a component exceeds 100 lines, evaluate if it should be split.
+- **Single Responsibility (SRP):** Each function, server action, or component should do one thing well.
+- **Clean Code:** Use descriptive variable names (e.g., `isShipmentOverdue` instead of `check`). Avoid deeply nested conditionals (use early returns).
+- **DRY (Don't Repeat Yourself):** Abstract shared logic into `@/src/hooks` or `@/src/lib/utils`.
+- **Props Typing:** Strictly type all component props using TypeScript interfaces.
+- **UI Consistency:** Always check `src/components/ui` for existing components before creating new ones to maintain design system integrity.
+
 ## 📝 Coding Standards & Architecture
 
 1. **Directory Structure:**

@@ -133,6 +133,27 @@
       "VIEWER": "Visualizador"
     }
   },
+  "Navbar": {
+    "quotes": "Cotações",
+    "orders": "Pedidos",
+    "shipments": "Embarques",
+    "products": "Produtos",
+    "Profile": {
+      "noOrganization": "Sem Organização",
+      "myProfile": "Meu Perfil",
+      "settings": "Configurações",
+      "logout": "Sair",
+      "loggingOut": "Saindo...",
+      "role": {
+        "OWNER": "Proprietário",
+        "ADMIN": "Administrador",
+        "ADMIN_EMPLOYEE": "Funcionário Admin",
+        "SELLER": "Vendedor",
+        "CUSTOMS_BROKER": "Despachante Aduaneiro",
+        "VIEWER": "Visualizador"
+      }
+    }
+  },
   "Onboarding": {
     "title": "Configure sua Organização",
     "subtitle": "Complete as informações para começar a usar o sistema",

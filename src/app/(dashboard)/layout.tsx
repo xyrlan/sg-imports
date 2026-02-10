@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { OrganizationProvider } from '@/contexts/organization-context';
 import { getUserOrganizations, getOrganizationById } from '@/services/organization.service';
+import { Navbar } from '@/components/layout';
 import type { ReactNode } from 'react';
 
 /**
@@ -75,7 +76,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <OrganizationProvider initialData={initialData}>
-      {children}
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
     </OrganizationProvider>
   );
 }

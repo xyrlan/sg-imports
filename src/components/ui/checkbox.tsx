@@ -1,7 +1,7 @@
 "use client";
 
-import { Checkbox } from "@heroui/react";
-import { forwardRef, useState, type ComponentProps } from "react";
+import { Checkbox, Label } from "@heroui/react";
+import { forwardRef, type ComponentProps } from "react";
 
 // Use Hero UI v3 Checkbox component props
 type CheckboxRootProps = ComponentProps<typeof Checkbox>;
@@ -9,55 +9,62 @@ type CheckboxRootProps = ComponentProps<typeof Checkbox>;
 export interface AppCheckboxProps extends Omit<CheckboxRootProps, 'name' | 'onChange'> {
   name?: string;
   label?: string;
+  description?: string;
   defaultSelected?: boolean;
   onChange?: (checked: boolean) => void;
+  variant?: "primary" | "secondary";
 }
 
 /**
  * AppCheckbox - Custom Checkbox component that integrates with HTML forms
  * 
- * HeroUI Checkbox doesn't natively integrate with HTML forms (FormData).
- * This component uses a hidden input to ensure the checkbox value is properly
- * submitted with the form as "true" or "false" string.
+ * HeroUI v3 Checkbox Structure:
+ * <Checkbox>
+ *   <Checkbox.Control>
+ *     <Checkbox.Indicator />
+ *   </Checkbox.Control>
+ *   <Checkbox.Content>  <-- Label deve estar aqui
+ *     <Label>Text</Label>
+ *   </Checkbox.Content>
+ * </Checkbox>
  */
 export const AppCheckbox = forwardRef<HTMLInputElement, AppCheckboxProps>(
-  (props, ref) => {
+  (props) => {
     const {
       name,
       label,
-      children,
+      description,
       defaultSelected = false,
       onChange,
+      variant = "primary",
       ...rest
     } = props;
 
-    const [isChecked, setIsChecked] = useState(defaultSelected);
-
     const handleChange = (checked: boolean) => {
-      setIsChecked(checked);
       onChange?.(checked);
     };
 
     return (
-      <div>
-        <Checkbox
-          defaultSelected={defaultSelected}
-          onChange={handleChange}
-          {...rest}
-        >
-          {label || children}
-        </Checkbox>
-        
-        {/* Hidden input to ensure form data is submitted correctly */}
-        {name && (
-          <input
-            ref={ref}
-            type="hidden"
-            name={name}
-            value={isChecked ? "true" : "false"}
-          />
+      <Checkbox
+        defaultSelected={defaultSelected}
+        id={name}
+        name={name}
+        variant={variant}
+        onChange={handleChange}
+        {...rest}
+      >
+        <Checkbox.Control>
+          <Checkbox.Indicator />
+        </Checkbox.Control>
+        {label && (
+          <Checkbox.Content>
+            <Label>{label}</Label>
+            {description && (
+              <span className="text-xs text-muted">{description}</span>
+            )}
+          </Checkbox.Content>
         )}
-      </div>
+      </Checkbox>
     );
   }
 );

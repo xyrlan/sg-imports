@@ -1,46 +1,70 @@
 "use client";
 
-import { Modal, type ModalProps, Button } from "@heroui/react";
+import { Modal } from "@heroui/react";
 import { type ReactNode } from "react";
 
-export interface AppModalProps extends Omit<ModalProps, "children"> {
+export interface AppModalProps {
   title?: string;
   children: ReactNode;
   footer?: ReactNode;
-  isOpen: boolean;
-  onClose: () => void;
+  trigger: ReactNode;
   size?: "xs" | "sm" | "md" | "lg" | "cover" | "full";
   placement?: "auto" | "center" | "top" | "bottom";
   backdrop?: "opaque" | "blur" | "transparent";
+  isDismissable?: boolean;
+  isKeyboardDismissDisabled?: boolean;
+  className?: string;
 }
 
+/**
+ * AppModal - Wrapper para Modal do HeroUI v3
+ * 
+ * API do HeroUI v3 usa compound pattern:
+ * <Modal>
+ *   <Button>Trigger</Button>
+ *   <Modal.Backdrop>
+ *     <Modal.Container>
+ *       <Modal.Dialog>
+ *         <Modal.Header />
+ *         <Modal.Body />
+ *         <Modal.Footer />
+ *       </Modal.Dialog>
+ *     </Modal.Container>
+ *   </Modal.Backdrop>
+ * </Modal>
+ * 
+ * Diferenças do v2:
+ * - Não tem mais props isOpen/onClose no Modal root
+ * - Button é o trigger direto (não precisa de state controlado)
+ * - size e placement vão no Modal.Container
+ * - backdrop variant vai no Modal.Backdrop
+ */
 export function AppModal({
   title,
   children,
   footer,
-  isOpen,
-  onClose,
+  trigger,
   size = "md",
   placement = "auto",
   backdrop = "blur",
-  ...props
+  isDismissable = true,
+  isKeyboardDismissDisabled = false,
+  className,
 }: AppModalProps) {
   return (
-    <Modal {...props}>
-      <Button onPress={onClose} className="hidden">
-        Trigger
-      </Button>
+    <Modal>
+      {trigger}
       <Modal.Backdrop
         variant={backdrop}
-        isOpen={isOpen}
-        onOpenChange={(open) => !open && onClose()}
+        isDismissable={isDismissable}
+        isKeyboardDismissDisabled={isKeyboardDismissDisabled}
       >
         <Modal.Container placement={placement} size={size}>
-          <Modal.Dialog>
+          <Modal.Dialog className={className}>
             <Modal.CloseTrigger />
             {title && (
               <Modal.Header>
-                <h3 className="text-lg font-semibold">{title}</h3>
+                <Modal.Heading>{title}</Modal.Heading>
               </Modal.Header>
             )}
             <Modal.Body>{children}</Modal.Body>
@@ -51,3 +75,20 @@ export function AppModal({
     </Modal>
   );
 }
+
+/**
+ * Hook de uso controlado (para casos avançados)
+ * 
+ * Para controle programático do modal, use o Dialog render props:
+ * 
+ * <Modal.Dialog>
+ *   {(renderProps) => (
+ *     <>
+ *       <Modal.Body>Content</Modal.Body>
+ *       <Modal.Footer>
+ *         <Button onPress={() => renderProps.close()}>Close</Button>
+ *       </Modal.Footer>
+ *     </>
+ *   )}
+ * </Modal.Dialog>
+ */

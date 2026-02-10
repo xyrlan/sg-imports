@@ -63,5 +63,26 @@
       "CUSTOMS_BROKER": "Customs Broker",
       "VIEWER": "Viewer"
     }
+  },
+  "Navbar": {
+    "quotes": "Quotes",
+    "orders": "Orders",
+    "shipments": "Shipments",
+    "products": "Products",
+    "Profile": {
+      "noOrganization": "No Organization",
+      "myProfile": "My Profile",
+      "settings": "Settings",
+      "logout": "Logout",
+      "loggingOut": "Logging out...",
+      "role": {
+        "OWNER": "Owner",
+        "ADMIN": "Administrator",
+        "ADMIN_EMPLOYEE": "Admin Employee",
+        "SELLER": "Seller",
+        "CUSTOMS_BROKER": "Customs Broker",
+        "VIEWER": "Viewer"
+      }
+    }
   }
 }
