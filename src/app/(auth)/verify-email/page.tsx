@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CircleCheck, CircleX, Mail, Clock, RefreshCw, LogOut, User } from 'lucide-react';
-import { AppCard } from '@/components/ui/card';
-import { AppButton } from '@/components/ui/button';
+import { Card, Button, Spinner } from '@heroui/react';
 import { createClient } from '@/lib/supabase/client';
-import { Spinner } from '@heroui/react';
 
 // Types for better state management
 type VerificationState =
@@ -310,87 +308,95 @@ interface UserHeaderProps {
 }
 
 const UserHeader = ({ t, user, onLogout }: UserHeaderProps) => (
-  <AppCard className="w-full">
-    <div className="flex items-center justify-between p-4">
-      <div className="flex items-center gap-3">
-        <div className="rounded-full bg-primary/20 p-2">
-          <User className="text-primary w-4 h-4" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-foreground">
-            {user.name || 'Usuário'}
-          </span>
-          <span className="text-xs text-default-500">
-            {user.email}
-          </span>
-        </div>
-      </div>
-
-      <AppButton
-        variant="danger"
-        size="sm"
-        onClick={onLogout}
-      >
-        <LogOut className="w-4 h-4 mr-1" />
-        {t('userHeader.logout')}
-      </AppButton>
-    </div>
-
-    {!user.emailConfirmed && (
-      <div className="px-4 pb-4">
-        <div className="pt-3 border-t border-default-200">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-warning" />
-            <span className="text-xs text-default-600">
-              {t('userHeader.pendingVerification')}
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <div className="rounded-full bg-primary/20 p-2">
+            <User className="text-primary w-4 h-4" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-foreground">
+              {user.name || 'Usuário'}
+            </span>
+            <span className="text-xs text-default-500">
+              {user.email}
             </span>
           </div>
         </div>
+
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={onLogout}
+        >
+          <LogOut className="w-4 h-4 mr-1" />
+          {t('userHeader.logout')}
+        </Button>
       </div>
-    )}
-  </AppCard>
+
+      {!user.emailConfirmed && (
+        <div className="px-4 pb-4">
+          <div className="pt-3 border-t border-default-200">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-warning" />
+              <span className="text-xs text-default-600">
+                {t('userHeader.pendingVerification')}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </Card.Content>
+  </Card>
 );
 
 const LoadingState = () => (
-  <AppCard className="w-full">
-    <div className="text-center py-8">
-      <Spinner size="sm" color="accent" />
-    </div>
-  </AppCard>
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="text-center py-8">
+        <Spinner size="sm" color="accent" />
+      </div>
+    </Card.Content>
+  </Card>
 );
 
 const VerifyingState = ({ t }: { t: TranslationFunction }) => (
-  <AppCard className="w-full">
-    <div className="text-center py-8 space-y-4">
-      <Spinner size="sm" color="accent" />
-      <h1 className="text-xl font-semibold">{t('states.verifying.title')}</h1>
-      <p className="text-sm text-default-600">
-        {t('states.verifying.description')}
-      </p>
-    </div>
-  </AppCard>
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="text-center py-8 space-y-4">
+        <Spinner size="sm" color="accent" />
+        <h1 className="text-xl font-semibold">{t('states.verifying.title')}</h1>
+        <p className="text-sm text-default-600">
+          {t('states.verifying.description')}
+        </p>
+      </div>
+    </Card.Content>
+  </Card>
 );
 
 const SuccessState = ({ t }: { t: TranslationFunction }) => (
-  <AppCard className="w-full">
-    <div className="text-center py-8 space-y-4">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-success/20 p-4">
-          <CircleCheck className="text-success" size={48} />
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="text-center py-8 space-y-4">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-success/20 p-4">
+            <CircleCheck className="text-success" size={48} />
+          </div>
+        </div>
+        <h1 className="text-xl font-semibold text-success">
+          {t('states.verified.title')}
+        </h1>
+        <p className="text-sm text-default-600">
+          {t('states.verified.description')}
+        </p>
+        <div className="flex items-center justify-center gap-2 text-xs text-default-500 mt-2">
+          <Spinner size="sm" />
+          <span>{t('states.verified.redirecting')}</span>
         </div>
       </div>
-      <h1 className="text-xl font-semibold text-success">
-        {t('states.verified.title')}
-      </h1>
-      <p className="text-sm text-default-600">
-        {t('states.verified.description')}
-      </p>
-      <div className="flex items-center justify-center gap-2 text-xs text-default-500 mt-2">
-        <Spinner size="sm" />
-        <span>{t('states.verified.redirecting')}</span>
-      </div>
-    </div>
-  </AppCard>
+    </Card.Content>
+  </Card>
 );
 
 interface ErrorStateProps {
@@ -410,53 +416,54 @@ const ErrorState = ({
   resendCooldown,
   userEmail,
 }: ErrorStateProps) => (
-  <AppCard className="w-full">
-    <div className="text-center py-8 space-y-4">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-danger/20 p-4">
-          <CircleX className="text-danger" size={48} />
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="text-center py-8 space-y-4">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-danger/20 p-4">
+            <CircleX className="text-danger" size={48} />
+          </div>
         </div>
+        <h1 className="text-xl font-semibold text-danger">
+          {t('states.error.title')}
+        </h1>
+        <p className="text-sm text-default-600">{error.message}</p>
+
+        {userEmail && (
+          <div className="text-xs text-default-500 bg-default-100 p-3 rounded-lg mt-2">
+            <Mail className="inline w-4 h-4 mr-1" />
+            {userEmail}
+          </div>
+        )}
+
+        {error.canRetry && onResend && (
+          <div className="space-y-3 mt-4">
+            <p className="text-sm text-default-600">
+              {t('states.error.canRetry')}
+            </p>
+            <Button
+              variant="primary"
+              isDisabled={resendCooldown > 0 || resendLoading}
+              onClick={onResend}
+              className="w-full"
+            >
+              {resendLoading ? 'Carregando...' : resendCooldown > 0 ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t('resendButton.waiting', { seconds: resendCooldown })}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t('resendButton.ready')}
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
-      <h1 className="text-xl font-semibold text-danger">
-        {t('states.error.title')}
-      </h1>
-      <p className="text-sm text-default-600">{error.message}</p>
-
-      {userEmail && (
-        <div className="text-xs text-default-500 bg-default-100 p-3 rounded-lg mt-2">
-          <Mail className="inline w-4 h-4 mr-1" />
-          {userEmail}
-        </div>
-      )}
-
-      {error.canRetry && onResend && (
-        <div className="space-y-3 mt-4">
-          <p className="text-sm text-default-600">
-            {t('states.error.canRetry')}
-          </p>
-          <AppButton
-            variant="primary"
-            isDisabled={resendCooldown > 0}
-            isLoading={resendLoading}
-            onClick={onResend}
-            className="w-full"
-          >
-            {resendCooldown > 0 ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('resendButton.waiting', { seconds: resendCooldown })}
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('resendButton.ready')}
-              </>
-            )}
-          </AppButton>
-        </div>
-      )}
-    </div>
-  </AppCard>
+    </Card.Content>
+  </Card>
 );
 
 interface WaitingProps {
@@ -474,52 +481,53 @@ const WaitingState = ({
   resendLoading,
   resendCooldown,
 }: WaitingProps) => (
-  <AppCard className="w-full">
-    <div className="text-center py-8 space-y-4">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-primary/20 p-4">
-          <Mail className="text-primary" size={48} />
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="text-center py-8 space-y-4">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-primary/20 p-4">
+            <Mail className="text-primary" size={48} />
+          </div>
         </div>
-      </div>
-      <h1 className="text-xl font-semibold">{t('states.waiting.title')}</h1>
-      <p className="text-sm text-default-600">{t('description')}</p>
+        <h1 className="text-xl font-semibold">{t('states.waiting.title')}</h1>
+        <p className="text-sm text-default-600">{t('description')}</p>
 
-      {userEmail && (
-        <div className="text-xs text-default-500 bg-default-100 p-3 rounded-lg mt-2">
-          <Mail className="inline w-4 h-4 mr-1" />
-          {userEmail}
-        </div>
-      )}
-
-      <div className="space-y-3 mt-4">
-        <p className="text-xs text-default-500">
-          {t('states.waiting.noReceived')}
-        </p>
-
-        {onResend && (
-          <AppButton
-            variant="primary"
-            isDisabled={resendCooldown > 0}
-            isLoading={resendLoading}
-            onClick={onResend}
-            className="w-full"
-          >
-            {resendCooldown > 0 ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('resendButton.waiting', { seconds: resendCooldown })}
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('resendButton.ready')}
-              </>
-            )}
-          </AppButton>
+        {userEmail && (
+          <div className="text-xs text-default-500 bg-default-100 p-3 rounded-lg mt-2">
+            <Mail className="inline w-4 h-4 mr-1" />
+            {userEmail}
+          </div>
         )}
+
+        <div className="space-y-3 mt-4">
+          <p className="text-xs text-default-500">
+            {t('states.waiting.noReceived')}
+          </p>
+
+          {onResend && (
+            <Button
+              variant="primary"
+              isDisabled={resendCooldown > 0 || resendLoading}
+              onClick={onResend}
+              className="w-full"
+            >
+              {resendLoading ? 'Carregando...' : resendCooldown > 0 ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t('resendButton.waiting', { seconds: resendCooldown })}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t('resendButton.ready')}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
-  </AppCard>
+    </Card.Content>
+  </Card>
 );
 
 const TokenExpiredState = ({
@@ -529,54 +537,55 @@ const TokenExpiredState = ({
   resendLoading,
   resendCooldown,
 }: WaitingProps) => (
-  <AppCard className="w-full">
-    <div className="text-center py-8 space-y-4">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-warning/20 p-4">
-          <Clock className="text-warning" size={48} />
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="text-center py-8 space-y-4">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-warning/20 p-4">
+            <Clock className="text-warning" size={48} />
+          </div>
         </div>
-      </div>
-      <h1 className="text-xl font-semibold text-warning">
-        {t('states.tokenExpired.title')}
-      </h1>
-      <p className="text-sm text-default-600">
-        {t('states.tokenExpired.description')}
-      </p>
-
-      {userEmail && (
-        <div className="text-xs text-default-500 bg-default-100 p-3 rounded-lg mt-2">
-          <Mail className="inline w-4 h-4 mr-1" />
-          {userEmail}
-        </div>
-      )}
-
-      <div className="space-y-3 mt-4">
-        <p className="text-xs text-default-500">
-          {t('states.tokenExpired.checkInbox')}
+        <h1 className="text-xl font-semibold text-warning">
+          {t('states.tokenExpired.title')}
+        </h1>
+        <p className="text-sm text-default-600">
+          {t('states.tokenExpired.description')}
         </p>
 
-        {onResend && (
-          <AppButton
-            variant="primary"
-            isDisabled={resendCooldown > 0}
-            isLoading={resendLoading}
-            onClick={onResend}
-            className="w-full"
-          >
-            {resendCooldown > 0 ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('resendButton.waiting', { seconds: resendCooldown })}
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('resendButton.ready')}
-              </>
-            )}
-          </AppButton>
+        {userEmail && (
+          <div className="text-xs text-default-500 bg-default-100 p-3 rounded-lg mt-2">
+            <Mail className="inline w-4 h-4 mr-1" />
+            {userEmail}
+          </div>
         )}
+
+        <div className="space-y-3 mt-4">
+          <p className="text-xs text-default-500">
+            {t('states.tokenExpired.checkInbox')}
+          </p>
+
+          {onResend && (
+            <Button
+              variant="primary"
+              isDisabled={resendCooldown > 0 || resendLoading}
+              onClick={onResend}
+              className="w-full"
+            >
+              {resendLoading ? 'Carregando...' : resendCooldown > 0 ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t('resendButton.waiting', { seconds: resendCooldown })}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  {t('resendButton.ready')}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
-  </AppCard>
+    </Card.Content>
+  </Card>
 );

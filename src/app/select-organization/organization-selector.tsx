@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppCard } from '@/components/ui/card';
-import { AppButton } from '@/components/ui/button';
-import { AppChip } from '@/components/ui/chip';
+import { Card, Button, Chip } from '@heroui/react';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
 import { useTranslations } from 'next-intl';
 import type { UserOrganization } from '@/services/organization.service';
@@ -70,52 +68,54 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
             disabled={isLoading}
             className={`text-left transition-all hover:scale-[1.02]`}
           >
-            <AppCard className="h-full">
-              <div className="flex-col items-start">
-                <div className="flex justify-between w-full items-start mb-2">
-                  <h3 className="text-lg font-semibold line-clamp-1">
-                    {organization.name}
-                  </h3>
-                  <AppChip
-                    color={getRoleColor(role)}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    {t(`role.${role}`)}
-                  </AppChip>
-                </div>
-                {organization.tradeName && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                    {organization.tradeName}
-                  </p>
-                )}
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">CNPJ:</span>
-                    <span className="ml-2 font-mono">{organization.document}</span>
+            <Card variant="default" className="h-full">
+              <Card.Content>
+                <div className="flex-col items-start">
+                  <div className="flex justify-between w-full items-start mb-2">
+                    <h3 className="text-lg font-semibold line-clamp-1">
+                      {organization.name}
+                    </h3>
+                    <Chip
+                      color={getRoleColor(role)}
+                      size="sm"
+                      variant="secondary"
+                    >
+                      {t(`role.${role}`)}
+                    </Chip>
                   </div>
-                  
-                  {organization.email && (
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">Email:</span>
-                      <span className="ml-2 line-clamp-1">{organization.email}</span>
-                    </div>
+                  {organization.tradeName && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                      {organization.tradeName}
+                    </p>
                   )}
-                  
-                  <AppButton
-                    fullWidth
-                    variant="primary"
-                    size="sm"
-                    isDisabled={isLoading && selectedOrgId === organization.id}
-                    className="mt-4"
-                    onPress={() => handleSelectOrganization(organization.id)}
-                  >
-                    {isLoading && selectedOrgId === organization.id ? 'Carregando...' : 'Acessar'}
-                  </AppButton>
-              </div>
-            </AppCard>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">CNPJ:</span>
+                      <span className="ml-2 font-mono">{organization.document}</span>
+                    </div>
+                    
+                    {organization.email && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Email:</span>
+                        <span className="ml-2 line-clamp-1">{organization.email}</span>
+                      </div>
+                    )}
+                    
+                    <Button
+                      fullWidth
+                      variant="primary"
+                      size="sm"
+                      isDisabled={isLoading && selectedOrgId === organization.id}
+                      className="mt-4"
+                      onPress={() => handleSelectOrganization(organization.id)}
+                    >
+                      {isLoading && selectedOrgId === organization.id ? 'Carregando...' : 'Acessar'}
+                    </Button>
+                </div>
+              </Card.Content>
+            </Card>
           </button>
         ))}
       </div>

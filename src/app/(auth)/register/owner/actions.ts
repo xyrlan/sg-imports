@@ -23,6 +23,7 @@ export async function registerOwner(
     // Extract form data
     const rawData = {
       fullName: formData.get('fullName') as string,
+      companyName: formData.get('companyName') as string,
       email: formData.get('email') as string,
       password: formData.get('password') as string,
       cnpj: formData.get('cnpj') as string,
@@ -43,6 +44,7 @@ export async function registerOwner(
         data: {
           role: 'OWNER',
           fullName: validatedData.fullName,
+          organizationName: validatedData.companyName,
           document: validatedData.cnpj, // Already cleaned by Zod transform
         },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/callback`,
@@ -73,6 +75,7 @@ export async function registerOwner(
         role: 'OWNER',
         fullName: validatedData.fullName,
         document: validatedData.cnpj,
+        organizationName: validatedData.companyName,
       }
     );
 

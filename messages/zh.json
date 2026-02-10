@@ -4,6 +4,7 @@
       "Owner": {
         "title": "进口客户注册",
         "fullName": "全名",
+        "companyName": "公司名称",
         "email": "电子邮件",
         "password": "密码",
         "cnpj": "CNPJ",

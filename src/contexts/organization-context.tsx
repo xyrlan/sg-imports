@@ -1,15 +1,17 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { organizations, memberships } from '@/db/schema';
+import type { organizations, memberships, profiles } from '@/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
 
 type Organization = InferSelectModel<typeof organizations>;
 type Membership = InferSelectModel<typeof memberships>;
+type Profile = InferSelectModel<typeof profiles>;
 
 export interface OrganizationState {
   currentOrganization: Organization | null;
   membership: Membership | null;
+  profile: Profile | null;
   availableOrganizations: Array<{
     organization: Organization;
     role: string;
@@ -58,6 +60,7 @@ export function OrganizationProvider({ children, initialData }: OrganizationProv
         setState({
           currentOrganization: selectedOrgData.organization,
           membership: selectedOrgData.membership,
+          profile: state.profile,
           availableOrganizations: state.availableOrganizations,
           isLoading: false,
         });
@@ -70,7 +73,7 @@ export function OrganizationProvider({ children, initialData }: OrganizationProv
       setState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }
-  }, [state.availableOrganizations]);
+  }, [state.availableOrganizations, state.profile]);
 
   const refreshOrganizations = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true }));

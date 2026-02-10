@@ -3,15 +3,13 @@
 import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { AppCard } from '@/components/ui/card';
-import { AppInput } from '@/components/ui/input';
-import { AppButton } from '@/components/ui/button';
+import { Card, TextField, Input, Label, Button } from '@heroui/react';
 import { registerOwner } from './actions';
 
 /**
  * Owner Registration Page
  * For importing clients (OWNER role)
- * Collects: Full Name, Email, Password, CNPJ
+ * Collects: Full Name, Company Name, Email, Password, CNPJ
  */
 export default function OwnerRegisterPage() {
   const t = useTranslations('Auth.Register.Owner');
@@ -34,92 +32,89 @@ export default function OwnerRegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <AppCard className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-sm text-muted">
-            SG-Imports - Sistema de Gerenciamento de Importações
-          </p>
-        </div>
+      <Card variant="default" className="w-full max-w-md">
+        <Card.Content className="p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              {t('title')}
+            </h1>
+            <p className="text-sm text-muted">
+              SG-Imports - Sistema de Gerenciamento de Importações
+            </p>
+          </div>
 
-        <form action={formAction} className="space-y-4">
-          {/* Error Message */}
-          {state?.error && (
-            <div className="p-3 bg-danger/10 border border-danger rounded-lg">
-              <p className="text-sm text-danger">{state.error}</p>
-            </div>
-          )}
+          <form action={formAction} className="space-y-4">
+            {/* Error Message */}
+            {state?.error && (
+              <div className="p-3 bg-danger/10 border border-danger rounded-lg">
+                <p className="text-sm text-danger">{state.error}</p>
+              </div>
+            )}
 
-          {/* Full Name */}
-          <AppInput
-            name="fullName"
-            label={t('fullName')}
-            placeholder="João Silva"
-            required
-            isDisabled={isPending}
-          />
+            {/* Full Name */}
+            <TextField variant="primary" isDisabled={isPending} isRequired>
+              <Label>{t('fullName')}</Label>
+              <Input name="fullName" placeholder="João Silva" />
+            </TextField>
 
-          {/* Email */}
-          <AppInput
-            name="email"
-            type="email"
-            label={t('email')}
-            placeholder="joao@empresa.com.br"
-            required
-            isDisabled={isPending}
-          />
+            {/* Company Name */}
+            <TextField variant="primary" isDisabled={isPending} isRequired>
+              <Label>{t('companyName')}</Label>
+              <Input name="companyName" placeholder="Empresa XYZ LTDA" />
+            </TextField>
 
-          {/* CNPJ with mask */}
-          <AppInput
-            name="cnpj"
-            label={t('cnpj')}
-            placeholder="00.000.000/0000-00"
-            required
-            isDisabled={isPending}
-            maxLength={18}
-            onChange={handleCnpjChange}
-          />
+            {/* Email */}
+            <TextField variant="primary" isDisabled={isPending} isRequired>
+              <Label>{t('email')}</Label>
+              <Input name="email" type="email" placeholder="joao@empresa.com.br" />
+            </TextField>
 
-          {/* Password */}
-          <AppInput
-            name="password"
-            type="password"
-            label={t('password')}
-            placeholder="••••••••"
-            required
-            isDisabled={isPending}
-          />
+            {/* CNPJ with mask */}
+            <TextField variant="primary" isDisabled={isPending} isRequired>
+              <Label>{t('cnpj')}</Label>
+              <Input
+                name="cnpj"
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                onChange={handleCnpjChange}
+              />
+            </TextField>
 
-          {/* Submit Button */}
-          <AppButton
-            type="submit"
-            variant="primary"
-            className="w-full"
-            isLoading={isPending}
-            size="lg"
-          >
-            {t('submit')}
-          </AppButton>
-        </form>
+            {/* Password */}
+            <TextField variant="primary" isDisabled={isPending} isRequired>
+              <Label>{t('password')}</Label>
+              <Input name="password" type="password" placeholder="••••••••" />
+            </TextField>
 
-        {/* Footer Links */}
-        <div className="mt-6 text-center space-y-2">
-          <p className="text-sm text-muted">
-            {t('hasAccount')}{' '}
-            <Link href="/login" className="text-accent hover:underline font-medium">
-              {t('login')}
-            </Link>
-          </p>
-          <p className="text-sm text-muted">
-            {t('orRegisterAs')}{' '}
-            <Link href="/register/seller" className="text-accent hover:underline font-medium">
-              {t('seller')}
-            </Link>
-          </p>
-        </div>
-      </AppCard>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              isDisabled={isPending}
+              size="lg"
+            >
+              {isPending ? 'Carregando...' : t('submit')}
+            </Button>
+          </form>
+
+          {/* Footer Links */}
+          <div className="mt-6 text-center space-y-2">
+            <p className="text-sm text-muted">
+              {t('hasAccount')}{' '}
+              <Link href="/login" className="text-accent hover:underline font-medium">
+                {t('login')}
+              </Link>
+            </p>
+            <p className="text-sm text-muted">
+              {t('orRegisterAs')}{' '}
+              <Link href="/register/seller" className="text-accent hover:underline font-medium">
+                {t('seller')}
+              </Link>
+            </p>
+          </div>
+        </Card.Content>
+      </Card>
     </div>
   );
 }

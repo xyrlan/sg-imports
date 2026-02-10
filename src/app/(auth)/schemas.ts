@@ -2,10 +2,11 @@ import { z } from 'zod';
 
 /**
  * Validation schema for OWNER registration
- * Validates: Full Name, Email, Password, and CNPJ (Brazilian company ID)
+ * Validates: Full Name, Company Name, Email, Password, and CNPJ (Brazilian company ID)
  */
 export const ownerRegistrationSchema = z.object({
   fullName: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  companyName: z.string().min(3, 'Nome da empresa deve ter no mínimo 3 caracteres'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
   cnpj: z

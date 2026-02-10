@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 export function NavbarProfileDropdown() {
   const t = useTranslations('Navbar.Profile');
   const router = useRouter();
-  const { membership, currentOrganization } = useOrganizationState();
+  const { membership, currentOrganization, profile } = useOrganizationState();
   const [isPending, startTransition] = useTransition();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -35,32 +35,30 @@ export function NavbarProfileDropdown() {
     }
   };
 
-  const profileId = membership?.profileId || '';
+  const userEmail = profile?.email || '';
   const organizationName = currentOrganization?.name || t('noOrganization');
   const userRole = membership?.role || 'VIEWER';
   const initials = organizationName.charAt(0).toUpperCase() + (organizationName.charAt(1) || '').toUpperCase();
 
   return (
     <Dropdown>
-      <Dropdown.Trigger className="outline-none">
-        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none">
-          <Avatar color="accent" size="sm">
-            <Avatar.Fallback>{initials}</Avatar.Fallback>
-          </Avatar>
-          <div className="hidden md:flex flex-col items-start">
-            <span className="text-sm font-medium">{organizationName}</span>
-            <span className="text-xs text-muted">
-              {t(`role.${userRole}`)}
-            </span>
-          </div>
-        </button>
+      <Dropdown.Trigger className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none">
+        <Avatar color="accent" size="sm">
+          <Avatar.Fallback>{initials}</Avatar.Fallback>
+        </Avatar>
+        <div className="hidden md:flex flex-col items-start">
+          <span className="text-sm font-medium">{organizationName}</span>
+          <span className="text-xs text-muted">
+            {t(`role.${userRole}`)}
+          </span>
+        </div>
       </Dropdown.Trigger>
 
       <Dropdown.Popover placement="bottom start">
         <div className="px-3 pt-3 pb-1">
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold">{organizationName}</p>
-            <p className="text-xs text-muted">{profileId}</p>
+            <p className="text-xs text-muted">{userEmail}</p>
           </div>
         </div>
 

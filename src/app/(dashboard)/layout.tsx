@@ -5,6 +5,7 @@ import { OrganizationProvider } from '@/contexts/organization-context';
 import { getUserOrganizations, getOrganizationById } from '@/services/organization.service';
 import { Navbar } from '@/components/layout';
 import type { ReactNode } from 'react';
+import { getUserProfile } from '@/services/auth.service';
 
 /**
  * Dashboard Layout - Multi-tenant Organization Context
@@ -33,6 +34,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   // Step 3: Fetch user's organizations
   const userOrgs = await getUserOrganizations(user.id);
+
+  // Step 4: Fetch user profile
+  const userProfile = await getUserProfile(user.id);
 
   // Step 4: Handle organization selection logic
   if (!activeOrgId) {
@@ -70,6 +74,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const initialData = {
     currentOrganization: currentOrgData.organization,
     membership: currentOrgData.membership,
+    profile: userProfile,
     availableOrganizations: userOrgs,
     isLoading: false,
   };

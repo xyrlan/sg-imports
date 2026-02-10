@@ -2,12 +2,7 @@
 
 import { useState, useActionState, useTransition, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Switch } from '@heroui/react';
-import { AppCard } from '@/components/ui/card';
-import { AppInput } from '@/components/ui/input';
-import { AppSelect } from '@/components/ui/select';
-import { AppButton } from '@/components/ui/button';
-import { AppCheckbox } from '@/components/ui/checkbox';
+import { Card, TextField, Input, Label, Select, ListBox, Button, Checkbox, Switch } from '@heroui/react';
 import {
   updateOrganizationDetails,
   createAddressAction,
@@ -164,9 +159,10 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
           {t('step', { current: currentStep, total: totalSteps })}
         </p>
 
-        <AppCard className="p-6">
-          {/* Step 1: Organization Details */}
-          {currentStep === 1 && (
+        <Card variant="default">
+          <Card.Content className="p-6">
+            {/* Step 1: Organization Details */}
+            {currentStep === 1 && (
             <form action={step1Action}>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">{t('Step1.title')}</h2>
@@ -182,58 +178,57 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
               )}
 
               <div className="space-y-4">
-                <AppInput
-                  name="tradeName"
-                  label={t('Step1.tradeName')}
-                  placeholder={t('Step1.tradeNamePlaceholder')}
-                  required
-                  isDisabled={step1Pending}
-                />
+                <TextField variant="primary" isDisabled={step1Pending} isRequired>
+                  <Label>{t('Step1.tradeName')}</Label>
+                  <Input name="tradeName" placeholder={t('Step1.tradeNamePlaceholder')} />
+                </TextField>
 
-                <AppInput
-                  name="stateRegistry"
-                  label={t('Step1.stateRegistry')}
-                  placeholder={t('Step1.stateRegistryPlaceholder')}
-                  isDisabled={step1Pending}
-                />
+                <TextField variant="primary" isDisabled={step1Pending}>
+                  <Label>{t('Step1.stateRegistry')}</Label>
+                  <Input name="stateRegistry" placeholder={t('Step1.stateRegistryPlaceholder')} />
+                </TextField>
 
-                <AppSelect
-                  name="taxRegime"
-                  label={t('Step1.taxRegime')}
-                  placeholder={t('Step1.taxRegimePlaceholder')}
-                  items={[
-                    { id: 'SIMPLES_NACIONAL', label: t('Step1.taxRegimes.SIMPLES_NACIONAL') },
-                    { id: 'LUCRO_PRESUMIDO', label: t('Step1.taxRegimes.LUCRO_PRESUMIDO') },
-                    { id: 'LUCRO_REAL', label: t('Step1.taxRegimes.LUCRO_REAL') },
-                  ]}
-                  isDisabled={step1Pending}
-                />
+                <Select name="taxRegime" variant="primary" isDisabled={step1Pending}>
+                  <Label>{t('Step1.taxRegime')}</Label>
+                  <Select.Trigger>
+                    <Select.Value placeholder={t('Step1.taxRegimePlaceholder')} />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      <ListBox.Item key="SIMPLES_NACIONAL" id="SIMPLES_NACIONAL" textValue={t('Step1.taxRegimes.SIMPLES_NACIONAL')}>
+                        {t('Step1.taxRegimes.SIMPLES_NACIONAL')}
+                      </ListBox.Item>
+                      <ListBox.Item key="LUCRO_PRESUMIDO" id="LUCRO_PRESUMIDO" textValue={t('Step1.taxRegimes.LUCRO_PRESUMIDO')}>
+                        {t('Step1.taxRegimes.LUCRO_PRESUMIDO')}
+                      </ListBox.Item>
+                      <ListBox.Item key="LUCRO_REAL" id="LUCRO_REAL" textValue={t('Step1.taxRegimes.LUCRO_REAL')}>
+                        {t('Step1.taxRegimes.LUCRO_REAL')}
+                      </ListBox.Item>
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
 
-                <AppInput
-                  name="email"
-                  type="email"
-                  label={t('Step1.email')}
-                  placeholder={t('Step1.emailPlaceholder')}
-                  isDisabled={step1Pending}
-                />
+                <TextField variant="primary" isDisabled={step1Pending}>
+                  <Label>{t('Step1.email')}</Label>
+                  <Input name="email" type="email" placeholder={t('Step1.emailPlaceholder')} />
+                </TextField>
 
-                <AppInput
-                  name="phone"
-                  label={t('Step1.phone')}
-                  placeholder={t('Step1.phonePlaceholder')}
-                  isDisabled={step1Pending}
-                />
+                <TextField variant="primary" isDisabled={step1Pending}>
+                  <Label>{t('Step1.phone')}</Label>
+                  <Input name="phone" placeholder={t('Step1.phonePlaceholder')} />
+                </TextField>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <AppButton
+                <Button
                   type="submit"
                   variant="primary"
-                  isLoading={step1Pending}
+                  isDisabled={step1Pending}
                   size="lg"
                 >
-                  {t('next')}
-                </AppButton>
+                  {step1Pending ? t('loading') : t('next')}
+                </Button>
               </div>
             </form>
           )}
@@ -263,21 +258,21 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <AppInput
-                      name="postalCode"
-                      label={t('Step2.postalCode')}
-                      placeholder={t('Step2.postalCodePlaceholder')}
-                      required
-                      isDisabled={step2Pending}
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                    />
+                    <TextField variant="primary" isDisabled={step2Pending} isRequired>
+                      <Label>{t('Step2.postalCode')}</Label>
+                      <Input
+                        name="postalCode"
+                        placeholder={t('Step2.postalCodePlaceholder')}
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                      />
+                    </TextField>
                   </div>
                   <div className="flex items-end">
-                    <AppButton
+                    <Button
                       type="button"
                       variant="secondary"
-                      isLoading={fetchingCEP}
+                      isDisabled={fetchingCEP}
                       onClick={() => {
                         if (postalCode) {
                           handleFetchCEP(postalCode);
@@ -286,79 +281,79 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                       size="lg"
                     >
                       {fetchingCEP ? t('Step2.fetchingCEP') : t('Step2.fetchCEP')}
-                    </AppButton>
+                    </Button>
                   </div>
                 </div>
 
-                <AppInput
-                  name="street"
-                  label={t('Step2.street')}
-                  placeholder={t('Step2.streetPlaceholder')}
-                  required
-                  isDisabled={step2Pending}
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                />
+                <TextField variant="primary" isDisabled={step2Pending} isRequired>
+                  <Label>{t('Step2.street')}</Label>
+                  <Input
+                    name="street"
+                    placeholder={t('Step2.streetPlaceholder')}
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                  />
+                </TextField>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <AppInput
-                    name="number"
-                    label={t('Step2.number')}
-                    placeholder={t('Step2.numberPlaceholder')}
-                    required
-                    isDisabled={step2Pending}
-                  />
+                  <TextField variant="primary" isDisabled={step2Pending} isRequired>
+                    <Label>{t('Step2.number')}</Label>
+                    <Input name="number" placeholder={t('Step2.numberPlaceholder')} />
+                  </TextField>
 
-                  <AppInput
-                    name="complement"
-                    label={t('Step2.complement')}
-                    placeholder={t('Step2.complementPlaceholder')}
-                    isDisabled={step2Pending}
-                  />
+                  <TextField variant="primary" isDisabled={step2Pending}>
+                    <Label>{t('Step2.complement')}</Label>
+                    <Input name="complement" placeholder={t('Step2.complementPlaceholder')} />
+                  </TextField>
                 </div>
 
-                <AppInput
-                  name="neighborhood"
-                  label={t('Step2.neighborhood')}
-                  placeholder={t('Step2.neighborhoodPlaceholder')}
-                  required
-                  isDisabled={step2Pending}
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                />
+                <TextField variant="primary" isDisabled={step2Pending} isRequired>
+                  <Label>{t('Step2.neighborhood')}</Label>
+                  <Input
+                    name="neighborhood"
+                    placeholder={t('Step2.neighborhoodPlaceholder')}
+                    value={neighborhood}
+                    onChange={(e) => setNeighborhood(e.target.value)}
+                  />
+                </TextField>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <AppInput
-                    name="city"
-                    label={t('Step2.city')}
-                    placeholder={t('Step2.cityPlaceholder')}
-                    required
-                    isDisabled={step2Pending}
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
+                  <TextField variant="primary" isDisabled={step2Pending} isRequired>
+                    <Label>{t('Step2.city')}</Label>
+                    <Input
+                      name="city"
+                      placeholder={t('Step2.cityPlaceholder')}
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                    />
+                  </TextField>
 
-                  <AppInput
-                    name="state"
-                    label={t('Step2.state')}
-                    placeholder={t('Step2.statePlaceholder')}
-                    required
-                    maxLength={2}
-                    isDisabled={step2Pending}
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                  />
+                  <TextField variant="primary" isDisabled={step2Pending} isRequired>
+                    <Label>{t('Step2.state')}</Label>
+                    <Input
+                      name="state"
+                      placeholder={t('Step2.statePlaceholder')}
+                      maxLength={2}
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                    />
+                  </TextField>
                 </div>
 
                 <input type="hidden" name="country" value="Brazil" />
 
-                <AppCheckbox name="sameAsDelivery" defaultSelected>
-                  {t('Step2.sameAsDelivery')}
-                </AppCheckbox>
+                <Checkbox name="sameAsDelivery" defaultSelected variant="primary">
+                  <Checkbox.Control>
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                  <Checkbox.Content>
+                    <Label>{t('Step2.sameAsDelivery')}</Label>
+                  </Checkbox.Content>
+                </Checkbox>
               </div>
 
               <div className="flex justify-between gap-3 mt-6">
-                <AppButton
+                <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCurrentStep(1)}
@@ -366,15 +361,15 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   size="lg"
                 >
                   {t('back')}
-                </AppButton>
-                <AppButton
+                </Button>
+                <Button
                   type="submit"
                   variant="primary"
-                  isLoading={step2Pending || isPending}
+                  isDisabled={step2Pending || isPending}
                   size="lg"
                 >
-                  {isSeller ? t('finish') : t('next')}
-                </AppButton>
+                  {(step2Pending || isPending) ? t('loading') : (isSeller ? t('finish') : t('next'))}
+                </Button>
               </div>
             </form>
           )}
@@ -402,31 +397,33 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   </p>
                 </div>
 
-                <AppInput
-                  name="percentage"
-                  type="number"
-                  label={t('Step3.percentage')}
-                  placeholder={t('Step3.percentagePlaceholder')}
-                  defaultValue="2.5"
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  isDisabled={step3Pending}
-                />
+                <TextField variant="primary" isDisabled={step3Pending}>
+                  <Label>{t('Step3.percentage')}</Label>
+                  <Input
+                    name="percentage"
+                    type="number"
+                    placeholder={t('Step3.percentagePlaceholder')}
+                    defaultValue="2.5"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                  />
+                </TextField>
                 <p className="text-xs text-muted -mt-2">
                   {t('Step3.percentageHelp')}
                 </p>
 
-                <AppInput
-                  name="minimumValue"
-                  type="number"
-                  label={t('Step3.minimumValue')}
-                  placeholder={t('Step3.minimumValuePlaceholder')}
-                  defaultValue="3060.00"
-                  step="0.01"
-                  min="0"
-                  isDisabled={step3Pending}
-                />
+                <TextField variant="primary" isDisabled={step3Pending}>
+                  <Label>{t('Step3.minimumValue')}</Label>
+                  <Input
+                    name="minimumValue"
+                    type="number"
+                    placeholder={t('Step3.minimumValuePlaceholder')}
+                    defaultValue="3060.00"
+                    step="0.01"
+                    min="0"
+                  />
+                </TextField>
                 <p className="text-xs text-muted -mt-2">
                   {t('Step3.minimumValueHelp')}
                 </p>
@@ -445,7 +442,7 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
               </div>
 
               <div className="flex justify-between gap-3 mt-6">
-                <AppButton
+                <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCurrentStep(2)}
@@ -453,19 +450,20 @@ export function OnboardingForm({ organizationName, role }: OnboardingFormProps) 
                   size="lg"
                 >
                   {t('back')}
-                </AppButton>
-                <AppButton
+                </Button>
+                <Button
                   type="submit"
                   variant="primary"
-                  isLoading={step3Pending || isPending}
+                  isDisabled={step3Pending || isPending}
                   size="lg"
                 >
-                  {t('finish')}
-                </AppButton>
+                  {(step3Pending || isPending) ? t('loading') : t('finish')}
+                </Button>
               </div>
             </form>
           )}
-        </AppCard>
+          </Card.Content>
+        </Card>
       </div>
     </div>
   );

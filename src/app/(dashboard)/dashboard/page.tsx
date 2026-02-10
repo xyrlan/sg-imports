@@ -1,8 +1,7 @@
 'use client';
 
 import { useOrganization } from '@/contexts/organization-context';
-import { AppCard } from '@/components/ui/card';
-import { AppChip } from '@/components/ui/chip';
+import { Card, Chip } from '@heroui/react';
 
 /**
  * Dashboard Home Page
@@ -38,107 +37,125 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Organization Card */}
-        <AppCard title="Organização Atual">
-          <div className="space-y-4">
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Nome:</span>
-              <p className="text-lg font-medium">{currentOrganization.name}</p>
-            </div>
-            
-            {currentOrganization.tradeName && (
+        <Card variant="default">
+          <Card.Header>
+            <Card.Title>Organização Atual</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <div className="space-y-4">
               <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">Nome Fantasia:</span>
-                <p className="text-lg">{currentOrganization.tradeName}</p>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Nome:</span>
+                <p className="text-lg font-medium">{currentOrganization.name}</p>
               </div>
-            )}
-            
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">CNPJ:</span>
-              <p className="text-lg font-mono">{currentOrganization.document}</p>
-            </div>
-            
-            {currentOrganization.email && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">Email:</span>
-                <p className="text-lg">{currentOrganization.email}</p>
-              </div>
-            )}
-            
-            {membership && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">Seu Cargo:</span>
-                <div className="mt-2">
-                  <AppChip>
-                    {membership.role}
-                  </AppChip>
+              
+              {currentOrganization.tradeName && (
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Nome Fantasia:</span>
+                  <p className="text-lg">{currentOrganization.tradeName}</p>
                 </div>
+              )}
+              
+              <div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">CNPJ:</span>
+                <p className="text-lg font-mono">{currentOrganization.document}</p>
               </div>
-            )}
-          </div>
-        </AppCard>
+              
+              {currentOrganization.email && (
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Email:</span>
+                  <p className="text-lg">{currentOrganization.email}</p>
+                </div>
+              )}
+              
+              {membership && (
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Seu Cargo:</span>
+                  <div className="mt-2">
+                    <Chip variant="secondary">
+                      {membership.role}
+                    </Chip>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card.Content>
+        </Card>
 
         {/* Available Organizations Card */}
-        <AppCard title="Suas Organizações">
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Você tem acesso a {availableOrganizations.length} organização(ões)
-            </p>
-            
-            {availableOrganizations.map(({ organization, role }) => (
-              <div
-                key={organization.id}
-                className={`p-3 rounded-lg border ${
-                  organization.id === currentOrganization.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-gray-200 dark:border-gray-700'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{organization.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {organization.document}
-                    </p>
+        <Card variant="default">
+          <Card.Header>
+            <Card.Title>Suas Organizações</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Você tem acesso a {availableOrganizations.length} organização(ões)
+              </p>
+              
+              {availableOrganizations.map(({ organization, role }) => (
+                <div
+                  key={organization.id}
+                  className={`p-3 rounded-lg border ${
+                    organization.id === currentOrganization.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{organization.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {organization.document}
+                      </p>
+                    </div>
+                    <Chip size="sm" variant="secondary">
+                      {role}
+                    </Chip>
                   </div>
-                  <AppChip size="sm">
-                    {role}
-                  </AppChip>
                 </div>
-              </div>
-            ))}
-          </div>
-        </AppCard>
+              ))}
+            </div>
+          </Card.Content>
+        </Card>
       </div>
 
       {/* Quick Stats */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <AppCard>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-primary">0</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Embarques Ativos</p>
-          </div>
-        </AppCard>
+        <Card variant="default">
+          <Card.Content>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-primary">0</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Embarques Ativos</p>
+            </div>
+          </Card.Content>
+        </Card>
         
-        <AppCard>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-success">0</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Cotações Pendentes</p>
-          </div>
-        </AppCard>
+        <Card variant="default">
+          <Card.Content>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-success">0</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Cotações Pendentes</p>
+            </div>
+          </Card.Content>
+        </Card>
         
-        <AppCard>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-warning">0</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Produtos Cadastrados</p>
-          </div>
-        </AppCard>
+        <Card variant="default">
+          <Card.Content>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-warning">0</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Produtos Cadastrados</p>
+            </div>
+          </Card.Content>
+        </Card>
         
-        <AppCard>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-secondary">0</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Fornecedores</p>
-          </div>
-        </AppCard>
+        <Card variant="default">
+          <Card.Content>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-secondary">0</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Fornecedores</p>
+            </div>
+          </Card.Content>
+        </Card>
       </div>
     </div>
   );

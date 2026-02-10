@@ -4,6 +4,7 @@
       "Owner": {
         "title": "Cadastro de Cliente Importador",
         "fullName": "Nome Completo",
+        "companyName": "Nome da Empresa",
         "email": "E-mail",
         "password": "Senha",
         "cnpj": "CNPJ",

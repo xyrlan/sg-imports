@@ -4,6 +4,7 @@
       "Owner": {
         "title": "Importer Client Registration",
         "fullName": "Full Name",
+        "companyName": "Company Name",
         "email": "Email",
         "password": "Password",
         "cnpj": "CNPJ",
