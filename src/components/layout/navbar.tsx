@@ -88,9 +88,11 @@ export function Navbar() {
             orientation="vertical"
           />
 
-          <div className="hidden sm:flex">
-            <NavbarOrganizationSelect />
-          </div>
+          {userRole === 'OWNER' && (
+            <div className="hidden sm:flex">
+              <NavbarOrganizationSelect />
+            </div>
+          )}
         </div>
 
         {/* Right Content - Navigation Links */}

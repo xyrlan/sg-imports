@@ -65,9 +65,7 @@ export function OrganizationProvider({ children, initialData }: OrganizationProv
           isLoading: false,
         });
       }
-      
-      // Trigger a full page refresh to ensure server components update
-      window.location.reload();
+      // Caller should invoke router.refresh() to revalidate server components
     } catch (error) {
       console.error('Failed to switch organization:', error);
       setState(prev => ({ ...prev, isLoading: false }));

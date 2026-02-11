@@ -13,7 +13,7 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 - **Runtime:** Bun (Always use `bun` commands).
 - **Frontend:** Next.js 16 (App Router) + React 19 (Server Components by default).
 - **UI:** Hero UI 3.0.0 (@heroui/react) for ALL components, but use the components of `src/components/ui/*.tsx`.
-- **Hero UI Table Limitation:** Hero UI v3 beta 6 lacks a native Table component. Use the custom wrapper `src/components/ui/data-table.tsx`. If a table is needed, implement it with native HTML tags + Tailwind classes or @tanstack/react-table.
+- **Hero UI Table Limitation:** Hero UI v3 beta 6 lacks a native Table component.
 - **Database:** PostgreSQL (Supabase) + Drizzle ORM (`postgres.js` driver).
 - **Workflows:** Inngest for durable execution and complex sagas.
 
@@ -24,7 +24,6 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 - **Clean Code:** Use descriptive variable names (e.g., `isShipmentOverdue` instead of `check`). Avoid deeply nested conditionals (use early returns).
 - **DRY (Don't Repeat Yourself):** Abstract shared logic into `@/src/hooks` or `@/src/lib/utils`.
 - **Props Typing:** Strictly type all component props using TypeScript interfaces.
-- **UI Consistency:** Always check `src/components/ui` for existing components before creating new ones to maintain design system integrity.
 
 ## 📝 Coding Standards & Architecture
 

@@ -72,6 +72,7 @@ export interface UpdateOrganizationData {
   stateRegistry?: string;
   billingAddressId?: string;
   deliveryAddressId?: string;
+  socialContractUrl?: string;
 }
 
 /**
@@ -105,6 +106,65 @@ export async function updateOrganization(
     .returning();
 
   return updatedOrg || null;
+}
+
+export interface CreateOrganizationForOwnerInput {
+  name: string;
+  document: string; // CNPJ (14 digits, no formatting)
+}
+
+/**
+ * Create a new organization and add the current user as OWNER
+ * Only users who already have at least one organization with OWNER role can use this
+ * @param userId - Profile ID from Supabase Auth
+ * @param data - Organization name and CNPJ
+ * @returns Created organization or null if user is not OWNER somewhere or CNPJ already exists
+ */
+export async function createOrganizationForOwner(
+  userId: string,
+  data: CreateOrganizationForOwnerInput
+): Promise<{ organization: Organization } | { error: string }> {
+  // Verify user has OWNER role in at least one organization
+  const userOrgs = await getUserOrganizations(userId);
+  const hasOwnerRole = userOrgs.some((org) => org.role === 'OWNER');
+  if (!hasOwnerRole) {
+    return { error: 'Apenas proprietários podem criar novas organizações' };
+  }
+
+  // Check CNPJ uniqueness
+  const [existingOrg] = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.document, data.document))
+    .limit(1);
+
+  if (existingOrg) {
+    return { error: 'Este CNPJ já está cadastrado no sistema' };
+  }
+
+  // Create organization and membership in transaction
+  const [newOrg] = await db
+    .insert(organizations)
+    .values({
+      name: data.name,
+      document: data.document,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  if (!newOrg) {
+    return { error: 'Erro ao criar organização' };
+  }
+
+  await db.insert(memberships).values({
+    organizationId: newOrg.id,
+    profileId: userId,
+    role: 'OWNER',
+    createdAt: new Date(),
+  });
+
+  return { organization: newOrg };
 }
 
 /**

@@ -46,3 +46,30 @@ export async function clearOrganizationCookie() {
   cookieStore.delete(COOKIE_NAME);
   revalidatePath('/', 'layout');
 }
+
+/**
+ * Switch to organization and redirect to onboarding
+ * Used for "Completar cadastro" button - sets cookie and redirects
+ * Server Action: receives formData with organizationId
+ */
+export async function completeOrganizationRegistration(formData: FormData) {
+  const organizationId = formData.get('organizationId') as string;
+  if (!organizationId) return;
+
+  const { requireAuth } = await import('@/services/auth.service');
+  const { getOrganizationById } = await import(
+    '@/services/organization.service'
+  );
+  const { redirect: nextRedirect } = await import('next/navigation');
+
+  const user = await requireAuth();
+  const orgData = await getOrganizationById(organizationId, user.id);
+
+  if (!orgData) {
+    nextRedirect('/dashboard/profile');
+    return;
+  }
+
+  await setOrganizationCookie(organizationId);
+  nextRedirect('/onboarding');
+}

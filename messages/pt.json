@@ -123,8 +123,69 @@
   },
   "Organization": {
     "select": "Selecionar Organização",
+    "createNew": "Criar nova organização",
     "noOrganizations": "Nenhuma organização encontrada",
+    "CreateNew": {
+      "title": "Cadastrar Nova Empresa",
+      "description": "Adicione uma nova organização à sua conta. Você será redirecionado para completar o cadastro após a criação.",
+      "companyName": "Nome da Empresa",
+      "companyNamePlaceholder": "Empresa XYZ LTDA",
+      "cnpj": "CNPJ",
+      "cnpjPlaceholder": "00.000.000/0000-00",
+      "submit": "Criar e Configurar",
+      "submitting": "Criando...",
+      "backToDashboard": "Voltar ao Dashboard"
+    },
     "switchSuccess": "Organização alterada com sucesso",
+    "role": {
+      "OWNER": "Proprietário",
+      "ADMIN": "Administrador",
+      "ADMIN_EMPLOYEE": "Funcionário Admin",
+      "SELLER": "Vendedor",
+      "CUSTOMS_BROKER": "Despachante Aduaneiro",
+      "VIEWER": "Visualizador"
+    }
+  },
+  "OrganizationEdit": {
+    "title": "Editar Organização",
+    "backToProfile": "Voltar ao Perfil",
+    "name": "Razão Social",
+    "document": "CNPJ",
+    "tradeName": "Nome Fantasia",
+    "tradeNamePlaceholder": "Nome comercial da empresa",
+    "stateRegistry": "Inscrição Estadual",
+    "stateRegistryPlaceholder": "000.000.000.000 (opcional)",
+    "taxRegime": "Regime Tributário",
+    "taxRegimePlaceholder": "Selecione o regime",
+    "email": "E-mail",
+    "emailPlaceholder": "contato@empresa.com.br",
+    "phone": "Telefone",
+    "phonePlaceholder": "(00) 0000-0000",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "cancel": "Cancelar"
+  },
+  "ProfilePage": {
+    "title": "Meu Perfil",
+    "personalData": "Dados Pessoais",
+    "fullName": "Nome Completo",
+    "fullNamePlaceholder": "João Silva",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "phonePlaceholder": "(00) 00000-0000",
+    "documents": "Documentos",
+    "documentPhoto": "Documento de Identidade",
+    "addressProof": "Comprovante de Endereço",
+    "uploaded": "Enviado",
+    "pending": "Pendente",
+    "organizations": "Minhas Organizações",
+    "organizationsCount": "Você tem acesso a {count} organização(ões)",
+    "registrationComplete": "Cadastro completo",
+    "registrationPending": "Cadastro pendente",
+    "edit": "Editar",
+    "completeRegistration": "Completar cadastro",
+    "save": "Salvar",
+    "saving": "Salvando...",
     "role": {
       "OWNER": "Proprietário",
       "ADMIN": "Administrador",
@@ -186,6 +247,9 @@
     "Step2": {
       "title": "Endereço",
       "description": "Informe o endereço de faturamento e entrega",
+      "descriptionSeller": "Informe o endereço da sua loja",
+      "billingTitle": "Endereço de faturamento",
+      "deliveryTitle": "Endereço de entrega",
       "postalCode": "CEP",
       "postalCodePlaceholder": "00000-000",
       "fetchCEP": "Buscar CEP",
@@ -222,6 +286,23 @@
       "useDefaults": "Usar valores padrão do sistema",
       "defaultsInfo": "Sistema utilizará 2.5% com mínimo de R$ 3.060,00"
     },
+    "Step4": {
+      "title": "Documentos",
+      "description": "Envie os documentos necessários para completar seu cadastro",
+      "documentPhoto": "Foto do Documento (RG ou CNH)",
+      "documentPhotoHelp": "Envie uma foto clara e legível do seu documento de identidade",
+      "addressProof": "Comprovante de Endereço",
+      "addressProofHelp": "Conta de luz, água, telefone ou extrato bancário recente (até 90 dias)",
+      "socialContract": "Contrato Social da Empresa",
+      "socialContractHelp": "Documento de constituição da empresa registrado na Junta Comercial",
+      "uploadFile": "Clique para selecionar ou arraste o arquivo",
+      "fileSelected": "Arquivo selecionado",
+      "uploading": "Enviando documentos...",
+      "uploadSuccess": "Documentos enviados com sucesso!",
+      "uploadError": "Erro ao enviar documentos. Tente novamente.",
+      "acceptedFormats": "Formatos aceitos: PDF, JPG, PNG, WebP (máx. 10MB)",
+      "uploadInfo": "Todos os documentos serão armazenados de forma segura e criptografada. Eles são necessários para validação da sua conta e conformidade regulatória."
+    },
     "Errors": {
       "requiredField": "Este campo é obrigatório",
       "invalidCEP": "CEP inválido. Use o formato 00000-000",
@@ -238,6 +319,44 @@
       "step2": "Endereço cadastrado com sucesso!",
       "step3": "Configurações salvas com sucesso!",
       "complete": "Onboarding concluído! Redirecionando..."
+    }
+  },
+  "Admin": {
+    "Sidebar": {
+      "brand": "Admin",
+      "dashboard": "Painel",
+      "management": "Gerenciamento",
+      "backToDashboard": "Voltar ao Dashboard"
+    },
+    "Management": {
+      "title": "Gerenciamento",
+      "description": "Gerencie usuários e organizações do sistema",
+      "usersTab": "Usuários",
+      "organizationsTab": "Organizações",
+      "searchUsers": "Buscar por nome, e-mail ou telefone...",
+      "searchOrganizations": "Buscar por nome, CNPJ ou e-mail...",
+      "noName": "Sem nome",
+      "columns": {
+        "name": "Nome",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "systemRole": "Papel no Sistema",
+        "createdAt": "Criado em",
+        "orgName": "Razão Social",
+        "tradeName": "Nome Fantasia",
+        "cnpj": "CNPJ",
+        "members": "Membros"
+      },
+      "roles": {
+        "superAdmin": "Super Admin",
+        "user": "Usuário"
+      },
+      "actions": {
+        "label": "Ações",
+        "view": "Visualizar",
+        "edit": "Editar",
+        "editRole": "Editar Papel"
+      }
     }
   }
 }

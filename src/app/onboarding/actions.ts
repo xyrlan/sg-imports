@@ -7,6 +7,8 @@ import { updateOrganization, getOrganizationById } from '@/services/organization
 import { createAddress, fetchAddressFromCEP, type ViaCEPResponse } from '@/services/address.service';
 import { createServiceFeeConfig, getOrCreateServiceFeeConfig } from '@/services/config.service';
 import { setOrganizationCookie, getOrganizationCookie } from '@/app/(dashboard)/actions';
+import { uploadProfileDocument, uploadOrganizationDocument } from '@/services/upload.service';
+import { updateProfile, getProfile } from '@/services/profile.service';
 import { organizationDetailsSchema, addressSchema, serviceFeeConfigSchema } from './schemas';
 
 export interface ActionState {
@@ -96,15 +98,24 @@ export async function createAddressAction(
 
     // Extract form data
     const rawData = {
+      role: (formData.get('role') as string) || undefined,
       postalCode: formData.get('postalCode') as string,
       street: formData.get('street') as string,
       number: formData.get('number') as string,
-      complement: formData.get('complement') as string || undefined,
+      complement: (formData.get('complement') as string) || undefined,
       neighborhood: formData.get('neighborhood') as string,
       city: formData.get('city') as string,
       state: formData.get('state') as string,
-      country: formData.get('country') as string || 'Brazil',
-      sameAsDelivery: formData.get('sameAsDelivery') === 'true',
+      country: (formData.get('country') as string) || 'Brazil',
+      sameAsDelivery: (formData.get('sameAsDelivery') as string) || undefined,
+      deliveryPostalCode: (formData.get('deliveryPostalCode') as string) || undefined,
+      deliveryStreet: (formData.get('deliveryStreet') as string) || undefined,
+      deliveryNumber: (formData.get('deliveryNumber') as string) || undefined,
+      deliveryComplement: (formData.get('deliveryComplement') as string) || undefined,
+      deliveryNeighborhood: (formData.get('deliveryNeighborhood') as string) || undefined,
+      deliveryCity: (formData.get('deliveryCity') as string) || undefined,
+      deliveryState: (formData.get('deliveryState') as string) || undefined,
+      deliveryCountry: (formData.get('deliveryCountry') as string) || undefined,
     };
 
     // Validate with Zod
@@ -122,13 +133,24 @@ export async function createAddressAction(
       country: validatedData.country,
     });
 
-    // Create delivery address (same as billing if checkbox is checked)
+    // Delivery address: same as billing for SELLER or when OWNER has sameAsDelivery
     let deliveryAddressId = billingAddress.id;
-    
-    if (!validatedData.sameAsDelivery) {
-      // If delivery is different, we would need another form step
-      // For now, use the same address
-      deliveryAddressId = billingAddress.id;
+    const isSeller = validatedData.role === 'SELLER';
+    const needsSeparateDelivery =
+      !isSeller && validatedData.sameAsDelivery === false && validatedData.deliveryPostalCode;
+
+    if (needsSeparateDelivery && validatedData.deliveryStreet && validatedData.deliveryNumber) {
+      const deliveryAddress = await createAddress({
+        street: validatedData.deliveryStreet,
+        number: validatedData.deliveryNumber,
+        complement: validatedData.deliveryComplement,
+        neighborhood: validatedData.deliveryNeighborhood ?? '',
+        city: validatedData.deliveryCity ?? '',
+        state: validatedData.deliveryState ?? '',
+        postalCode: validatedData.deliveryPostalCode?.replace(/\D/g, '') ?? '',
+        country: validatedData.deliveryCountry ?? 'Brazil',
+      });
+      deliveryAddressId = deliveryAddress.id;
     }
 
     // Update organization with address IDs
@@ -213,6 +235,67 @@ export async function saveServiceFeeConfig(
 }
 
 /**
+ * Server Action: Upload Documents (Step 4)
+ * Uploads profile and organization documents to Supabase Storage
+ * When profile already has documentPhoto and addressProof, only socialContract is required for non-SELLER
+ */
+export async function uploadDocumentsAction(
+  prevState: ActionState | null,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const user = await requireAuth();
+    const orgId = await getCurrentOrganizationId();
+
+    if (!orgId) {
+      return { error: 'Organização não encontrada' };
+    }
+
+    const orgData = await getOrganizationById(orgId, user.id);
+    if (!orgData) {
+      return { error: 'Organização não encontrada' };
+    }
+
+    const profile = await getProfile(user.id);
+    const profileHasDocuments = !!(
+      profile?.documentPhotoUrl &&
+      profile?.addressProofUrl
+    );
+
+    const documentPhoto = formData.get('documentPhoto') as File | null;
+    const addressProof = formData.get('addressProof') as File | null;
+    const socialContract = formData.get('socialContract') as File | null;
+
+    if (!profileHasDocuments && (!documentPhoto || !addressProof)) {
+      return { error: 'Documentos obrigatórios não fornecidos' };
+    }
+
+    if (orgData.membership.role !== 'SELLER' && !socialContract) {
+      return { error: 'Contrato social é obrigatório' };
+    }
+
+    if (!profileHasDocuments && documentPhoto && addressProof) {
+      const documentPhotoUrl = await uploadProfileDocument(documentPhoto, user.id, 'document');
+      const addressProofUrl = await uploadProfileDocument(addressProof, user.id, 'address');
+      await updateProfile(user.id, {
+        documentPhotoUrl,
+        addressProofUrl,
+      });
+    }
+
+    if (socialContract && orgData.membership.role !== 'SELLER') {
+      const socialContractUrl = await uploadOrganizationDocument(socialContract, orgId);
+      await updateOrganization(orgId, user.id, { socialContractUrl });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error uploading documents:', error);
+    return { error: 'Erro ao fazer upload dos documentos' };
+  }
+}
+
+/**
  * Server Action: Complete Onboarding
  * Finalizes onboarding and redirects to dashboard
  */
@@ -230,6 +313,17 @@ export async function completeOnboarding(): Promise<void> {
     
     if (!orgData?.organization.billingAddressId || !orgData?.organization.deliveryAddressId) {
       throw new Error('Endereço não configurado');
+    }
+
+    // Ensure profile has documents
+    const profile = await getProfile(user.id);
+    if (!profile?.documentPhotoUrl || !profile?.addressProofUrl) {
+      throw new Error('Documentos do perfil não enviados');
+    }
+
+    // Ensure organization has social contract (if not SELLER)
+    if (orgData.membership.role !== 'SELLER' && !orgData.organization.socialContractUrl) {
+      throw new Error('Contrato social não enviado');
     }
 
     // Ensure service fee config exists (create with defaults if not)

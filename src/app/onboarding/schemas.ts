@@ -14,24 +14,68 @@ export const organizationDetailsSchema = z.object({
 
 export type OrganizationDetailsData = z.infer<typeof organizationDetailsSchema>;
 
+const postalCodeSchema = z
+  .string()
+  .regex(/^\d{5}-?\d{3}$/, 'Onboarding.Errors.invalidCEP')
+  .transform((val) => val.replace(/\D/g, ''));
+
 /**
  * Schema for Step 2: Address
  * Validates Brazilian address with CEP (postal code)
+ * - SELLER: single address only
+ * - OWNER: billing + optional delivery (when sameAsDelivery is false)
  */
-export const addressSchema = z.object({
-  postalCode: z
-    .string()
-    .regex(/^\d{5}-?\d{3}$/, 'Onboarding.Errors.invalidCEP')
-    .transform((val) => val.replace(/\D/g, '')), // Remove formatting
-  street: z.string().min(3, 'Onboarding.Errors.requiredField'),
-  number: z.string().min(1, 'Onboarding.Errors.requiredField'),
-  complement: z.string().optional(),
-  neighborhood: z.string().min(2, 'Onboarding.Errors.requiredField'),
-  city: z.string().min(2, 'Onboarding.Errors.requiredField'),
-  state: z.string().length(2, 'Onboarding.Errors.invalidState'),
-  country: z.string().default('Brazil'),
-  sameAsDelivery: z.boolean().default(true).optional(),
-});
+export const addressSchema = z
+  .object({
+    role: z.string().optional(),
+    postalCode: postalCodeSchema,
+    street: z.string().min(3, 'Onboarding.Errors.requiredField'),
+    number: z.string().min(1, 'Onboarding.Errors.requiredField'),
+    complement: z.string().optional(),
+    neighborhood: z.string().min(2, 'Onboarding.Errors.requiredField'),
+    city: z.string().min(2, 'Onboarding.Errors.requiredField'),
+    state: z.string().length(2, 'Onboarding.Errors.invalidState'),
+    country: z.string().default('Brazil'),
+    sameAsDelivery: z
+      .string()
+      .optional()
+      .transform((val) => val !== 'false'),
+    // Delivery address fields (OWNER only, when sameAsDelivery is false)
+    deliveryPostalCode: z.string().optional(),
+    deliveryStreet: z.string().optional(),
+    deliveryNumber: z.string().optional(),
+    deliveryComplement: z.string().optional(),
+    deliveryNeighborhood: z.string().optional(),
+    deliveryCity: z.string().optional(),
+    deliveryState: z.string().optional(),
+    deliveryCountry: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // When OWNER and delivery is different, validate delivery fields
+    const isOwner = data.role === 'OWNER';
+    const needsDeliveryAddress = isOwner && data.sameAsDelivery === false;
+
+    if (needsDeliveryAddress) {
+      if (!data.deliveryPostalCode || !/^\d{5}-?\d{3}$/.test(data.deliveryPostalCode.replace(/\D/g, ''))) {
+        ctx.addIssue({ code: 'custom', message: 'Onboarding.Errors.invalidCEP', path: ['deliveryPostalCode'] });
+      }
+      if (!data.deliveryStreet || data.deliveryStreet.length < 3) {
+        ctx.addIssue({ code: 'custom', message: 'Onboarding.Errors.requiredField', path: ['deliveryStreet'] });
+      }
+      if (!data.deliveryNumber || data.deliveryNumber.length < 1) {
+        ctx.addIssue({ code: 'custom', message: 'Onboarding.Errors.requiredField', path: ['deliveryNumber'] });
+      }
+      if (!data.deliveryNeighborhood || data.deliveryNeighborhood.length < 2) {
+        ctx.addIssue({ code: 'custom', message: 'Onboarding.Errors.requiredField', path: ['deliveryNeighborhood'] });
+      }
+      if (!data.deliveryCity || data.deliveryCity.length < 2) {
+        ctx.addIssue({ code: 'custom', message: 'Onboarding.Errors.requiredField', path: ['deliveryCity'] });
+      }
+      if (!data.deliveryState || data.deliveryState.length !== 2) {
+        ctx.addIssue({ code: 'custom', message: 'Onboarding.Errors.invalidState', path: ['deliveryState'] });
+      }
+    }
+  });
 
 export type AddressData = z.infer<typeof addressSchema>;
 

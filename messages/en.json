@@ -54,8 +54,69 @@
   },
   "Organization": {
     "select": "Select Organization",
+    "createNew": "Create new organization",
     "noOrganizations": "No organizations found",
+    "CreateNew": {
+      "title": "Register New Company",
+      "description": "Add a new organization to your account. You will be redirected to complete the registration after creation.",
+      "companyName": "Company Name",
+      "companyNamePlaceholder": "Company XYZ LTDA",
+      "cnpj": "CNPJ",
+      "cnpjPlaceholder": "00.000.000/0000-00",
+      "submit": "Create and Configure",
+      "submitting": "Creating...",
+      "backToDashboard": "Back to Dashboard"
+    },
     "switchSuccess": "Organization switched successfully",
+    "role": {
+      "OWNER": "Owner",
+      "ADMIN": "Administrator",
+      "ADMIN_EMPLOYEE": "Admin Employee",
+      "SELLER": "Seller",
+      "CUSTOMS_BROKER": "Customs Broker",
+      "VIEWER": "Viewer"
+    }
+  },
+  "OrganizationEdit": {
+    "title": "Edit Organization",
+    "backToProfile": "Back to Profile",
+    "name": "Legal Name",
+    "document": "CNPJ",
+    "tradeName": "Trade Name",
+    "tradeNamePlaceholder": "Commercial name of the company",
+    "stateRegistry": "State Registry",
+    "stateRegistryPlaceholder": "000.000.000.000 (optional)",
+    "taxRegime": "Tax Regime",
+    "taxRegimePlaceholder": "Select the regime",
+    "email": "Email",
+    "emailPlaceholder": "contact@company.com.br",
+    "phone": "Phone",
+    "phonePlaceholder": "(00) 0000-0000",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "ProfilePage": {
+    "title": "My Profile",
+    "personalData": "Personal Data",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "John Doe",
+    "email": "Email",
+    "phone": "Phone",
+    "phonePlaceholder": "(00) 00000-0000",
+    "documents": "Documents",
+    "documentPhoto": "Identity Document",
+    "addressProof": "Address Proof",
+    "uploaded": "Uploaded",
+    "pending": "Pending",
+    "organizations": "My Organizations",
+    "organizationsCount": "You have access to {count} organization(s)",
+    "registrationComplete": "Registration complete",
+    "registrationPending": "Registration pending",
+    "edit": "Edit",
+    "completeRegistration": "Complete registration",
+    "save": "Save",
+    "saving": "Saving...",
     "role": {
       "OWNER": "Owner",
       "ADMIN": "Administrator",
@@ -83,6 +144,149 @@
         "SELLER": "Seller",
         "CUSTOMS_BROKER": "Customs Broker",
         "VIEWER": "Viewer"
+      }
+    }
+  },
+  "Onboarding": {
+    "title": "Set Up Your Organization",
+    "subtitle": "Complete the information to start using the system",
+    "step": "Step {current} of {total}",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "Step1": {
+      "title": "Company Information",
+      "description": "Enter your organization's basic information",
+      "tradeName": "Trade Name",
+      "tradeNamePlaceholder": "Company trading name",
+      "stateRegistry": "State Registry",
+      "stateRegistryPlaceholder": "000.000.000.000 (optional)",
+      "taxRegime": "Tax Regime",
+      "taxRegimePlaceholder": "Select tax regime",
+      "email": "Company Email",
+      "emailPlaceholder": "contact@company.com",
+      "phone": "Phone",
+      "phonePlaceholder": "(00) 0000-0000",
+      "taxRegimes": {
+        "SIMPLES_NACIONAL": "Simples Nacional",
+        "LUCRO_PRESUMIDO": "Presumed Profit",
+        "LUCRO_REAL": "Actual Profit"
+      }
+    },
+    "Step2": {
+      "title": "Address",
+      "description": "Enter billing and delivery address",
+      "descriptionSeller": "Enter your store address",
+      "billingTitle": "Billing address",
+      "deliveryTitle": "Delivery address",
+      "postalCode": "Postal Code",
+      "postalCodePlaceholder": "00000-000",
+      "fetchCEP": "Fetch Address",
+      "fetchingCEP": "Fetching...",
+      "street": "Street",
+      "streetPlaceholder": "Street, Avenue, etc.",
+      "number": "Number",
+      "numberPlaceholder": "000",
+      "complement": "Complement",
+      "complementPlaceholder": "Apt, Suite, etc. (optional)",
+      "neighborhood": "Neighborhood",
+      "neighborhoodPlaceholder": "Neighborhood name",
+      "city": "City",
+      "cityPlaceholder": "City name",
+      "state": "State (UF)",
+      "statePlaceholder": "SP",
+      "country": "Country",
+      "sameAsDelivery": "Delivery address is the same",
+      "cepNotFound": "Postal code not found. Please check and try again.",
+      "cepFetchError": "Error fetching address. Please fill manually."
+    },
+    "Step3": {
+      "title": "Fee Configuration",
+      "description": "Configure default service fees for your organization",
+      "percentage": "Percentage (%)",
+      "percentagePlaceholder": "2.5",
+      "percentageHelp": "Percentage applied to merchandise value",
+      "minimumValue": "Minimum Value (R$)",
+      "minimumValuePlaceholder": "3060.00",
+      "minimumValueHelp": "Minimum fee regardless of percentage",
+      "currency": "Currency",
+      "applyToChinaProducts": "Apply fee to China products",
+      "applyToChinaProductsHelp": "Uncheck if you don't want to charge fees on Chinese products",
+      "useDefaults": "Use system default values",
+      "defaultsInfo": "System will use 2.5% with minimum of R$ 3,060.00"
+    },
+    "Step4": {
+      "title": "Documents",
+      "description": "Upload required documents to complete your registration",
+      "documentPhoto": "ID Document Photo (ID or Driver's License)",
+      "documentPhotoHelp": "Upload a clear and legible photo of your identification document",
+      "addressProof": "Proof of Address",
+      "addressProofHelp": "Utility bill, bank statement, or similar document (up to 90 days old)",
+      "socialContract": "Company Articles of Association",
+      "socialContractHelp": "Company incorporation document registered with the Commercial Registry",
+      "uploadFile": "Click to select or drag and drop file",
+      "fileSelected": "File selected",
+      "uploading": "Uploading documents...",
+      "uploadSuccess": "Documents uploaded successfully!",
+      "uploadError": "Error uploading documents. Please try again.",
+      "acceptedFormats": "Accepted formats: PDF, JPG, PNG, WebP (max 10MB)",
+      "uploadInfo": "All documents will be stored securely and encrypted. They are required for account validation and regulatory compliance."
+    },
+    "Errors": {
+      "requiredField": "This field is required",
+      "invalidCEP": "Invalid postal code. Use format 00000-000",
+      "invalidEmail": "Invalid email",
+      "invalidState": "State must be 2 characters (UF)",
+      "cepFetchError": "Error fetching postal code",
+      "genericError": "An error occurred. Please try again.",
+      "organizationNotFound": "Organization not found",
+      "addressCreationError": "Error creating address",
+      "configSaveError": "Error saving configuration"
+    },
+    "Success": {
+      "step1": "Company information saved successfully!",
+      "step2": "Address registered successfully!",
+      "step3": "Configuration saved successfully!",
+      "complete": "Onboarding completed! Redirecting..."
+    }
+  },
+  "Admin": {
+    "Sidebar": {
+      "brand": "Admin",
+      "dashboard": "Dashboard",
+      "management": "Management",
+      "backToDashboard": "Back to Dashboard"
+    },
+    "Management": {
+      "title": "Management",
+      "description": "Manage system users and organizations",
+      "usersTab": "Users",
+      "organizationsTab": "Organizations",
+      "searchUsers": "Search by name, email or phone...",
+      "searchOrganizations": "Search by name, CNPJ or email...",
+      "noName": "No name",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "systemRole": "System Role",
+        "createdAt": "Created At",
+        "orgName": "Legal Name",
+        "tradeName": "Trade Name",
+        "cnpj": "CNPJ",
+        "members": "Members"
+      },
+      "roles": {
+        "superAdmin": "Super Admin",
+        "user": "User"
+      },
+      "actions": {
+        "label": "Actions",
+        "view": "View",
+        "edit": "Edit",
+        "editRole": "Edit Role"
       }
     }
   }

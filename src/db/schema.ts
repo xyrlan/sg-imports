@@ -105,6 +105,9 @@ export const profiles = pgTable('profiles', {
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
   phone: text('phone'),
+  documentPhotoUrl: text('document_photo_url'),
+  addressProofUrl: text('address_proof_url'),
+  systemRole: text('system_role').$type<'USER' | 'SUPER_ADMIN' | 'SUPER_ADMIN_EMPLOYEE'>().notNull().default('USER'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -126,6 +129,9 @@ export const organizations = pgTable('organizations', {
   // Foreign Keys (Endereços)
   billingAddressId: uuid('billing_address_id'),
   deliveryAddressId: uuid('delivery_address_id'),
+
+  // Onboarding Documents
+  socialContractUrl: text('social_contract_url'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -165,6 +171,7 @@ export const hsCodes = pgTable('hs_codes', {
   ipi: decimal('ipi', { precision: 5, scale: 2 }).default('0'),
   pis: decimal('pis', { precision: 5, scale: 2 }).default('0'),
   cofins: decimal('cofins', { precision: 5, scale: 2 }).default('0'),
+  antidumping: decimal('antidumping_tax', { precision: 5, scale: 2 }).default('0'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 

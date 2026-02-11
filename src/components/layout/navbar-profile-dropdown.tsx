@@ -36,6 +36,7 @@ export function NavbarProfileDropdown() {
   };
 
   const userEmail = profile?.email || '';
+  const userFullName = profile?.fullName || '';
   const organizationName = currentOrganization?.name || t('noOrganization');
   const userRole = membership?.role || 'VIEWER';
   const initials = organizationName.charAt(0).toUpperCase() + (organizationName.charAt(1) || '').toUpperCase();
@@ -47,7 +48,7 @@ export function NavbarProfileDropdown() {
           <Avatar.Fallback>{initials}</Avatar.Fallback>
         </Avatar>
         <div className="hidden md:flex flex-col items-start">
-          <span className="text-sm font-medium">{organizationName}</span>
+          <span className="text-sm font-medium">{userFullName}</span>
           <span className="text-xs text-muted">
             {t(`role.${userRole}`)}
           </span>
@@ -57,7 +58,7 @@ export function NavbarProfileDropdown() {
       <Dropdown.Popover placement="bottom start">
         <div className="px-3 pt-3 pb-1">
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-semibold">{organizationName}</p>
+            <p className="text-sm font-semibold">{userFullName}</p>
             <p className="text-xs text-muted">{userEmail}</p>
           </div>
         </div>
