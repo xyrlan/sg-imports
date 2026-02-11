@@ -6,5 +6,5 @@ import { redirect } from 'next/navigation';
  * Will become a stats/overview page in the future.
  */
 export default function AdminPage() {
-  redirect('/admin/management');
+  redirect('/admin/users-organizations');
 }

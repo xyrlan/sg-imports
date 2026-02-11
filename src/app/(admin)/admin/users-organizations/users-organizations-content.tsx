@@ -2,19 +2,16 @@
 
 import { Tabs, Chip, Button, Dropdown, Label } from '@heroui/react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Eye, UserCog, Pencil } from 'lucide-react';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 
-import type { InferSelectModel } from 'drizzle-orm';
-import type { profiles, organizations } from '@/db/schema';
-import type { OrganizationWithMemberCount } from '@/services/admin.service';
-
-// ============================================
-// Types
-// ============================================
-
-type Profile = InferSelectModel<typeof profiles>;
+import type { Profile } from '@/services/admin/profiles.service';
+import type { OrganizationWithMemberCount } from '@/services/admin';
+import { formatCNPJ, formatDate } from '@/lib/utils';
+import Link from 'next/link';
+import { parseAsString, useQueryState } from 'nuqs';
 
 // ============================================
 // Column Definitions: Profiles
@@ -51,6 +48,7 @@ function useProfileColumns() {
     }),
     profileColumnHelper.accessor('systemRole', {
       header: t('columns.systemRole'),
+      filterFn: facetedFilterFn,
       cell: (info) => {
         const role = info.getValue();
         return (
@@ -64,6 +62,30 @@ function useProfileColumns() {
         );
       },
     }),
+    profileColumnHelper.accessor('documentPhotoUrl', {
+      header: t('columns.documentPhoto'),
+      enableSorting: false,
+      cell: (info) => (
+        <span className="text-sm text-muted">
+          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank">
+            <Eye className="size-4" />
+            <Label>{t('actions.view')}</Label>
+          </Link> : '—'}
+        </span>
+      ),
+    }),
+    profileColumnHelper.accessor('addressProofUrl', {
+      header: t('columns.addressProof'),
+      enableSorting: false,
+      cell: (info) => (
+        <span className="text-sm text-muted">
+          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank">
+            <Eye className="size-4" />
+            <Label>{t('actions.view')}</Label>
+          </Link> : '—'}
+        </span>
+      ),
+    }),
     profileColumnHelper.accessor('createdAt', {
       header: t('columns.createdAt'),
       cell: (info) => {
@@ -71,11 +93,7 @@ function useProfileColumns() {
         return (
           <span className="text-sm text-muted">
             {date
-              ? new Date(date).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })
+              ? formatDate(new Date(date ?? ''))
               : '—'}
           </span>
         );
@@ -92,6 +110,11 @@ function useProfileColumns() {
 
 function ProfileActions({ profile }: { profile: Profile }) {
   const t = useTranslations('Admin.Management');
+  const router = useRouter();
+
+  function handleAction() {
+    router.push(`/admin/users/${profile.id}`);
+  }
 
   return (
     <Dropdown>
@@ -104,7 +127,7 @@ function ProfileActions({ profile }: { profile: Profile }) {
         <MoreHorizontal className="size-4" />
       </Button>
       <Dropdown.Popover>
-        <Dropdown.Menu onAction={(key) => handleProfileAction(String(key), profile)}>
+        <Dropdown.Menu onAction={() => handleAction()}>
           <Dropdown.Item id="view" textValue={t('actions.view')}>
             <Eye className="size-4" />
             <Label>{t('actions.view')}</Label>
@@ -117,11 +140,6 @@ function ProfileActions({ profile }: { profile: Profile }) {
       </Dropdown.Popover>
     </Dropdown>
   );
-}
-
-function handleProfileAction(action: string, profile: Profile) {
-  // TODO: Implement actions (view modal, edit role modal)
-  console.log(`Action: ${action}`, profile.id);
 }
 
 // ============================================
@@ -154,13 +172,8 @@ function useOrganizationColumns() {
       enableSorting: false,
       cell: (info) => {
         const doc = info.getValue();
-        // Format CNPJ: 00.000.000/0000-00
-        const formatted = doc?.replace(
-          /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-          '$1.$2.$3/$4-$5',
-        );
         return (
-          <span className="text-sm font-mono">{formatted || doc}</span>
+          <span className="text-sm font-mono">{formatCNPJ(doc ?? '')}</span>
         );
       },
     }),
@@ -181,6 +194,28 @@ function useOrganizationColumns() {
         </Chip>
       ),
     }),
+    orgColumnHelper.accessor('orderType', {
+      header: t('columns.orderType'),
+      enableSorting: false,
+      filterFn: facetedFilterFn,
+      cell: (info) => (
+        <Chip size="sm" color={info.getValue() === 'ORDER' ? 'warning' : 'default'} variant="secondary">
+          {info.getValue() === 'ORDER' ? t('orderType.order') : t('orderType.directOrder')}
+        </Chip>
+      ),
+    }),
+    orgColumnHelper.accessor('socialContractUrl', {
+      header: t('columns.socialContract'),
+      enableSorting: false,
+      cell: (info) => (
+        <span className="text-sm text-muted">
+          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank">
+            <Eye className="size-4" />
+            <Label>{t('actions.view')}</Label>
+          </Link> : '—'}
+        </span>
+      ),
+    }),
     orgColumnHelper.accessor('createdAt', {
       header: t('columns.createdAt'),
       cell: (info) => {
@@ -188,11 +223,7 @@ function useOrganizationColumns() {
         return (
           <span className="text-sm text-muted">
             {date
-              ? new Date(date).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })
+              ? formatDate(new Date(date ?? ''))
               : '—'}
           </span>
         );
@@ -204,11 +235,17 @@ function useOrganizationColumns() {
       cell: (info) => <OrganizationActions organization={info.row.original} />,
       size: 50,
     }),
+
   ];
 }
 
 function OrganizationActions({ organization }: { organization: OrganizationWithMemberCount }) {
   const t = useTranslations('Admin.Management');
+  const router = useRouter();
+
+  function handleAction() {
+    router.push(`/admin/organizations/${organization.id}`);
+  }
 
   return (
     <Dropdown>
@@ -221,7 +258,7 @@ function OrganizationActions({ organization }: { organization: OrganizationWithM
         <MoreHorizontal className="size-4" />
       </Button>
       <Dropdown.Popover>
-        <Dropdown.Menu onAction={(key) => handleOrgAction(String(key), organization)}>
+        <Dropdown.Menu onAction={() => handleAction()}>
           <Dropdown.Item id="view" textValue={t('actions.view')}>
             <Eye className="size-4" />
             <Label>{t('actions.view')}</Label>
@@ -236,30 +273,68 @@ function OrganizationActions({ organization }: { organization: OrganizationWithM
   );
 }
 
-function handleOrgAction(action: string, organization: OrganizationWithMemberCount) {
-  // TODO: Implement actions (view details, edit organization)
-  console.log(`Action: ${action}`, organization.id);
+// ============================================
+// Main Component
+// ============================================
+
+interface UsersOrganizationsContentProps {
+  initialProfiles: Profile[];
+  initialOrganizations: OrganizationWithMemberCount[];
+}
+
+// ============================================
+// Faceted filter definitions
+// ============================================
+
+function useProfileFilters(): FacetedFilterDef[] {
+  const t = useTranslations('Admin.Management');
+
+  return [
+    {
+      columnId: 'systemRole',
+      title: t('columns.systemRole'),
+      options: [
+        { label: t('roles.superAdmin'), value: 'SUPER_ADMIN' },
+        { label: t('roles.user'), value: 'USER' },
+      ],
+    },
+  ];
+}
+
+function useOrganizationFilters(): FacetedFilterDef[] {
+  const t = useTranslations('Admin.Management');
+
+  return [
+    {
+      columnId: 'orderType',
+      title: t('columns.orderType'),
+      options: [
+        { label: t('orderType.order'), value: 'ORDER' },
+        { label: t('orderType.directOrder'), value: 'DIRECT_ORDER' },
+      ],
+    },
+  ];
 }
 
 // ============================================
 // Main Component
 // ============================================
 
-interface ManagementContentProps {
-  initialProfiles: Profile[];
-  initialOrganizations: OrganizationWithMemberCount[];
-}
-
-export function ManagementContent({
+export function UsersOrganizationsContent({
   initialProfiles,
   initialOrganizations,
-}: ManagementContentProps) {
+}: UsersOrganizationsContentProps) {
+  const [selectedTab, setSelectedTab] = useQueryState('selectedTab', {
+    defaultValue: 'users',
+  });
   const t = useTranslations('Admin.Management');
   const profileColumns = useProfileColumns();
   const organizationColumns = useOrganizationColumns();
+  const profileFilters = useProfileFilters();
+  const organizationFilters = useOrganizationFilters();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6"> 
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold">{t('title')}</h1>
@@ -267,7 +342,7 @@ export function ManagementContent({
       </div>
 
       {/* Tabs */}
-      <Tabs>
+      <Tabs selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key as string)}>
         <Tabs.ListContainer>
           <Tabs.List aria-label={t('title')}>
             <Tabs.Tab id="users">
@@ -287,6 +362,7 @@ export function ManagementContent({
             data={initialProfiles}
             searchPlaceholder={t('searchUsers')}
             enableRowSelection
+            facetedFilters={profileFilters}
           />
         </Tabs.Panel>
 
@@ -296,6 +372,7 @@ export function ManagementContent({
             data={initialOrganizations}
             searchPlaceholder={t('searchOrganizations')}
             enableRowSelection
+            facetedFilters={organizationFilters}
           />
         </Tabs.Panel>
       </Tabs>

@@ -46,10 +46,11 @@ export type ProductSnapshot = {
 // ==========================================
 // 1. ENUMS (Postgres Types)
 // ==========================================
+export const systemRoleEnum = pgEnum('system_role', ['USER', 'SUPER_ADMIN', 'SUPER_ADMIN_EMPLOYEE']);
 export const organizationRoleEnum = pgEnum('organization_role', [
   'OWNER',           // O dono da conta/empresa (Cliente principal)
-  'ADMIN',           // Super usuário (Você/Sua equipe com controle total)
-  'ADMIN_EMPLOYEE',  // Funcionário que trabalha para o Admin
+  'ADMIN',           // Administrador da empresa (Gerente, Supervisor, etc.)
+  'EMPLOYEE',  // Funcionário que trabalha para o Administrador
   'SELLER',          // Vendedor/Fornecedor (Possui o "Marketplace")
   'CUSTOMS_BROKER',  // Despachante Aduaneiro (Acesso logístico/fiscal)
   'VIEWER'           // Acesso apenas leitura
@@ -107,7 +108,7 @@ export const profiles = pgTable('profiles', {
   phone: text('phone'),
   documentPhotoUrl: text('document_photo_url'),
   addressProofUrl: text('address_proof_url'),
-  systemRole: text('system_role').$type<'USER' | 'SUPER_ADMIN' | 'SUPER_ADMIN_EMPLOYEE'>().notNull().default('USER'),
+  systemRole: systemRoleEnum('system_role').notNull().default('USER'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -1,5 +1,5 @@
-import { getAllProfiles, getAllOrganizations } from '@/services/admin.service';
-import { ManagementContent } from './management-content';
+import { getAllProfiles, getAllOrganizations } from '@/services/admin';
+import { UsersOrganizationsContent } from './users-organizations-content';
 
 /**
  * Admin Management Page - Server Component
@@ -12,7 +12,7 @@ export default async function ManagementPage() {
   ]);
 
   return (
-    <ManagementContent
+    <UsersOrganizationsContent
       initialProfiles={profilesResult.data}
       initialOrganizations={organizationsResult.data}
     />

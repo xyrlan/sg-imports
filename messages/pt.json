@@ -325,17 +325,21 @@
     "Sidebar": {
       "brand": "Admin",
       "dashboard": "Painel",
-      "management": "Gerenciamento",
+      "management": "Usuários e Organizações",
       "backToDashboard": "Voltar ao Dashboard"
     },
     "Management": {
-      "title": "Gerenciamento",
+      "title": "Usuários e Organizações",
       "description": "Gerencie usuários e organizações do sistema",
       "usersTab": "Usuários",
       "organizationsTab": "Organizações",
       "searchUsers": "Buscar por nome, e-mail ou telefone...",
       "searchOrganizations": "Buscar por nome, CNPJ ou e-mail...",
       "noName": "Sem nome",
+      "orderType": {
+        "order": "Encomenda",
+        "directOrder": "Direta"
+      },
       "columns": {
         "name": "Nome",
         "email": "E-mail",
@@ -345,7 +349,11 @@
         "orgName": "Razão Social",
         "tradeName": "Nome Fantasia",
         "cnpj": "CNPJ",
-        "members": "Membros"
+        "members": "Membros",
+        "orderType": "Tipo de Pedido",
+        "socialContract": "Contrato Social",
+        "documentPhoto": "Foto do Documento",
+        "addressProof": "Comprovante de Endereço"
       },
       "roles": {
         "superAdmin": "Super Admin",
@@ -356,6 +364,108 @@
         "view": "Visualizar",
         "edit": "Editar",
         "editRole": "Editar Papel"
+      }
+    },
+    "UserEdit": {
+      "title": "Editar Usuário",
+      "backToManagement": "Voltar ao Gerenciamento",
+      "personalData": "Dados Pessoais",
+      "email": "E-mail",
+      "fullName": "Nome Completo",
+      "fullNamePlaceholder": "Nome completo do usuário",
+      "phone": "Telefone",
+      "phonePlaceholder": "(00) 00000-0000",
+      "systemRole": "Papel no Sistema",
+      "roles": {
+        "USER": "Usuário",
+        "SUPER_ADMIN": "Super Admin",
+        "SUPER_ADMIN_EMPLOYEE": "Funcionário Super Admin"
+      },
+      "documents": "Documentos",
+      "documentPhoto": "Foto do Documento",
+      "documentPhotoHelp": "Foto clara e legível do documento de identidade",
+      "addressProof": "Comprovante de Endereço",
+      "addressProofHelp": "Conta de luz, água ou extrato bancário recente",
+      "viewDocument": "Ver documento",
+      "noDocument": "Não enviado",
+      "uploadDocument": "Enviar Documentos",
+      "replaceDocument": "Substituir documento",
+      "uploading": "Enviando...",
+      "uploadSuccess": "Documentos enviados com sucesso!",
+      "organizations": "Organizações",
+      "organizationsCount": "{count} organização(ões)",
+      "noOrganizations": "Nenhuma organização vinculada",
+      "orgRoles": {
+        "OWNER": "Proprietário",
+        "ADMIN": "Administrador",
+        "EMPLOYEE": "Funcionário",
+        "SELLER": "Vendedor",
+        "CUSTOMS_BROKER": "Despachante Aduaneiro",
+        "VIEWER": "Visualizador"
+      },
+      "createdAt": "Criado em",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "success": "Perfil atualizado com sucesso!",
+      "notFound": "Usuário não encontrado"
+    },
+    "OrganizationEdit": {
+      "title": "Editar Organização",
+      "backToManagement": "Voltar ao Gerenciamento",
+      "companyData": "Dados da Empresa",
+      "name": "Razão Social",
+      "document": "CNPJ",
+      "tradeName": "Nome Fantasia",
+      "tradeNamePlaceholder": "Nome comercial da empresa",
+      "stateRegistry": "Inscrição Estadual",
+      "stateRegistryPlaceholder": "000.000.000.000 (opcional)",
+      "taxRegime": "Regime Tributário",
+      "taxRegimePlaceholder": "Selecione o regime",
+      "email": "E-mail",
+      "emailPlaceholder": "contato@empresa.com.br",
+      "phone": "Telefone",
+      "phonePlaceholder": "(00) 0000-0000",
+      "orderType": "Tipo de Pedido",
+      "orderTypes": {
+        "ORDER": "Encomenda",
+        "DIRECT_ORDER": "Direta"
+      },
+      "minOrderValue": "Valor Mínimo do Pedido",
+      "minOrderValuePlaceholder": "0.00",
+      "addresses": "Endereços",
+      "billingAddress": "Endereço de Faturamento",
+      "deliveryAddress": "Endereço de Entrega",
+      "sameAsDelivery": "Endereço de entrega é o mesmo",
+      "saveAddress": "Salvar Endereços",
+      "addressSuccess": "Endereços atualizados com sucesso!",
+      "socialContract": "Contrato Social",
+      "viewDocument": "Ver documento",
+      "noDocument": "Não enviado",
+      "uploadSocialContract": "Enviar Contrato Social",
+      "replaceDocument": "Substituir documento",
+      "uploadDocument": "Enviar",
+      "uploading": "Enviando...",
+      "uploadSuccess": "Documento enviado com sucesso!",
+      "members": "Membros",
+      "membersCount": "{count} membro(s)",
+      "memberColumns": {
+        "name": "Nome",
+        "email": "E-mail",
+        "role": "Papel"
+      },
+      "changeRole": "Alterar Papel",
+      "createdAt": "Criado em",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "success": "Organização atualizada com sucesso!",
+      "notFound": "Organização não encontrada",
+      "roles": {
+        "OWNER": "Proprietário",
+        "ADMIN": "Administrador",
+        "EMPLOYEE": "Funcionário",
+        "SELLER": "Vendedor",
+        "CUSTOMS_BROKER": "Despachante Aduaneiro",
+        "VIEWER": "Visualizador"
       }
     }
   }

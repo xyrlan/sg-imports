@@ -28,19 +28,38 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Search,
+  X,
+  Filter,
 } from 'lucide-react';
 
 // ============================================
 // Types
 // ============================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface FacetedFilterOption {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}
+
+export interface FacetedFilterDef {
+  /** Must match a column accessor id */
+  columnId: string;
+  /** Label displayed next to the filter chips */
+  title: string;
+  /** Available discrete values to filter by */
+  options: FacetedFilterOption[];
+}
+
 export interface DataTableProps<TData> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<TData, any>[];
   data: TData[];
   searchPlaceholder?: string;
   enableRowSelection?: boolean;
   isLoading?: boolean;
+  /** Clickable faceted filters rendered in the toolbar */
+  facetedFilters?: FacetedFilterDef[];
   /** Controlled server-side pagination */
   pageCount?: number;
   manualPagination?: boolean;
@@ -49,6 +68,17 @@ export interface DataTableProps<TData> {
   /** Callback when row selection changes */
   onRowSelectionChange?: (selectedRows: TData[]) => void;
 }
+
+/**
+ * Custom filter function for faceted filters.
+ * The column filter value is an array of selected options.
+ * A row passes if its cell value is included in the array.
+ */
+export const facetedFilterFn = <TData,>(row: Row<TData>, columnId: string, filterValue: string[]) => {
+  if (!filterValue || filterValue.length === 0) return true;
+  const cellValue = String(row.getValue(columnId));
+  return filterValue.includes(cellValue);
+};
 
 // ============================================
 // Selection Column Helper
@@ -159,6 +189,123 @@ function DataTableSearch({
         placeholder={placeholder ?? 'Buscar...'}
         className="w-full rounded-lg border border-default-200 bg-default-50 py-2 pl-9 pr-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
       />
+    </div>
+  );
+}
+
+function DataTableFilterDropdown<TData>({
+  table,
+  filters,
+}: {
+  table: Table<TData>;
+  filters: FacetedFilterDef[];
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Count total active filters across all faceted filter groups
+  const activeCount = filters.reduce((acc, filter) => {
+    const col = table.getColumn(filter.columnId);
+    const val = (col?.getFilterValue() as string[] | undefined) ?? [];
+    return acc + val.length;
+  }, 0);
+
+  function toggleValue(columnId: string, value: string) {
+    const column = table.getColumn(columnId);
+    if (!column) return;
+    const current = new Set((column.getFilterValue() as string[] | undefined) ?? []);
+    if (current.has(value)) {
+      current.delete(value);
+    } else {
+      current.add(value);
+    }
+    const next = Array.from(current);
+    column.setFilterValue(next.length > 0 ? next : undefined);
+  }
+
+  function clearAll() {
+    for (const filter of filters) {
+      table.getColumn(filter.columnId)?.setFilterValue(undefined);
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors cursor-pointer select-none ${
+          activeCount > 0
+            ? 'border-accent bg-accent/10 text-accent'
+            : 'border-default-200 bg-default-50 text-muted hover:bg-default-100 hover:text-foreground'
+        }`}
+      >
+        <Filter className="size-4" />
+        {activeCount > 0 && (
+          <span className="inline-flex items-center justify-center size-5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">
+            {activeCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown panel */}
+          <div className="absolute right-0 top-full mt-2 z-50 min-w-[280px] rounded-xl border border-default-200 bg-background shadow-lg p-4 space-y-4">
+            {filters.map((filter) => {
+              const column = table.getColumn(filter.columnId);
+              const selectedValues = (column?.getFilterValue() as string[] | undefined) ?? [];
+
+              return (
+                <div key={filter.columnId} className="space-y-2">
+                  <span className="text-xs font-semibold tracking-wider text-muted">
+                    {filter.title}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {filter.options.map((option) => {
+                      const isActive = selectedValues.includes(option.value);
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => toggleValue(filter.columnId, option.value)}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer select-none border ${
+                            isActive
+                              ? 'bg-accent text-accent-foreground border-accent'
+                              : 'bg-background text-muted border-default-200 hover:bg-default-100 hover:text-foreground'
+                          }`}
+                        >
+                          {option.icon}
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Clear all button */}
+            {activeCount > 0 && (
+              <div className="pt-2 border-t border-default-200">
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <X className="size-3" />
+                  Limpar filtros
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -279,6 +426,7 @@ export function DataTable<TData>({
   searchPlaceholder,
   enableRowSelection = false,
   isLoading = false,
+  facetedFilters,
   pageCount: controlledPageCount,
   manualPagination = false,
   pagination: controlledPagination,
@@ -348,13 +496,19 @@ export function DataTable<TData>({
 
   return (
     <div className="w-full space-y-4">
-      {/* Toolbar: Search */}
-      <div className="flex items-center gap-4">
+      {/* Toolbar: Search + Filter button */}
+      <div className="flex items-center gap-2">
         <DataTableSearch
           value={globalFilter}
           onChange={setGlobalFilter}
           placeholder={searchPlaceholder}
         />
+        {facetedFilters && facetedFilters.length > 0 && (
+          <DataTableFilterDropdown
+            table={table}
+            filters={facetedFilters}
+          />
+        )}
       </div>
 
       {/* Table */}
@@ -367,7 +521,7 @@ export function DataTable<TData>({
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                      className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted"
                       style={{
                         width: header.getSize() !== 150 ? header.getSize() : undefined,
                       }}

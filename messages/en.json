@@ -256,17 +256,21 @@
     "Sidebar": {
       "brand": "Admin",
       "dashboard": "Dashboard",
-      "management": "Management",
+      "management": "Users and Organizations",
       "backToDashboard": "Back to Dashboard"
     },
     "Management": {
-      "title": "Management",
+      "title": "Users and Organizations",
       "description": "Manage system users and organizations",
       "usersTab": "Users",
       "organizationsTab": "Organizations",
       "searchUsers": "Search by name, email or phone...",
       "searchOrganizations": "Search by name, CNPJ or email...",
       "noName": "No name",
+      "orderType": {
+        "order": "Order",
+        "directOrder": "Direct"
+      },
       "columns": {
         "name": "Name",
         "email": "Email",
@@ -276,7 +280,11 @@
         "orgName": "Legal Name",
         "tradeName": "Trade Name",
         "cnpj": "CNPJ",
-        "members": "Members"
+        "members": "Members",
+        "orderType": "Order Type",
+        "socialContract": "Social Contract",
+        "documentPhoto": "Document Photo",
+        "addressProof": "Address Proof"
       },
       "roles": {
         "superAdmin": "Super Admin",
@@ -287,6 +295,108 @@
         "view": "View",
         "edit": "Edit",
         "editRole": "Edit Role"
+      }
+    },
+    "UserEdit": {
+      "title": "Edit User",
+      "backToManagement": "Back to Management",
+      "personalData": "Personal Data",
+      "email": "Email",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "User full name",
+      "phone": "Phone",
+      "phonePlaceholder": "(00) 00000-0000",
+      "systemRole": "System Role",
+      "roles": {
+        "USER": "User",
+        "SUPER_ADMIN": "Super Admin",
+        "SUPER_ADMIN_EMPLOYEE": "Super Admin Employee"
+      },
+      "documents": "Documents",
+      "documentPhoto": "Document Photo",
+      "documentPhotoHelp": "Clear and legible photo of identity document",
+      "addressProof": "Address Proof",
+      "addressProofHelp": "Utility bill, bank statement, or similar recent document",
+      "viewDocument": "View document",
+      "noDocument": "Not uploaded",
+      "uploadDocument": "Upload Documents",
+      "replaceDocument": "Replace document",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Documents uploaded successfully!",
+      "organizations": "Organizations",
+      "organizationsCount": "{count} organization(s)",
+      "noOrganizations": "No linked organizations",
+      "orgRoles": {
+        "OWNER": "Owner",
+        "ADMIN": "Administrator",
+        "EMPLOYEE": "Employee",
+        "SELLER": "Seller",
+        "CUSTOMS_BROKER": "Customs Broker",
+        "VIEWER": "Viewer"
+      },
+      "createdAt": "Created at",
+      "save": "Save",
+      "saving": "Saving...",
+      "success": "Profile updated successfully!",
+      "notFound": "User not found"
+    },
+    "OrganizationEdit": {
+      "title": "Edit Organization",
+      "backToManagement": "Back to Management",
+      "companyData": "Company Data",
+      "name": "Legal Name",
+      "document": "CNPJ",
+      "tradeName": "Trade Name",
+      "tradeNamePlaceholder": "Company trading name",
+      "stateRegistry": "State Registry",
+      "stateRegistryPlaceholder": "000.000.000.000 (optional)",
+      "taxRegime": "Tax Regime",
+      "taxRegimePlaceholder": "Select the regime",
+      "email": "Email",
+      "emailPlaceholder": "contact@company.com.br",
+      "phone": "Phone",
+      "phonePlaceholder": "(00) 0000-0000",
+      "orderType": "Order Type",
+      "orderTypes": {
+        "ORDER": "Order",
+        "DIRECT_ORDER": "Direct Order"
+      },
+      "minOrderValue": "Minimum Order Value",
+      "minOrderValuePlaceholder": "0.00",
+      "addresses": "Addresses",
+      "billingAddress": "Billing Address",
+      "deliveryAddress": "Delivery Address",
+      "sameAsDelivery": "Delivery address is the same",
+      "saveAddress": "Save Addresses",
+      "addressSuccess": "Addresses updated successfully!",
+      "socialContract": "Social Contract",
+      "viewDocument": "View document",
+      "noDocument": "Not uploaded",
+      "uploadSocialContract": "Upload Social Contract",
+      "replaceDocument": "Replace document",
+      "uploadDocument": "Upload",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Document uploaded successfully!",
+      "members": "Members",
+      "membersCount": "{count} member(s)",
+      "memberColumns": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role"
+      },
+      "changeRole": "Change Role",
+      "createdAt": "Created at",
+      "save": "Save",
+      "saving": "Saving...",
+      "success": "Organization updated successfully!",
+      "notFound": "Organization not found",
+      "roles": {
+        "OWNER": "Owner",
+        "ADMIN": "Administrator",
+        "EMPLOYEE": "Employee",
+        "SELLER": "Seller",
+        "CUSTOMS_BROKER": "Customs Broker",
+        "VIEWER": "Viewer"
       }
     }
   }

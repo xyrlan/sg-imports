@@ -30,12 +30,12 @@ export function AdminSidebar() {
     },
     {
       labelKey: 'management',
-      href: '/admin/management',
+      href: '/admin/users-organizations',
       icon: <Users className="size-5 shrink-0" />,
     },
   ];
 
-  const navClassName = `fixed z-50 left-0 top-0 h-screen py-7 flex flex-col gap-6 bg-default-100 shadow-lg transition-all duration-200 ease-in-out overflow-hidden text-nowrap ${
+  const navClassName = `fixed z-50 left-0 top-0 h-screen py-7 flex flex-col gap-6 bg-background shadow-lg transition-all duration-200 ease-in-out overflow-hidden text-nowrap ${
     isExpanded ? 'max-w-[288px] p-2' : 'max-w-[83px] p-2'
   }`;
 
