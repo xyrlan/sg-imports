@@ -34,10 +34,15 @@ export function Step1OrganizationDetails({
           <Input name="stateRegistry" placeholder={t('Step1.stateRegistryPlaceholder')} />
         </TextField>
 
-        <Select name="taxRegime" variant="primary" isDisabled={isPending}>
+        <Select
+          name="taxRegime"
+          variant="primary"
+          isDisabled={isPending}
+          placeholder={t('Step1.taxRegimePlaceholder')}
+        >
           <Label>{t('Step1.taxRegime')}</Label>
           <Select.Trigger>
-            <Select.Value>{t('Step1.taxRegimePlaceholder')}</Select.Value>
+            <Select.Value />
             <Select.Indicator />
           </Select.Trigger>
           <Select.Popover>
@@ -48,6 +53,7 @@ export function Step1OrganizationDetails({
                 textValue={t('Step1.taxRegimes.SIMPLES_NACIONAL')}
               >
                 {t('Step1.taxRegimes.SIMPLES_NACIONAL')}
+                <ListBox.ItemIndicator />
               </ListBox.Item>
               <ListBox.Item
                 key="LUCRO_PRESUMIDO"
@@ -55,10 +61,15 @@ export function Step1OrganizationDetails({
                 textValue={t('Step1.taxRegimes.LUCRO_PRESUMIDO')}
               >
                 {t('Step1.taxRegimes.LUCRO_PRESUMIDO')}
+                <ListBox.ItemIndicator />
               </ListBox.Item>
-              <ListBox.Item key="LUCRO_REAL" id="LUCRO_REAL" textValue={t('Step1.taxRegimes.LUCRO_REAL')}
+              <ListBox.Item
+                key="LUCRO_REAL"
+                id="LUCRO_REAL"
+                textValue={t('Step1.taxRegimes.LUCRO_REAL')}
               >
                 {t('Step1.taxRegimes.LUCRO_REAL')}
+                <ListBox.ItemIndicator />
               </ListBox.Item>
             </ListBox>
           </Select.Popover>

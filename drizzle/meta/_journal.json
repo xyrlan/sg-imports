@@ -15,6 +15,13 @@
       "when": 1770715045959,
       "tag": "0001_curved_mandroid",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770838937816,
+      "tag": "0002_cool_marten_broadcloak",
+      "breakpoints": true
     }
   ]
 }

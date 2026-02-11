@@ -128,7 +128,7 @@ export function OnboardingForm({
 
             {currentStep === 3 && (
               <Step3Documents
-                onSubmit={step4Action}
+                onSubmit={(formData) => startTransition(() => step4Action(formData))}
                 isPending={step4Pending}
                 error={step4State?.error}
                 onBack={() => setCurrentStep(2)}

@@ -54,8 +54,11 @@
   },
   "Organization": {
     "select": "选择组织",
+    "selectDescription": "选择要访问的组织",
     "noOrganizations": "未找到组织",
     "switchSuccess": "组织切换成功",
+    "loading": "加载中...",
+    "access": "访问",
     "role": {
       "OWNER": "所有者",
       "ADMIN": "管理员",

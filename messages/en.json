@@ -54,6 +54,7 @@
   },
   "Organization": {
     "select": "Select Organization",
+    "selectDescription": "Choose the organization you want to access",
     "createNew": "Create new organization",
     "noOrganizations": "No organizations found",
     "CreateNew": {
@@ -68,6 +69,8 @@
       "backToDashboard": "Back to Dashboard"
     },
     "switchSuccess": "Organization switched successfully",
+    "loading": "Loading...",
+    "access": "Access",
     "role": {
       "OWNER": "Owner",
       "ADMIN": "Administrator",
@@ -390,6 +393,15 @@
       "saving": "Saving...",
       "success": "Organization updated successfully!",
       "notFound": "Organization not found",
+      "feeConfig": "Service Fee Configuration",
+      "feePercentage": "Percentage (%)",
+      "feeMultiplier": "Minimum value (multiplier)",
+      "feeApplyToChina": "Apply to China products",
+      "feeNotConfigured": "No service fee configuration found. Fill in the fields to create one.",
+      "feeCreate": "Create Configuration",
+      "feeUpdate": "Update Configuration",
+      "feeSuccess": "Service fee configuration saved successfully!",
+      "feeLastUpdated": "Last updated: {date}",
       "roles": {
         "OWNER": "Owner",
         "ADMIN": "Administrator",

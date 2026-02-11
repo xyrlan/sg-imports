@@ -284,7 +284,11 @@ export async function uploadDocumentsAction(
     }
 
     if (socialContract && orgData.membership.role !== 'SELLER') {
-      const socialContractUrl = await uploadOrganizationDocument(socialContract, orgId);
+      const socialContractUrl = await uploadOrganizationDocument(
+        socialContract,
+        user.id,
+        orgId
+      );
       await updateOrganization(orgId, user.id, { socialContractUrl });
     }
 

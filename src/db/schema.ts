@@ -94,6 +94,8 @@ export const documentTypeEnum = pgEnum('document_type', [
   'ICMS_PROOF',
   'OTHER'
 ]);
+export const feeBasisEnum = pgEnum('fee_basis', ['PER_BOX', 'PER_BL', 'PER_WM', "PER_BOX"]);
+export const chargeTypeEnum = pgEnum('charge_type', ['PERCENTAGE', 'FIXED']);
 
 // ==========================================
 // 2. AUTH & ORGANIZATION
@@ -347,7 +349,7 @@ export const storageRules = pgTable('storage_rules', {
   terminalId: uuid('terminal_id').references(() => terminals.id, { onDelete: 'cascade' }).notNull(),
   type: containerTypeEnum('type').notNull(),
   currency: currencyEnum('currency').default('BRL').notNull(),
-
+  shipmentType: shipmentTypeEnum('shipment_type').default('FCL').notNull(),
   minValue: decimal('min_value', { precision: 10, scale: 2 }).default('0'),
   freeDays: integer('free_days').default(0),
 });
@@ -357,7 +359,9 @@ export const storagePeriods = pgTable('storage_periods', {
   ruleId: uuid('rule_id').references(() => storageRules.id, { onDelete: 'cascade' }).notNull(),
   daysFrom: integer('days_from').notNull(),
   daysTo: integer('days_to'), // Nullable para "até infinito"
-  dailyRate: decimal('daily_rate', { precision: 10, scale: 2 }).notNull(),
+  chargeType: chargeTypeEnum('charge_type').default('PERCENTAGE').notNull(),
+  rate: decimal('rate', { precision: 12, scale: 2 }).notNull(),
+  isDailyRate: boolean('is_daily_rate').default(true),
 });
 
 // ==========================================
@@ -444,19 +448,34 @@ export const shipmentDocuments = pgTable('shipment_documents', {
 // 9. SERVICE FEES & CONFIG (Substitui HonorarioConfig)
 // ==========================================
 
+/** Global config (singleton). Admin sets default for all organizations. */
+export const globalServiceFeeConfig = pgTable('global_service_fee_config', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  /** Brazilian minimum wage (BRL) - updated annually by Admin */
+  minimumWageBrl: decimal('minimum_wage_brl', { precision: 10, scale: 2 }).notNull().default('1530.00'),
+  /** Default multiplier: 2x, 3x, 4x salary */
+  defaultMultiplier: integer('default_multiplier').notNull().default(2),
+  /** Default percentage (e.g. 2.5) */
+  defaultPercentage: decimal('default_percentage', { precision: 5, scale: 2 }).default('2.5'),
+  /** Default: apply fee to China products */
+  defaultApplyToChina: boolean('default_apply_to_china').default(true),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/** Organization-specific override. Admin can customize multiplier, percentage, applyToChina. */
 export const serviceFeeConfigs = pgTable('service_fee_configs', {
   id: uuid('id').defaultRandom().primaryKey(),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).unique().notNull(),
-  
-  // Regras de Cobrança
-  percentage: decimal('percentage', { precision: 5, scale: 2 }).default('2.5'), // 2.5% padrão
-  minimumValue: decimal('minimum_value', { precision: 10, scale: 2 }).default('3060.00'), // R$ 3060 padrão
-  
-  currency: currencyEnum('currency').default('BRL'),
-  
-  // Flags de lógica
+
+  /** Multiplier: 2x, 3x or 4x of minimum wage. Minimum value = global.minimumWageBrl × multiplier */
+  minimumValueMultiplier: integer('minimum_value_multiplier').notNull().default(2),
+
+  /** Fee percentage (e.g. 2.5%) */
+  percentage: decimal('percentage', { precision: 5, scale: 2 }).default('2.5'),
+
+  /** Apply fee to China-origin products */
   applyToChinaProducts: boolean('apply_to_china').default(true),
-  
+
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 

@@ -47,12 +47,15 @@ export async function uploadProfileDocument(
 
 /**
  * Upload an organization document to Supabase Storage
+ * Path uses userId as first segment to satisfy RLS: (storage.foldername(name))[1] = auth.uid()
  * @param file - File to upload
+ * @param userId - User ID (must match auth.uid() for RLS)
  * @param orgId - Organization ID
  * @returns Public URL of the uploaded file
  */
 export async function uploadOrganizationDocument(
   file: File,
+  userId: string,
   orgId: string
 ): Promise<string> {
   const supabase = await createClient();
@@ -60,7 +63,7 @@ export async function uploadOrganizationDocument(
   // Get file extension
   const fileExt = file.name.split('.').pop()?.toLowerCase();
   const fileName = `social-contract-${Date.now()}.${fileExt}`;
-  const filePath = `organizations/${orgId}/${fileName}`;
+  const filePath = `${userId}/organizations/${orgId}/${fileName}`;
 
   // Convert File to ArrayBuffer for Supabase Storage
   const arrayBuffer = await file.arrayBuffer();

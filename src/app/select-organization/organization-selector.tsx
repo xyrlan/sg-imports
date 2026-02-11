@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Button, Chip } from '@heroui/react';
+import { Card, Chip } from '@heroui/react';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
 import { useTranslations } from 'next-intl';
 import type { UserOrganization } from '@/services/organization.service';
@@ -36,6 +36,15 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
     }
   };
 
+  useEffect(() => {
+    if (organizations.length !== 1) return;
+    const orgId = organizations[0].organization.id;
+    void setOrganizationCookie(orgId).then(() => {
+      router.push('/dashboard');
+      router.refresh();
+    });
+  }, [organizations, router]);
+
   const getRoleColor = (role: string): 'default' | 'success' | 'warning' | 'danger' | 'accent' => {
     switch (role) {
       case 'OWNER':
@@ -56,17 +65,30 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">{t('select')}</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Escolha a organização que deseja acessar
+          {t('selectDescription')}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {organizations.map(({ organization, role }) => (
-          <button
+        {organizations.map(({ organization, role }) => {
+          const isThisOrgLoading = isLoading && selectedOrgId === organization.id;
+          const handleClick = () => handleSelectOrganization(organization.id);
+          return (
+          <div
             key={organization.id}
-            onClick={() => handleSelectOrganization(organization.id)}
-            disabled={isLoading}
-            className={`text-left transition-all hover:scale-[1.02]`}
+            role="button"
+            tabIndex={0}
+            onClick={handleClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
+              }
+            }}
+            aria-disabled={isLoading}
+            className={`text-left transition-all hover:scale-[1.02] cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              isLoading ? 'pointer-events-none opacity-70' : ''
+            }`}
           >
             <Card variant="default" className="h-full">
               <Card.Content>
@@ -103,21 +125,18 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
                       </div>
                     )}
                     
-                    <Button
-                      fullWidth
-                      variant="primary"
-                      size="sm"
-                      isDisabled={isLoading && selectedOrgId === organization.id}
-                      className="mt-4"
-                      onPress={() => handleSelectOrganization(organization.id)}
+                    <div
+                      className="mt-4 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-accent text-accent-foreground"
+                      aria-hidden
                     >
-                      {isLoading && selectedOrgId === organization.id ? 'Carregando...' : 'Acessar'}
-                    </Button>
+                      {isThisOrgLoading ? t('loading') : t('access')}
+                    </div>
                 </div>
               </Card.Content>
             </Card>
-          </button>
-        ))}
+          </div>
+          );
+        })}
       </div>
 
       {organizations.length === 0 && (

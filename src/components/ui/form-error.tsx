@@ -7,8 +7,8 @@ export function FormError({ message, variant = 'danger' }: FormErrorProps) {
   if (!message) return null;
 
   const variantStyles = {
-    danger: 'bg-danger/10 border-danger text-danger-foreground',
-    warning: 'bg-warning/10 border-warning text-warning-foreground',
+    danger: 'bg-danger/10 border-danger text-danger',
+    warning: 'bg-warning/10 border-warning text-warning',
   };
 
   return (

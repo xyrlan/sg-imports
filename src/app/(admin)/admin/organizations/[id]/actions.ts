@@ -7,6 +7,7 @@ import { getUserProfile } from '@/services/auth.service';
 import {
   updateOrganizationAsAdmin,
   updateMembershipRole,
+  upsertServiceFeeConfig,
 } from '@/services/admin';
 import { createAddress, updateAddress, fetchAddressFromCEP } from '@/services/address.service';
 import type { ViaCEPResponse } from '@/services/address.service';
@@ -79,6 +80,11 @@ export interface UpdateMemberRoleState {
   error?: string;
 }
 
+export interface UpdateServiceFeeState {
+  success?: boolean;
+  error?: string;
+}
+
 // ============================================
 // Actions
 // ============================================
@@ -146,7 +152,7 @@ export async function uploadSocialContractAdminAction(
   formData: FormData,
 ): Promise<UploadSocialContractState> {
   try {
-    await requireSuperAdmin();
+    const user = await requireSuperAdmin();
 
     const file = formData.get('socialContract') as File | null;
     if (!file || file.size === 0) {
@@ -158,7 +164,7 @@ export async function uploadSocialContractAdminAction(
       return { error: validation.error };
     }
 
-    const url = await uploadOrganizationDocument(file, orgId);
+    const url = await uploadOrganizationDocument(file, user.id, orgId);
     await updateOrganizationAsAdmin(orgId, { socialContractUrl: url });
 
     revalidatePath('/admin/management');
@@ -316,6 +322,50 @@ export async function updateMemberRoleAdminAction(
     console.error('Error updating member role as admin:', error);
     return {
       error: error instanceof Error ? error.message : 'Erro ao atualizar papel',
+    };
+  }
+}
+
+/**
+ * Server Action: Create or update service fee configuration for an organization
+ */
+export async function updateServiceFeeAdminAction(
+  orgId: string,
+  _prevState: UpdateServiceFeeState | null,
+  formData: FormData,
+): Promise<UpdateServiceFeeState> {
+  try {
+    await requireSuperAdmin();
+
+    const percentage = (formData.get('percentage') as string) ?? '';
+    const multiplierStr = (formData.get('minimumValueMultiplier') as string) ?? '2';
+    const applyToChinaProducts = formData.get('applyToChinaProducts') === 'true';
+
+    // NumberField with formatOptions percent uses 0-1 range (0.025 = 2.5%)
+    const rawPercentage = parseFloat(percentage);
+    const parsedPercentage = rawPercentage <= 1 ? rawPercentage * 100 : rawPercentage;
+    if (isNaN(parsedPercentage) || parsedPercentage < 0 || parsedPercentage > 100) {
+      return { error: 'Porcentagem deve estar entre 0 e 100' };
+    }
+
+    // Validate multiplier (2x, 3x, 4x salary)
+    const multiplier = parseInt(multiplierStr, 10);
+    if (![2, 3, 4].includes(multiplier)) {
+      return { error: 'Multiplicador deve ser 2, 3 ou 4' };
+    }
+
+    await upsertServiceFeeConfig(orgId, {
+      percentage: parsedPercentage.toFixed(2),
+      minimumValueMultiplier: multiplier,
+      applyToChinaProducts,
+    });
+
+    revalidatePath(`/admin/organizations/${orgId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating service fee config as admin:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Erro ao atualizar configuração de honorários',
     };
   }
 }

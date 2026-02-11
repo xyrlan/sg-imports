@@ -7,6 +7,7 @@ import {
   TextField,
   Input,
   Label,
+  NumberField,
   Select,
   ListBox,
   Button,
@@ -22,18 +23,20 @@ import {
   Upload,
   MapPin,
   Search,
+  Receipt,
 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { FileUpload } from '@/components/ui/file-upload';
 import { useTranslations } from 'next-intl';
 import { formatDate, formatCNPJ } from '@/lib/utils';
-import type { OrganizationMember, OrganizationAddress } from '@/services/admin';
+import type { OrganizationMember, OrganizationAddress, ServiceFeeConfig } from '@/services/admin';
 
 import {
   updateOrganizationAdminAction,
   uploadSocialContractAdminAction,
   updateOrganizationAddressAdminAction,
   updateMemberRoleAdminAction,
+  updateServiceFeeAdminAction,
   fetchCEPDataAdmin,
 } from './actions';
 
@@ -61,6 +64,7 @@ interface OrganizationEditFormProps {
     createdAt: Date;
   };
   members: OrganizationMember[];
+  feeConfig: ServiceFeeConfig | null;
 }
 
 const ORG_ROLES = ['OWNER', 'ADMIN', 'EMPLOYEE', 'SELLER', 'CUSTOMS_BROKER', 'VIEWER'] as const;
@@ -72,6 +76,7 @@ const ORG_ROLES = ['OWNER', 'ADMIN', 'EMPLOYEE', 'SELLER', 'CUSTOMS_BROKER', 'VI
 export function OrganizationEditForm({
   organization,
   members,
+  feeConfig,
 }: OrganizationEditFormProps) {
   const t = useTranslations('Admin.OrganizationEdit');
   const tOnboarding = useTranslations('Onboarding');
@@ -95,7 +100,14 @@ export function OrganizationEditForm({
     null,
   );
 
+  // Service fee config form
+  const [feeState, feeFormAction, isFeeSaving] = useActionState(
+    updateServiceFeeAdminAction.bind(null, organization.id),
+    null,
+  );
+
   const [socialContractFile, setSocialContractFile] = useState<File | null>(null);
+  const [applyToChina, setApplyToChina] = useState(feeConfig?.applyToChinaProducts ?? true);
 
   // "Same as billing" checkbox
   const isSameAddress = organization.billingAddressId === organization.deliveryAddressId && !!organization.billingAddressId;
@@ -106,10 +118,10 @@ export function OrganizationEditForm({
   const [deliveryCepLoading, setDeliveryCepLoading] = useState(false);
 
   useEffect(() => {
-    if (state?.success || uploadState?.success || addressState?.success) {
+    if (state?.success || uploadState?.success || addressState?.success || feeState?.success) {
       router.refresh();
     }
-  }, [state?.success, uploadState?.success, addressState?.success, router]);
+  }, [state?.success, uploadState?.success, addressState?.success, feeState?.success, router]);
 
   async function handleCepFetch(prefix: 'billing' | 'delivery', cep: string) {
     const setLoading = prefix === 'billing' ? setBillingCepLoading : setDeliveryCepLoading;
@@ -169,6 +181,11 @@ export function OrganizationEditForm({
       {addressState?.success && (
         <div className="p-3 border rounded-lg bg-success/10 border-success text-success-foreground">
           <p className="text-sm">{t('addressSuccess')}</p>
+        </div>
+      )}
+      {feeState?.success && (
+        <div className="p-3 border rounded-lg bg-success/10 border-success text-success-foreground">
+          <p className="text-sm">{t('feeSuccess')}</p>
         </div>
       )}
 
@@ -384,6 +401,98 @@ export function OrganizationEditForm({
                   <Upload className="size-4" />
                   {isUploading ? t('uploading') : t('uploadDocument')}
                 </Button>
+              </form>
+            </Card.Content>
+          </Card>
+
+          {/* Service Fee Configuration */}
+          <Card variant="default">
+            <Card.Header>
+              <div className="flex items-center gap-2">
+                <Receipt className="size-5" />
+                <Card.Title>{t('feeConfig')}</Card.Title>
+              </div>
+              {feeConfig && (
+                <p className="text-xs text-muted mt-1">
+                  {t('feeLastUpdated', { date: formatDate(new Date(feeConfig.updatedAt)) })}
+                </p>
+              )}
+            </Card.Header>
+            <Card.Content>
+              <form action={feeFormAction} className="space-y-4">
+                <FormError message={feeState?.error} variant="danger" />
+
+                <input type="hidden" name="applyToChinaProducts" value={applyToChina ? 'true' : 'false'} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <NumberField
+                    variant="primary"
+                    isDisabled={isFeeSaving}
+                    name="percentage"
+                    defaultValue={parseFloat(feeConfig?.percentage ?? '2.5') / 100}
+                    minValue={0}
+                    maxValue={1}
+                    step={0.001}
+                    formatOptions={{ style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 2 }}
+                  >
+                    <Label>{t('feePercentage')}</Label>
+                    <NumberField.Group>
+                      <NumberField.DecrementButton />
+                      <NumberField.Input className="min-w-0 flex-1" />
+                      <NumberField.IncrementButton />
+                    </NumberField.Group>
+                  </NumberField>
+
+                  <Select
+                    name="minimumValueMultiplier"
+                    variant="primary"
+                    isDisabled={isFeeSaving}
+                    defaultSelectedKey={String(feeConfig?.minimumValueMultiplier ?? 2)}
+                  >
+                    <Label>{t('feeMultiplier')}</Label>
+                    <Select.Trigger>
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox>
+                        <ListBox.Item key="2" id="2" textValue="2× salário mínimo">
+                          2× salário mínimo
+                        </ListBox.Item>
+                        <ListBox.Item key="3" id="3" textValue="3× salário mínimo">
+                          3× salário mínimo
+                        </ListBox.Item>
+                        <ListBox.Item key="4" id="4" textValue="4× salário mínimo">
+                          4× salário mínimo
+                        </ListBox.Item>
+                      </ListBox>
+                    </Select.Popover>
+                  </Select>
+                </div>
+
+                <Checkbox
+                  isSelected={applyToChina}
+                  onChange={setApplyToChina}
+                >
+                  <Checkbox.Control>
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                  <Checkbox.Content>
+                    <Label>{t('feeApplyToChina')}</Label>
+                  </Checkbox.Content>
+                </Checkbox>
+
+                {!feeConfig && (
+                  <div className="p-3 rounded-lg bg-warning/10 border border-warning text-sm text-warning-foreground">
+                    {t('feeNotConfigured')}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <Button type="submit" variant="primary" isDisabled={isFeeSaving}>
+                    {isFeeSaving ? t('saving') : (feeConfig ? t('feeUpdate') : t('feeCreate'))}
+                  </Button>
+                </div>
               </form>
             </Card.Content>
           </Card>

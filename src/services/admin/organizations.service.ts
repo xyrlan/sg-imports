@@ -1,8 +1,10 @@
 import { db } from '@/db';
-import { organizations, memberships, profiles } from '@/db/schema';
+import { organizations, memberships, profiles, serviceFeeConfigs } from '@/db/schema';
 import { eq, ilike, or, sql, desc, asc, type AnyColumn } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import { type AdminQueryParams, type PaginatedResult, buildPaginatedResult } from './types';
+
+export type ServiceFeeConfig = InferSelectModel<typeof serviceFeeConfigs>;
 
 type Organization = InferSelectModel<typeof organizations>;
 
@@ -217,4 +219,49 @@ export async function updateMembershipRole(
     )
     .returning();
   return result.length > 0;
+}
+
+// ============================================
+// Service Fee Config
+// ============================================
+
+/**
+ * Fetch the service fee configuration for an organization.
+ */
+export async function getServiceFeeConfig(orgId: string): Promise<ServiceFeeConfig | null> {
+  const result = await db.query.serviceFeeConfigs.findFirst({
+    where: eq(serviceFeeConfigs.organizationId, orgId),
+  });
+  return result ?? null;
+}
+
+export interface UpsertServiceFeeData {
+  percentage?: string;
+  minimumValueMultiplier?: number;
+  applyToChinaProducts?: boolean;
+}
+
+/**
+ * Create or update the service fee config for an organization.
+ */
+export async function upsertServiceFeeConfig(
+  orgId: string,
+  data: UpsertServiceFeeData,
+): Promise<ServiceFeeConfig> {
+  const [result] = await db
+    .insert(serviceFeeConfigs)
+    .values({
+      organizationId: orgId,
+      ...data,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: serviceFeeConfigs.organizationId,
+      set: {
+        ...data,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+  return result;
 }

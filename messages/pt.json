@@ -35,7 +35,8 @@
       "submit": "Entrar",
       "noAccount": "Não tem uma conta?",
       "registerOwner": "Cadastrar como Cliente",
-      "registerSeller": "Cadastrar como Vendedor"
+      "registerSeller": "Cadastrar como Vendedor",
+      "submitting": "Entrando..."
     },
     "VerifyEmail": {
       "title": "Verifique seu e-mail",
@@ -123,6 +124,7 @@
   },
   "Organization": {
     "select": "Selecionar Organização",
+    "selectDescription": "Escolha a organização que deseja acessar",
     "createNew": "Criar nova organização",
     "noOrganizations": "Nenhuma organização encontrada",
     "CreateNew": {
@@ -137,6 +139,8 @@
       "backToDashboard": "Voltar ao Dashboard"
     },
     "switchSuccess": "Organização alterada com sucesso",
+    "loading": "Carregando...",
+    "access": "Acessar",
     "role": {
       "OWNER": "Proprietário",
       "ADMIN": "Administrador",
@@ -459,6 +463,15 @@
       "saving": "Salvando...",
       "success": "Organização atualizada com sucesso!",
       "notFound": "Organização não encontrada",
+      "feeConfig": "Configuração de Honorários",
+      "feePercentage": "Percentual (%)",
+      "feeMultiplier": "Valor mínimo (multiplicador)",
+      "feeApplyToChina": "Aplicar a produtos da China",
+      "feeNotConfigured": "Nenhuma configuração de honorários registrada. Preencha os campos para criar.",
+      "feeCreate": "Criar Configuração",
+      "feeUpdate": "Atualizar Configuração",
+      "feeSuccess": "Configuração de honorários salva com sucesso!",
+      "feeLastUpdated": "Última atualização: {date}",
       "roles": {
         "OWNER": "Proprietário",
         "ADMIN": "Administrador",

@@ -32,6 +32,7 @@ export function NavbarOrganizationSelect() {
         router.refresh();
       } catch (error) {
         console.error('Failed to switch organization:', error);
+      } finally {
         setIsSwitching(false);
       }
     }
@@ -41,7 +42,7 @@ export function NavbarOrganizationSelect() {
     <div className="flex items-center gap-1">
       <Select
         aria-label={t('select')}
-        className="w-48"
+        className="max-w-64"
         defaultValue={currentOrganization?.id}
         isDisabled={isLoading || isSwitching}
         placeholder={t('select')}
