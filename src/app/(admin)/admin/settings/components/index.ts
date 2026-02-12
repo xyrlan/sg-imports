@@ -3,3 +3,6 @@ export type { SettingsSection } from './settings-sidebar';
 export { HonorariosSection } from './honorarios-section';
 export { ImpostosTaxasSection } from './impostos-taxas-section';
 export { TerminalsSection } from './terminals-section';
+export { PortsSection } from './ports-section';
+export { CarriersSection } from './carriers-section';
+export { CurrencyExchangeBrokersSection } from './currency-exchange-brokers-section';

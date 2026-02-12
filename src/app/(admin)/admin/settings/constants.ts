@@ -13,7 +13,14 @@ export const RATE_TYPES = [
   'CONTAINER_WASHING',
 ] as const;
 
-export const SECTION_KEYS = ['honorarios', 'impostos-taxas', 'terminals'] as const;
+export const SECTION_KEYS = [
+  'honorarios',
+  'impostos-taxas',
+  'terminals',
+  'ports',
+  'carriers',
+  'currency-exchange-brokers',
+] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];
 

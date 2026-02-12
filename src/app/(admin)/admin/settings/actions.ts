@@ -11,6 +11,13 @@ import {
   createTerminal,
   updateTerminal,
   deleteTerminal,
+  createPort,
+  updatePort,
+  deletePort,
+  syncCarriersFromShipsGo,
+  createCurrencyExchangeBroker,
+  updateCurrencyExchangeBroker,
+  deleteCurrencyExchangeBroker,
 } from '@/services/admin';
 import { z } from 'zod';
 import { RATE_TYPES } from './constants';
@@ -220,6 +227,152 @@ export async function deleteTerminalAction(id: string) {
     await deleteTerminal(id);
     revalidatePath('/admin/settings');
     revalidatePath('/admin/settings/terminals');
+    return { ok: true };
+  } catch {
+    return { error: 'Erro ao excluir', ok: false };
+  }
+}
+
+// ============================================
+// Ports
+// ============================================
+
+const portSchema = z.object({
+  name: z.string().min(1),
+  code: z.string().min(1),
+  country: z.string().min(1),
+});
+
+export async function createPortAction(prev: unknown, formData: FormData) {
+  try {
+    await requireSuperAdmin();
+    const parsed = portSchema.safeParse({
+      name: formData.get('name'),
+      code: formData.get('code'),
+      country: formData.get('country'),
+    });
+    if (!parsed.success) {
+      return { error: 'Dados inválidos', ok: false };
+    }
+    await createPort(parsed.data);
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch {
+    return { error: 'Erro ao criar', ok: false };
+  }
+}
+
+export async function updatePortAction(
+  id: string,
+  prev: unknown,
+  formData: FormData,
+) {
+  try {
+    await requireSuperAdmin();
+    const parsed = portSchema.safeParse({
+      name: formData.get('name'),
+      code: formData.get('code'),
+      country: formData.get('country'),
+    });
+    if (!parsed.success) {
+      return { error: 'Dados inválidos', ok: false };
+    }
+    await updatePort(id, parsed.data);
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch {
+    return { error: 'Erro ao atualizar', ok: false };
+  }
+}
+
+export async function deletePortAction(id: string) {
+  try {
+    await requireSuperAdmin();
+    await deletePort(id);
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch {
+    return { error: 'Erro ao excluir', ok: false };
+  }
+}
+
+// ============================================
+// Carriers (ShipsGo sync)
+// ============================================
+
+export async function syncCarriersFromShipsGoAction() {
+  try {
+    await requireSuperAdmin();
+    const result = await syncCarriersFromShipsGo();
+    revalidatePath('/admin/settings');
+    return {
+      ok: true,
+      inserted: result.inserted,
+      updated: result.updated,
+      errors: result.errors,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Erro ao sincronizar',
+    };
+  }
+}
+
+// ============================================
+// Currency Exchange Brokers (corretoras de câmbio)
+// ============================================
+
+const currencyExchangeBrokerSchema = z.object({
+  name: z.string().min(1),
+});
+
+export async function createCurrencyExchangeBrokerAction(
+  prev: unknown,
+  formData: FormData,
+) {
+  try {
+    await requireSuperAdmin();
+    const parsed = currencyExchangeBrokerSchema.safeParse({
+      name: formData.get('name'),
+    });
+    if (!parsed.success) {
+      return { error: 'Dados inválidos', ok: false };
+    }
+    await createCurrencyExchangeBroker(parsed.data);
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch {
+    return { error: 'Erro ao criar', ok: false };
+  }
+}
+
+export async function updateCurrencyExchangeBrokerAction(
+  id: string,
+  prev: unknown,
+  formData: FormData,
+) {
+  try {
+    await requireSuperAdmin();
+    const parsed = currencyExchangeBrokerSchema.safeParse({
+      name: formData.get('name'),
+    });
+    if (!parsed.success) {
+      return { error: 'Dados inválidos', ok: false };
+    }
+    await updateCurrencyExchangeBroker(id, parsed.data);
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch {
+    return { error: 'Erro ao atualizar', ok: false };
+  }
+}
+
+export async function deleteCurrencyExchangeBrokerAction(id: string) {
+  try {
+    await requireSuperAdmin();
+    await deleteCurrencyExchangeBroker(id);
+    revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
     return { error: 'Erro ao excluir', ok: false };

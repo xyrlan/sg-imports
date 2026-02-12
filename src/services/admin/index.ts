@@ -70,6 +70,38 @@ export {
   type UpsertGlobalPlatformRateData,
 } from './config.service';
 
+// Ports
+export {
+  getAllPorts,
+  getPortById,
+  createPort,
+  updatePort,
+  deletePort,
+  type Port,
+  type CreatePortData,
+  type UpdatePortData,
+} from './ports.service';
+
+// Carriers (synced from ShipsGo)
+export {
+  getAllCarriers,
+  getCarrierById,
+  syncCarriersFromShipsGo,
+  type Carrier,
+} from './carriers.service';
+
+// Currency Exchange Brokers (corretoras de câmbio)
+export {
+  getAllCurrencyExchangeBrokers,
+  getCurrencyExchangeBrokerById,
+  createCurrencyExchangeBroker,
+  updateCurrencyExchangeBroker,
+  deleteCurrencyExchangeBroker,
+  type CurrencyExchangeBroker,
+  type CreateCurrencyExchangeBrokerData,
+  type UpdateCurrencyExchangeBrokerData,
+} from './currency-exchange-brokers.service';
+
 // Terminals & storage rules
 export {
   getAllTerminals,
@@ -81,6 +113,10 @@ export {
   createStorageRule,
   updateStorageRule,
   deleteStorageRule,
+  findStorageRuleConflict,
+  createStorageRuleWithPeriods,
+  updateStorageRuleWithPeriods,
+  duplicateStorageRule,
   createStoragePeriod,
   updateStoragePeriod,
   deleteStoragePeriod,
@@ -92,4 +128,6 @@ export {
   type UpdateTerminalData,
   type UpsertStorageRuleData,
   type UpsertStoragePeriodData,
+  type CreateStorageRuleWithPeriodsData,
+  type ContainerType,
 } from './terminals.service';

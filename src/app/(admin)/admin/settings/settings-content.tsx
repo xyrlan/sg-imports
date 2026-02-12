@@ -1,15 +1,34 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { DollarSign, Receipt, Terminal as TerminalIcon } from 'lucide-react';
+import {
+  Anchor,
+  Building2,
+  DollarSign,
+  Landmark,
+  Receipt,
+  Ship,
+} from 'lucide-react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
-import type { GlobalServiceFeeConfig, StateIcmsRate, SiscomexFeeConfig, GlobalPlatformRate, Terminal } from '@/services/admin';
+import type {
+  GlobalServiceFeeConfig,
+  StateIcmsRate,
+  SiscomexFeeConfig,
+  GlobalPlatformRate,
+  Terminal,
+  Port,
+  Carrier,
+  CurrencyExchangeBroker,
+} from '@/services/admin';
 import { SECTION_KEYS, type SectionKey } from './constants';
 import {
   SettingsSidebar,
   HonorariosSection,
   ImpostosTaxasSection,
   TerminalsSection,
+  PortsSection,
+  CarriersSection,
+  CurrencyExchangeBrokersSection,
 } from './components';
 
 interface SettingsContentProps {
@@ -18,6 +37,9 @@ interface SettingsContentProps {
   siscomexFee: SiscomexFeeConfig | null;
   platformRates: GlobalPlatformRate[];
   terminals: Terminal[];
+  ports: Port[];
+  carriers: Carrier[];
+  currencyExchangeBrokers: CurrencyExchangeBroker[];
 }
 
 export function SettingsContent({
@@ -26,6 +48,9 @@ export function SettingsContent({
   siscomexFee,
   platformRates,
   terminals,
+  ports,
+  carriers,
+  currencyExchangeBrokers,
 }: SettingsContentProps) {
   const t = useTranslations('Admin.Settings');
   const [activeSection, setActiveSection] = useQueryState(
@@ -49,21 +74,44 @@ export function SettingsContent({
     {
       key: 'terminals' as const,
       label: t('terminals'),
-      icon: <TerminalIcon size={16} />,
+      icon: <Building2 size={16} />,
       description: t('terminalsDescription'),
     },
+    {
+      key: 'ports' as const,
+      label: t('ports'),
+      icon: <Anchor size={16} />,
+      description: t('portsDescription'),
+    },
+    {
+      key: 'carriers' as const,
+      label: t('carriers'),
+      icon: <Ship size={16} />,
+      description: t('carriersDescription'),
+    },
+    {
+      key: 'currency-exchange-brokers' as const,
+      label: t('currencyExchangeBrokers'),
+      icon: <Landmark size={16} />,
+      description: t('currencyExchangeBrokersDescription'),
+    },
   ];
-  
 
   const sectionContent: Record<SectionKey, React.ReactNode> = {
-    'honorarios': <HonorariosSection honorarios={honorarios} />,
-    'impostos-taxas': 
+    honorarios: <HonorariosSection honorarios={honorarios} />,
+    'impostos-taxas': (
       <ImpostosTaxasSection
         stateIcmsRates={stateIcmsRates}
         siscomexFee={siscomexFee}
         platformRates={platformRates}
-      />,
-    'terminals': <TerminalsSection terminals={terminals} />,
+      />
+    ),
+    terminals: <TerminalsSection terminals={terminals} />,
+    ports: <PortsSection ports={ports} />,
+    carriers: <CarriersSection carriers={carriers} />,
+    'currency-exchange-brokers': (
+      <CurrencyExchangeBrokersSection brokers={currencyExchangeBrokers} />
+    ),
   };
 
   return (

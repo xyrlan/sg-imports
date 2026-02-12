@@ -1,81 +1,41 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useRouter } from 'next/navigation';
 import NextLink from 'next/link';
-import { TextField, Input, Label, Button, Card } from '@heroui/react';
+import { Link } from '@heroui/react';
 import { ArrowLeft } from 'lucide-react';
-import { FormError } from '@/components/ui/form-error';
 import { useTranslations } from 'next-intl';
-import { updateTerminalAction } from '../../actions';
+import { StorageRulesSection } from './components';
 import type { TerminalWithRules } from '@/services/admin';
 
 interface TerminalEditFormProps {
   terminal: TerminalWithRules;
+  onBack?: () => void;
+  onRefresh?: () => void;
 }
 
-export function TerminalEditForm({ terminal }: TerminalEditFormProps) {
+export function TerminalEditForm({ terminal, onBack, onRefresh }: TerminalEditFormProps) {
   const t = useTranslations('Admin.Settings.Terminals');
-  const router = useRouter();
-
-  const [state, formAction, isPending] = useActionState(
-    updateTerminalAction.bind(null, terminal.id),
-    null,
+  const backLink = onBack ? (
+    <Link 
+      onClick={onBack}
+      className="inline-flex items-center gap-1 mb-4"
+    >
+      <ArrowLeft className="size-4" />
+      {t('back')}
+    </Link>
+  ) : (
+    <NextLink
+      href="/admin/settings?activeSection=terminals"
+      className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground mb-4"
+    >
+      <ArrowLeft className="size-4" />
+      {t('back')}
+    </NextLink>
   );
-
-  if (state?.ok && !isPending) {
-    router.push('/admin/settings');
-  }
-
-  return (
-    <Card className="p-6">
-      <NextLink
-        href="/admin/settings"
-        className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground mb-4"
-      >
-        <ArrowLeft className="size-4" />
-        {t('back')}
-      </NextLink>
-      <h2 className="text-lg font-semibold mb-4">{t('edit')} - {terminal.name}</h2>
-      <form action={formAction}>
-        <div className="space-y-4">
-          <TextField variant="primary" isRequired>
-            <Label>{t('name')}</Label>
-            <Input name="name" defaultValue={terminal.name} placeholder={t('namePlaceholder')} />
-          </TextField>
-          <TextField variant="primary">
-            <Label>{t('code')}</Label>
-            <Input name="code" defaultValue={terminal.code ?? ''} placeholder={t('codePlaceholder')} />
-          </TextField>
-          {state?.error && <FormError message={state.error} />}
-          <div className="flex gap-2">
-            <Button type="submit" variant="primary" isPending={isPending}>
-              {isPending ? t('saving') : t('save')}
-            </Button>
-            <NextLink href="/admin/settings">
-              <Button type="button" variant="outline">
-                {t('cancel')}
-              </Button>
-            </NextLink>
-          </div>
-        </div>
-      </form>
-
-      {terminal.storageRules.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-default-200">
-          <h3 className="font-semibold mb-2">{t('storageRules')}</h3>
-          <p className="text-sm text-muted mb-4">
-            {t('storageRulesComingSoon')}
-          </p>
-          <ul className="space-y-2">
-            {terminal.storageRules.map((rule) => (
-              <li key={rule.id} className="text-sm">
-                {t('type')}: {rule.type} | {t('shipmentType')}: {rule.shipmentType}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </Card>
+  return (    
+    <>
+          {backLink}
+          <StorageRulesSection terminal={terminal} onRefresh={onRefresh} />
+    </>
   );
 }

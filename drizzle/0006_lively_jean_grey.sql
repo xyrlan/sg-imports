@@ -1,0 +1,1 @@
+ALTER TABLE "storage_rules" ADD COLUMN "cif_insurance" numeric(5, 2) DEFAULT '0';

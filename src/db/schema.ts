@@ -340,6 +340,13 @@ export const carriers = pgTable('carriers', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   scacCode: text('scac_code').unique(),
+  status: text('status').$type<'ACTIVE' | 'PASSIVE'>(),
+});
+
+/** Corretoras de câmbio (ex: Abrão, Travelex). Relacionado a exchange_contracts. */
+export const currencyExchangeBrokers = pgTable('currency_exchange_brokers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
 });
 
 export const ports = pgTable('ports', {
@@ -365,11 +372,12 @@ export type StorageRuleAdditionalFee = {
 export const storageRules = pgTable('storage_rules', {
   id: uuid('id').defaultRandom().primaryKey(),
   terminalId: uuid('terminal_id').references(() => terminals.id, { onDelete: 'cascade' }).notNull(),
-  type: containerTypeEnum('type').notNull(),
-  currency: currencyEnum('currency').default('BRL').notNull(),
   shipmentType: shipmentTypeEnum('shipment_type').default('FCL').notNull(),
+  containerType: containerTypeEnum('container_type'),
+  currency: currencyEnum('currency').default('BRL').notNull(),
   minValue: decimal('min_value', { precision: 10, scale: 2 }).default('0'),
   freeDays: integer('free_days').default(0),
+  cifInsurance: decimal('cif_insurance', { precision: 5, scale: 2 }).default('0'),
   /** Array of additional fees (name, value, basis) for manual entry */
   additionalFees: jsonb('additional_fees').$type<StorageRuleAdditionalFee[]>().default([]),
 });
@@ -453,9 +461,9 @@ export const transactions = pgTable('transactions', {
 export const exchangeContracts = pgTable('exchange_contracts', {
   id: uuid('id').defaultRandom().primaryKey(),
   transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }).notNull(),
-  
+  brokerId: uuid('broker_id').references(() => currencyExchangeBrokers.id),
   contractNumber: text('contract_number').notNull(), // Número oficial do Banco Central
-  brokerName: text('broker_name'), // Corretora (ex: Abrão, Travelex)
+  brokerName: text('broker_name'), // Legado: Corretora (ex: Abrão, Travelex)
   
   closedAt: timestamp('closed_at').notNull(), // Data do fechamento
   vetDate: timestamp('vet_date'), // Valor Efetivo Total data
@@ -667,11 +675,22 @@ export const transactionsRelations = relations(transactions, ({ one, many }) => 
 }));
 
 export const exchangeContractsRelations = relations(exchangeContracts, ({ one }) => ({
-  transaction: one(transactions, { 
-    fields: [exchangeContracts.transactionId], 
-    references: [transactions.id] 
+  transaction: one(transactions, {
+    fields: [exchangeContracts.transactionId],
+    references: [transactions.id],
+  }),
+  broker: one(currencyExchangeBrokers, {
+    fields: [exchangeContracts.brokerId],
+    references: [currencyExchangeBrokers.id],
   }),
 }));
+
+export const currencyExchangeBrokersRelations = relations(
+  currencyExchangeBrokers,
+  ({ many }) => ({
+    exchangeContracts: many(exchangeContracts),
+  }),
+);
 
 export const shipmentDocumentsRelations = relations(shipmentDocuments, ({ one }) => ({
   shipment: one(shipments, { fields: [shipmentDocuments.shipmentId], references: [shipments.id] }),
