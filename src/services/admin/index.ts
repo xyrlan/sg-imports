@@ -49,3 +49,47 @@ export {
 
 // Dashboard stats
 export { getAdminStats } from './stats.service';
+
+// Platform config (Honorários, Impostos, Siscomex, etc.)
+export {
+  getGlobalServiceFeeConfig,
+  upsertGlobalServiceFeeConfig,
+  getStateIcmsRates,
+  upsertStateIcmsRates,
+  getSiscomexFeeConfig,
+  upsertSiscomexFeeConfig,
+  getGlobalPlatformRates,
+  upsertGlobalPlatformRate,
+  type GlobalServiceFeeConfig,
+  type StateIcmsRate,
+  type SiscomexFeeConfig,
+  type GlobalPlatformRate,
+  type UpsertGlobalServiceFeeData,
+  type UpsertStateIcmsData,
+  type UpsertSiscomexFeeData,
+  type UpsertGlobalPlatformRateData,
+} from './config.service';
+
+// Terminals & storage rules
+export {
+  getAllTerminals,
+  getTerminalById,
+  getTerminalWithRules,
+  createTerminal,
+  updateTerminal,
+  deleteTerminal,
+  createStorageRule,
+  updateStorageRule,
+  deleteStorageRule,
+  createStoragePeriod,
+  updateStoragePeriod,
+  deleteStoragePeriod,
+  type Terminal,
+  type TerminalWithRules,
+  type StorageRule,
+  type StoragePeriod,
+  type CreateTerminalData,
+  type UpdateTerminalData,
+  type UpsertStorageRuleData,
+  type UpsertStoragePeriodData,
+} from './terminals.service';

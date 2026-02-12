@@ -94,8 +94,19 @@ export const documentTypeEnum = pgEnum('document_type', [
   'ICMS_PROOF',
   'OTHER'
 ]);
-export const feeBasisEnum = pgEnum('fee_basis', ['PER_BOX', 'PER_BL', 'PER_WM', "PER_BOX"]);
+export const feeBasisEnum = pgEnum('fee_basis', ['PER_BOX', 'PER_BL', 'PER_WM', 'PER_CONTAINER']);
 export const chargeTypeEnum = pgEnum('charge_type', ['PERCENTAGE', 'FIXED']);
+export const difalEnum = pgEnum('difal', ['INSIDE', 'OUTSIDE']);
+export const rateTypeEnum = pgEnum('rate_type', [
+  'AFRMM',
+  'INTL_INSURANCE',
+  'CUSTOMS_BROKER_SDA',
+  'CONTAINER_UNSTUFFING',
+  'CONTAINER_WASHING',
+  'PIS_DEFAULT',
+  'COFINS_DEFAULT'
+]);
+export const rateUnitEnum = pgEnum('rate_unit', ['PERCENT', 'FIXED_BRL', 'FIXED_USD', 'PER_CONTAINER_BRL']);
 
 // ==========================================
 // 2. AUTH & ORGANIZATION
@@ -344,6 +355,13 @@ export const terminals = pgTable('terminals', {
   code: text('code'), // Código Siscomex
 });
 
+/** Additional fee item within a storage rule (free-form) */
+export type StorageRuleAdditionalFee = {
+  name: string;
+  value: number;
+  basis: 'PER_BOX' | 'PER_BL' | 'PER_WM' | 'PER_CONTAINER';
+};
+
 export const storageRules = pgTable('storage_rules', {
   id: uuid('id').defaultRandom().primaryKey(),
   terminalId: uuid('terminal_id').references(() => terminals.id, { onDelete: 'cascade' }).notNull(),
@@ -352,6 +370,8 @@ export const storageRules = pgTable('storage_rules', {
   shipmentType: shipmentTypeEnum('shipment_type').default('FCL').notNull(),
   minValue: decimal('min_value', { precision: 10, scale: 2 }).default('0'),
   freeDays: integer('free_days').default(0),
+  /** Array of additional fees (name, value, basis) for manual entry */
+  additionalFees: jsonb('additional_fees').$type<StorageRuleAdditionalFee[]>().default([]),
 });
 
 export const storagePeriods = pgTable('storage_periods', {
@@ -362,6 +382,43 @@ export const storagePeriods = pgTable('storage_periods', {
   chargeType: chargeTypeEnum('charge_type').default('PERCENTAGE').notNull(),
   rate: decimal('rate', { precision: 12, scale: 2 }).notNull(),
   isDailyRate: boolean('is_daily_rate').default(true),
+});
+
+// ==========================================
+// 5b. PLATFORM CONFIG (Admin-managed global tables)
+// ==========================================
+
+/** ICMS rates per state + DIFAL (INSIDE = internal, OUTSIDE = interstate) */
+export const stateIcmsRates = pgTable(
+  'state_icms_rates',
+  {
+    state: text('state').notNull(),
+    difal: difalEnum('difal').notNull(),
+    icmsRate: decimal('icms_rate', { precision: 5, scale: 2 }).notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.state, t.difal] })],
+);
+
+/** Siscomex fee config — Valor de Registro + additions by range */
+export const siscomexFeeConfig = pgTable('siscomex_fee_config', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  registrationValue: decimal('registration_value', { precision: 12, scale: 2 }).notNull().default('0'),
+  additions: jsonb('additions').$type<string[]>().default([]),
+  additions11To20: decimal('additions_11_to_20', { precision: 12, scale: 2 }).notNull().default('0'),
+  additions21To50: decimal('additions_21_to_50', { precision: 12, scale: 2 }).notNull().default('0'),
+  additions51AndAbove: decimal('additions_51_and_above', { precision: 12, scale: 2 }).notNull().default('0'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/** Global platform rates: AFRMM, insurance, customs broker, etc. */
+export const globalPlatformRates = pgTable('global_platform_rates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  rateType: rateTypeEnum('rate_type').notNull().unique(),
+  value: decimal('value', { precision: 12, scale: 4 }).notNull().default('0'),
+  unit: rateUnitEnum('unit').notNull().default('PERCENT'),
+  description: text('description'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // ==========================================
@@ -630,4 +687,16 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   profile: one(profiles, { fields: [notifications.profileId], references: [profiles.id] }),
 }));
 
+export const terminalsRelations = relations(terminals, ({ many }) => ({
+  storageRules: many(storageRules),
+}));
+
+export const storageRulesRelations = relations(storageRules, ({ one, many }) => ({
+  terminal: one(terminals, { fields: [storageRules.terminalId], references: [terminals.id] }),
+  periods: many(storagePeriods),
+}));
+
+export const storagePeriodsRelations = relations(storagePeriods, ({ one }) => ({
+  rule: one(storageRules, { fields: [storagePeriods.ruleId], references: [storageRules.id] }),
+}));
 

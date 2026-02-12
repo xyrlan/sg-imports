@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { getLocale } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { THEME_COOKIE_NAME } from "@/lib/theme";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -26,13 +29,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const theme = themeCookie === 'light' || themeCookie === 'dark' ? themeCookie : 'dark';
+
+  const fontVariableClasses = `${inter.variable} ${jetbrainsMono.variable}`;
+
   return (
-    <html lang={locale}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang={locale} data-theme={theme} className={`${theme} ${fontVariableClasses}`}>
+      <body className="font-sans antialiased bg-background text-foreground">
         <NextIntlClientProvider>
           <NuqsAdapter>
+            <div className="fixed bottom-4 right-4 z-50">
+              <ThemeToggle initialTheme={theme} fontVariableClass={fontVariableClasses} />
+            </div>
             {children}
           </NuqsAdapter>
         </NextIntlClientProvider>

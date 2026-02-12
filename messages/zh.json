@@ -35,27 +35,109 @@
       "submit": "登录",
       "noAccount": "还没有账户？",
       "registerOwner": "注册为客户",
-      "registerSeller": "注册为卖家"
+      "registerSeller": "注册为卖家",
+      "submitting": "登录中..."
     },
     "VerifyEmail": {
       "title": "验证您的电子邮件",
       "description": "我们已向您的电子邮件发送了确认链接。点击链接激活您的账户。",
       "resend": "重新发送电子邮件",
       "success": "电子邮件已成功重新发送！",
-      "checkSpam": "没有收到？请检查您的垃圾邮件文件夹。"
+      "checkSpam": "没有收到？请检查您的垃圾邮件文件夹。",
+      "backToLogin": "返回登录",
+      "footer": "确认电子邮件后，您将能够登录系统。",
+      "userHeader": {
+        "logout": "退出",
+        "pendingVerification": "电子邮件待验证"
+      },
+      "states": {
+        "verifying": {
+          "title": "正在验证您的电子邮件...",
+          "description": "正在处理您的验证，请稍候。"
+        },
+        "verified": {
+          "title": "电子邮件验证成功！",
+          "description": "您的电子邮件已通过验证。几秒钟后将自动重定向。",
+          "redirecting": "正在重定向..."
+        },
+        "error": {
+          "title": "验证错误",
+          "canRetry": "您可以请求新的验证电子邮件："
+        },
+        "waiting": {
+          "title": "验证您的电子邮件",
+          "noReceived": "没有收到电子邮件？请检查垃圾邮件文件夹或请求新的："
+        },
+        "tokenExpired": {
+          "title": "令牌已过期",
+          "description": "您的验证令牌已过期。我们已自动为您请求新的验证电子邮件。",
+          "checkInbox": "请查看收件箱或请求新的电子邮件："
+        }
+      },
+      "resendButton": {
+        "waiting": "请等待 {seconds} 秒",
+        "ready": "重新发送电子邮件"
+      }
     },
     "Errors": {
       "invalidCredentials": "电子邮件或密码无效",
       "emailAlreadyExists": "此电子邮件已被注册",
       "genericError": "发生错误。请重试。",
       "weakPassword": "密码至少需要8个字符",
-      "invalidEmail": "电子邮件无效"
+      "invalidEmail": "电子邮件无效",
+      "resendFailed": "重新发送电子邮件时发生错误。请重试。",
+      "tokenInvalid": "令牌无效或已过期",
+      "serverError": "服务器错误。请稍后重试。",
+      "connectionError": "连接错误。请检查网络后重试。",
+      "sessionExpired": "会话已过期。请重新登录。",
+      "alreadyVerified": "您的电子邮件已验证！"
+    },
+    "Email": {
+      "VerificationEmail": {
+        "subject": "确认您的电子邮件 - SoulGlobal",
+        "title": "欢迎使用 SoulGlobal！",
+        "body": "点击下方按钮验证您的电子邮件",
+        "button": "验证电子邮件",
+        "expiry": "此链接24小时内有效",
+        "securityNotice": "安全信息",
+        "securityText": "出于安全考虑，此验证链接24小时后过期。如非您本人注册，可忽略此邮件。",
+        "alternativeText": "如果上方按钮无效，请复制此链接到浏览器："
+      },
+      "WelcomeEmail": {
+        "subject": "账户已激活 - 欢迎使用 SoulGlobal！",
+        "title": "您的账户已激活！",
+        "subtitle": "您的账户已激活并可使用",
+        "bodyOwner": "您现在可以方便地管理您的进口业务。",
+        "bodySeller": "您现在可以在市场上销售您的产品。",
+        "congratulations": "恭喜！您的电子邮件已成功验证，您现已完全访问 SoulGlobal 平台。",
+        "dashboardButton": "访问仪表板",
+        "helpTitle": "需要帮助？",
+        "helpText": "我们的支持团队随时为您提供帮助。",
+        "features": {
+          "management": "全面管理：实时跟踪所有进口",
+          "calculation": "自动计算：税费自动计算",
+          "reports": "详细报告：完整的财务分析仪表板",
+          "notifications": "通知：及时了解每个流程步骤"
+        }
+      }
     }
   },
   "Organization": {
     "select": "选择组织",
     "selectDescription": "选择要访问的组织",
+    "createNew": "创建新组织",
     "noOrganizations": "未找到组织",
+    "CreateNew": {
+      "title": "注册新公司",
+      "description": "在您的账户中添加新组织。创建后将重定向以完成注册。",
+      "companyName": "公司名称",
+      "companyNamePlaceholder": "公司 XYZ 有限公司",
+      "cnpj": "CNPJ",
+      "cnpjPlaceholder": "00.000.000/0000-00",
+      "submit": "创建并配置",
+      "submitting": "创建中...",
+      "backToDashboard": "返回仪表板"
+    },
     "switchSuccess": "组织切换成功",
     "loading": "加载中...",
     "access": "访问",
@@ -67,6 +149,58 @@
       "CUSTOMS_BROKER": "报关行",
       "VIEWER": "查看者"
     }
+  },
+  "OrganizationEdit": {
+    "title": "编辑组织",
+    "backToProfile": "返回个人资料",
+    "name": "法定名称",
+    "document": "CNPJ",
+    "tradeName": "商号",
+    "tradeNamePlaceholder": "公司商号",
+    "stateRegistry": "州注册号",
+    "stateRegistryPlaceholder": "000.000.000.000（可选）",
+    "taxRegime": "税收制度",
+    "taxRegimePlaceholder": "选择制度",
+    "email": "电子邮件",
+    "emailPlaceholder": "contato@empresa.com.br",
+    "phone": "电话",
+    "phonePlaceholder": "(00) 0000-0000",
+    "save": "保存",
+    "saving": "保存中...",
+    "cancel": "取消"
+  },
+  "ProfilePage": {
+    "title": "我的资料",
+    "personalData": "个人数据",
+    "fullName": "全名",
+    "fullNamePlaceholder": "张三",
+    "email": "电子邮件",
+    "phone": "电话",
+    "phonePlaceholder": "(00) 00000-0000",
+    "documents": "文件",
+    "documentPhoto": "身份证明",
+    "addressProof": "地址证明",
+    "uploaded": "已上传",
+    "pending": "待处理",
+    "organizations": "我的组织",
+    "organizationsCount": "您可访问 {count} 个组织",
+    "registrationComplete": "注册完成",
+    "registrationPending": "注册待完成",
+    "edit": "编辑",
+    "completeRegistration": "完成注册",
+    "save": "保存",
+    "saving": "保存中...",
+    "role": {
+      "OWNER": "所有者",
+      "ADMIN": "管理员",
+      "ADMIN_EMPLOYEE": "管理员员工",
+      "SELLER": "卖家",
+      "CUSTOMS_BROKER": "报关行",
+      "VIEWER": "查看者"
+    }
+  },
+  "Theme": {
+    "toggle": "切换明/暗主题"
   },
   "Navbar": {
     "quotes": "报价",
@@ -86,6 +220,337 @@
         "SELLER": "卖家",
         "CUSTOMS_BROKER": "报关行",
         "VIEWER": "查看者"
+      }
+    }
+  },
+  "Onboarding": {
+    "title": "配置您的组织",
+    "subtitle": "完成信息以开始使用系统",
+    "step": "第 {current} 步，共 {total} 步",
+    "next": "下一步",
+    "back": "返回",
+    "finish": "完成",
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "Step1": {
+      "title": "公司信息",
+      "description": "输入您组织的基本信息",
+      "tradeName": "商号",
+      "tradeNamePlaceholder": "公司商号",
+      "stateRegistry": "州注册号",
+      "stateRegistryPlaceholder": "000.000.000.000（可选）",
+      "taxRegime": "税收制度",
+      "taxRegimePlaceholder": "选择税收制度",
+      "email": "公司电子邮件",
+      "emailPlaceholder": "contato@empresa.com.br",
+      "phone": "电话",
+      "phonePlaceholder": "(00) 0000-0000",
+      "taxRegimes": {
+        "SIMPLES_NACIONAL": "简易税制",
+        "LUCRO_PRESUMIDO": "推定利润",
+        "LUCRO_REAL": "实际利润"
+      }
+    },
+    "Step2": {
+      "title": "地址",
+      "description": "输入账单和收货地址",
+      "descriptionSeller": "输入您的店铺地址",
+      "billingTitle": "账单地址",
+      "deliveryTitle": "收货地址",
+      "postalCode": "邮政编码",
+      "postalCodePlaceholder": "00000-000",
+      "fetchCEP": "获取地址",
+      "fetchingCEP": "获取中...",
+      "street": "街道",
+      "streetPlaceholder": "街道、大道等",
+      "number": "门牌号",
+      "numberPlaceholder": "000",
+      "complement": "补充信息",
+      "complementPlaceholder": "公寓、房间等（可选）",
+      "neighborhood": "社区",
+      "neighborhoodPlaceholder": "社区名称",
+      "city": "城市",
+      "cityPlaceholder": "城市名称",
+      "state": "州（UF）",
+      "statePlaceholder": "SP",
+      "country": "国家",
+      "sameAsDelivery": "与收货地址相同",
+      "cepNotFound": "未找到邮政编码。请检查后重试。",
+      "cepFetchError": "获取地址错误。请手动填写。"
+    },
+    "Step3": {
+      "title": "费用配置",
+      "description": "配置组织的默认服务费用",
+      "percentage": "百分比 (%)",
+      "percentagePlaceholder": "2.5",
+      "percentageHelp": "应用于商品价值的百分比",
+      "minimumValue": "最低金额 (R$)",
+      "minimumValuePlaceholder": "3060.00",
+      "minimumValueHelp": "无论百分比如何均收取的最低费用",
+      "currency": "货币",
+      "applyToChinaProducts": "对中国产品收取费用",
+      "applyToChinaProductsHelp": "如不想对中国产品收费请取消勾选",
+      "useDefaults": "使用系统默认值",
+      "defaultsInfo": "系统将使用 2.5%，最低 R$ 3.060,00"
+    },
+    "Step4": {
+      "title": "文件",
+      "description": "上传所需文件以完成注册",
+      "documentPhoto": "身份证照片（身份证或驾照）",
+      "documentPhotoHelp": "上传清晰可读的身份证件照片",
+      "addressProof": "地址证明",
+      "addressProofHelp": "近期水电费、电话费或银行对账单（90天内）",
+      "socialContract": "公司章程",
+      "socialContractHelp": "在商业登记处注册的公司成立文件",
+      "uploadFile": "点击选择或拖放文件",
+      "fileSelected": "已选择文件",
+      "uploading": "正在上传文件...",
+      "uploadSuccess": "文件上传成功！",
+      "uploadError": "上传文件时出错。请重试。",
+      "acceptedFormats": "接受格式：PDF、JPG、PNG、WebP（最大 10MB）",
+      "uploadInfo": "所有文件将安全加密存储。账户验证和合规需要这些文件。"
+    },
+    "Errors": {
+      "requiredField": "此字段为必填",
+      "invalidCEP": "邮政编码无效。请使用格式 00000-000",
+      "invalidEmail": "电子邮件无效",
+      "invalidState": "州必须为2个字符（UF）",
+      "cepFetchError": "获取邮政编码错误",
+      "genericError": "发生错误。请重试。",
+      "organizationNotFound": "未找到组织",
+      "addressCreationError": "创建地址时出错",
+      "configSaveError": "保存配置时出错"
+    },
+    "Success": {
+      "step1": "公司信息保存成功！",
+      "step2": "地址注册成功！",
+      "step3": "配置保存成功！",
+      "complete": "引导完成！正在重定向..."
+    }
+  },
+  "Admin": {
+    "Sidebar": {
+      "brand": "管理",
+      "dashboard": "仪表板",
+      "management": "用户和组织",
+      "settings": "设置",
+      "backToDashboard": "返回仪表板"
+    },
+    "Management": {
+      "title": "用户和组织",
+      "description": "管理系统用户和组织",
+      "usersTab": "用户",
+      "organizationsTab": "组织",
+      "searchUsers": "按姓名、电子邮件或电话搜索...",
+      "searchOrganizations": "按名称、CNPJ 或电子邮件搜索...",
+      "noName": "无名称",
+      "orderType": {
+        "order": "订单",
+        "directOrder": "直接"
+      },
+      "columns": {
+        "name": "姓名",
+        "email": "电子邮件",
+        "phone": "电话",
+        "systemRole": "系统角色",
+        "createdAt": "创建时间",
+        "orgName": "法定名称",
+        "tradeName": "商号",
+        "cnpj": "CNPJ",
+        "members": "成员",
+        "orderType": "订单类型",
+        "socialContract": "章程",
+        "documentPhoto": "证件照片",
+        "addressProof": "地址证明"
+      },
+      "roles": {
+        "superAdmin": "超级管理员",
+        "user": "用户"
+      },
+      "actions": {
+        "label": "操作",
+        "view": "查看",
+        "edit": "编辑",
+        "editRole": "编辑角色"
+      }
+    },
+    "UserEdit": {
+      "title": "编辑用户",
+      "backToManagement": "返回管理",
+      "personalData": "个人数据",
+      "email": "电子邮件",
+      "fullName": "全名",
+      "fullNamePlaceholder": "用户全名",
+      "phone": "电话",
+      "phonePlaceholder": "(00) 00000-0000",
+      "systemRole": "系统角色",
+      "roles": {
+        "USER": "用户",
+        "SUPER_ADMIN": "超级管理员",
+        "SUPER_ADMIN_EMPLOYEE": "超级管理员员工"
+      },
+      "documents": "文件",
+      "documentPhoto": "证件照片",
+      "documentPhotoHelp": "身份证件清晰可读的照片",
+      "addressProof": "地址证明",
+      "addressProofHelp": "近期水电费或银行对账单",
+      "viewDocument": "查看文件",
+      "noDocument": "未上传",
+      "uploadDocument": "上传文件",
+      "replaceDocument": "替换文件",
+      "uploading": "上传中...",
+      "uploadSuccess": "文件上传成功！",
+      "organizations": "组织",
+      "organizationsCount": "{count} 个组织",
+      "noOrganizations": "无关联组织",
+      "orgRoles": {
+        "OWNER": "所有者",
+        "ADMIN": "管理员",
+        "EMPLOYEE": "员工",
+        "SELLER": "卖家",
+        "CUSTOMS_BROKER": "报关行",
+        "VIEWER": "查看者"
+      },
+      "createdAt": "创建时间",
+      "save": "保存",
+      "saving": "保存中...",
+      "success": "资料更新成功！",
+      "notFound": "未找到用户"
+    },
+    "OrganizationEdit": {
+      "title": "编辑组织",
+      "backToManagement": "返回管理",
+      "companyData": "公司数据",
+      "name": "法定名称",
+      "document": "CNPJ",
+      "tradeName": "商号",
+      "tradeNamePlaceholder": "公司商号",
+      "stateRegistry": "州注册号",
+      "stateRegistryPlaceholder": "000.000.000.000（可选）",
+      "taxRegime": "税收制度",
+      "taxRegimePlaceholder": "选择制度",
+      "email": "电子邮件",
+      "emailPlaceholder": "contato@empresa.com.br",
+      "phone": "电话",
+      "phonePlaceholder": "(00) 0000-0000",
+      "orderType": "订单类型",
+      "orderTypes": {
+        "ORDER": "订单",
+        "DIRECT_ORDER": "直接"
+      },
+      "minOrderValue": "最低订单金额",
+      "minOrderValuePlaceholder": "0.00",
+      "addresses": "地址",
+      "billingAddress": "账单地址",
+      "deliveryAddress": "收货地址",
+      "sameAsDelivery": "与收货地址相同",
+      "saveAddress": "保存地址",
+      "addressSuccess": "地址更新成功！",
+      "socialContract": "章程",
+      "viewDocument": "查看文件",
+      "noDocument": "未上传",
+      "uploadSocialContract": "上传章程",
+      "replaceDocument": "替换文件",
+      "uploadDocument": "上传",
+      "uploading": "上传中...",
+      "uploadSuccess": "文件上传成功！",
+      "members": "成员",
+      "membersCount": "{count} 名成员",
+      "memberColumns": {
+        "name": "姓名",
+        "email": "电子邮件",
+        "role": "角色"
+      },
+      "changeRole": "更改角色",
+      "createdAt": "创建时间",
+      "save": "保存",
+      "saving": "保存中...",
+      "success": "组织更新成功！",
+      "notFound": "未找到组织",
+      "feeConfig": "服务费配置",
+      "feePercentage": "百分比 (%)",
+      "feeMultiplier": "最低金额（乘数）",
+      "feeApplyToChina": "应用于中国产品",
+      "feeNotConfigured": "未找到服务费配置。请填写字段以创建。",
+      "feeCreate": "创建配置",
+      "feeUpdate": "更新配置",
+      "feeSuccess": "服务费配置保存成功！",
+      "feeLastUpdated": "最后更新：{date}",
+      "roles": {
+        "OWNER": "所有者",
+        "ADMIN": "管理员",
+        "EMPLOYEE": "员工",
+        "SELLER": "卖家",
+        "CUSTOMS_BROKER": "报关行",
+        "VIEWER": "查看者"
+      }
+    },
+    "Settings": {
+      "title": "设置",
+      "subtitle": "配置平台全局表",
+      "honorarios": "服务费",
+      "honorariosDescription": "全局服务费设置",
+      "taxes": "税费",
+      "taxesDescription": "州税率、AFRMM 和 Siscomex",
+      "terminals": "终端",
+      "terminalsDescription": "终端和仓储规则",
+      "Honorarios": {
+        "title": "服务费",
+        "description": "所有组织的默认服务费配置",
+        "minimumWage": "最低工资",
+        "defaultMultiplier": "乘数",
+        "defaultPercentage": "百分比",
+        "applyToChina": "应用于中国产品",
+        "save": "保存服务费",
+        "saving": "正在保存服务费...",
+        "success": "服务费保存成功！"
+      },
+      "Taxes": {
+        "title": "税费",
+        "stateIcms": "各州 ICMS 税率",
+        "stateIcmsDescription": "按 UF 配置 ICMS 税率。选择 DIFAL（州内/州际）并输入百分比。",
+        "siscomexFee": "Siscomex 费",
+        "platformRates": "其他费用",
+        "state": "UF",
+        "difal": "DIFAL",
+        "aliquota": "税率 (%)",
+        "inside": "州内",
+        "outside": "州际",
+        "icmsRate": "ICMS 税率 (%)",
+        "registrationValue": "注册价值",
+        "additions": "附加 1–10",
+        "additions11To20": "附加 11–20",
+        "additions21To50": "附加 21–50",
+        "additions51Plus": "附加 51+",
+        "rateType": {
+          "AFRMM": "AFRMM",
+          "INTL_INSURANCE": "国际保险",
+          "CUSTOMS_BROKER_SDA": "报关行和 SDA",
+          "CONTAINER_UNSTUFFING": "集装箱卸货",
+          "CONTAINER_WASHING": "集装箱清洗",
+          "PIS_DEFAULT": "PIS",
+          "COFINS_DEFAULT": "COFINS"
+        },
+        "value": "金额",
+        "unit": "单位",
+        "currency": "货币",
+        "save": "保存",
+        "saveIcms": "保存 ICMS",
+        "saveSiscomex": "保存 Siscomex",
+        "saving": "保存中...",
+        "success": "配置保存成功！"
+      },
+      "Terminals": {
+        "title": "终端",
+        "description": "管理终端和仓储规则",
+        "addTerminal": "新建终端",
+        "name": "名称",
+        "code": "代码",
+        "edit": "编辑",
+        "delete": "删除",
+        "noTerminals": "未注册终端。",
+        "storageRules": "仓储规则",
+        "additionalFees": "额外费用"
       }
     }
   }

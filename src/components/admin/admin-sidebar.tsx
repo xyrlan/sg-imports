@@ -9,6 +9,7 @@ import {
   Users,
   LogOut,
   ShieldCheck,
+  Settings,
 } from 'lucide-react';
 
 interface NavItem {
@@ -33,9 +34,14 @@ export function AdminSidebar() {
       href: '/admin/users-organizations',
       icon: <Users className="size-5 shrink-0" />,
     },
+    {
+      labelKey: 'settings',
+      href: '/admin/settings',
+      icon: <Settings className="size-5 shrink-0" />,
+    },
   ];
 
-  const navClassName = `fixed z-50 left-0 top-0 h-screen py-7 flex flex-col gap-6 bg-background shadow-lg transition-all duration-200 ease-in-out overflow-hidden text-nowrap ${
+  const navClassName = `fixed z-50 left-0 top-0 h-screen py-6 flex flex-col gap-6 bg-background shadow-lg transition-all duration-200 ease-in-out overflow-hidden text-nowrap ${
     isExpanded ? 'max-w-[288px] p-2' : 'max-w-[83px] p-2'
   }`;
 
@@ -53,7 +59,7 @@ export function AdminSidebar() {
       onMouseLeave={() => setIsExpanded(false)}
     >
       {/* Logo / Brand */}
-      <div className="flex items-center gap-3 px-4 pb-2">
+      <div className="flex items-center gap-3 px-5 pb-2">
         <ShieldCheck className="size-7 shrink-0 text-accent" />
         <span
           className={`font-bold text-lg transition-opacity duration-200 ${
@@ -75,11 +81,12 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
                 active
                   ? 'bg-accent/10 text-accent font-medium'
                   : 'text-muted hover:bg-default-200 hover:text-foreground'
-              }`}
+              }
+              `}
             >
               {item.icon}
               <span
@@ -98,7 +105,7 @@ export function AdminSidebar() {
       <div className="mx-3 border-t border-default-200" />
       <Link
         href="/dashboard"
-        className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted hover:bg-default-200 hover:text-foreground transition-colors"
+        className="flex items-center gap-3 px-6 py-3 rounded-lg text-muted hover:text-foreground transition-colors"
       >
         <LogOut className="size-5 shrink-0" />
         <span

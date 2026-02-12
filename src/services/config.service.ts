@@ -8,8 +8,7 @@ type ServiceFeeConfigInsert = InferInsertModel<typeof serviceFeeConfigs>;
 
 export interface ServiceFeeConfigData {
   percentage?: string;
-  minimumValue?: string;
-  currency?: 'BRL' | 'USD' | 'CNY' | 'EUR';
+  minimumValueMultiplier?: number;
   applyToChinaProducts?: boolean;
 }
 
@@ -26,8 +25,7 @@ export async function createServiceFeeConfig(
   const configData: ServiceFeeConfigInsert = {
     organizationId,
     percentage: data?.percentage || '2.5',
-    minimumValue: data?.minimumValue || '3060.00',
-    currency: data?.currency || 'BRL',
+    minimumValueMultiplier: data?.minimumValueMultiplier ?? 2,
     applyToChinaProducts: data?.applyToChinaProducts ?? true,
   };
 

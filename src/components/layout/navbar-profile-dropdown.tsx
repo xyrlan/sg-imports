@@ -44,7 +44,7 @@ export function NavbarProfileDropdown() {
   return (
     <Dropdown>
       <Dropdown.Trigger className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none">
-        <Avatar color="accent" size="sm">
+        <Avatar color="danger" size="sm">
           <Avatar.Fallback>{initials}</Avatar.Fallback>
         </Avatar>
         <div className="hidden md:flex flex-col items-start">

@@ -208,8 +208,7 @@ export async function saveServiceFeeConfig(
     // Extract form data
     const rawData = {
       percentage: formData.get('percentage') as string || '2.5',
-      minimumValue: formData.get('minimumValue') as string || '3060.00',
-      currency: (formData.get('currency') as string || 'BRL') as 'BRL' | 'USD' | 'CNY' | 'EUR',
+      minimumValueMultiplier: formData.get('minimumValueMultiplier') as string || '2',
       applyToChinaProducts: formData.get('applyToChinaProducts') === 'true',
     };
 
@@ -219,8 +218,7 @@ export async function saveServiceFeeConfig(
     // Create or update config
     await createServiceFeeConfig(orgId, {
       percentage: validatedData.percentage.toString(),
-      minimumValue: validatedData.minimumValue.toString(),
-      currency: validatedData.currency,
+      minimumValueMultiplier: validatedData.minimumValueMultiplier,
       applyToChinaProducts: validatedData.applyToChinaProducts,
     });
 

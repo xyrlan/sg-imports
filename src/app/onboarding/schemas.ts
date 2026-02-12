@@ -89,12 +89,12 @@ export const serviceFeeConfigSchema = z.object({
     .transform((val) => parseFloat(val))
     .pipe(z.number().min(0).max(100))
     .default(2.5),
-  minimumValue: z
+  minimumValueMultiplier: z
     .string()
-    .transform((val) => parseFloat(val))
-    .pipe(z.number().min(0))
-    .default(3060.0),
-  currency: z.enum(['BRL', 'USD', 'CNY', 'EUR']).default('BRL'),
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 2))
+    .pipe(z.number().min(2).max(4))
+    .default(2),
   applyToChinaProducts: z.boolean().default(true),
 });
 

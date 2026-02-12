@@ -61,10 +61,10 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
   };
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full max-w-6xl">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">{t('select')}</h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-muted">
           {t('selectDescription')}
         </p>
       </div>
@@ -105,28 +105,24 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
                       {t(`role.${role}`)}
                     </Chip>
                   </div>
-                  {organization.tradeName && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {organization.tradeName}
-                    </p>
-                  )}
+                  
                 </div>
                 
                 <div className="space-y-2 text-sm">
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">CNPJ:</span>
+                      <span className="text-muted">CNPJ:</span>
                       <span className="ml-2 font-mono">{organization.document}</span>
                     </div>
                     
                     {organization.email && (
                       <div>
-                        <span className="text-gray-500 dark:text-gray-400">Email:</span>
-                        <span className="ml-2 line-clamp-1">{organization.email}</span>
+                        <span className="text-muted">Email:</span>
+                        <span className="ml-2 font-mono">{organization.email}</span>
                       </div>
                     )}
                     
                     <div
-                      className="mt-4 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-accent text-accent-foreground"
+                      className="mt-4 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-accent text-foreground"
                       aria-hidden
                     >
                       {isThisOrgLoading ? t('loading') : t('access')}
@@ -141,7 +137,7 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
 
       {organizations.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted">
             {t('noOrganizations')}
           </p>
         </div>

@@ -199,6 +199,9 @@
       "VIEWER": "Visualizador"
     }
   },
+  "Theme": {
+    "toggle": "Alternar tema claro/escuro"
+  },
   "Navbar": {
     "quotes": "Cotações",
     "orders": "Pedidos",
@@ -330,6 +333,7 @@
       "brand": "Admin",
       "dashboard": "Painel",
       "management": "Usuários e Organizações",
+      "settings": "Configurações",
       "backToDashboard": "Voltar ao Dashboard"
     },
     "Management": {
@@ -479,6 +483,74 @@
         "SELLER": "Vendedor",
         "CUSTOMS_BROKER": "Despachante Aduaneiro",
         "VIEWER": "Visualizador"
+      }
+    },
+    "Settings": {
+      "title": "Configurações",
+      "subtitle": "Configure tabelas globais da plataforma",
+      "honorarios": "Honorários",
+      "honorariosDescription": "Configurações globais de honorários",
+      "taxes": "Impostos e Taxas",
+      "taxesDescription": "Alíquotas Estados, AFRMM e Siscomex",
+      "terminals": "Terminais",
+      "terminalsDescription": "Terminais e regras de armazenagem",
+      "Honorarios": {
+        "title": "Honorários",
+        "description": "Configuração padrão de honorários para todas as organizações",
+        "minimumWage": "Salário Mínimo",
+        "defaultMultiplier": "Multiplicador",
+        "defaultPercentage": "Percentual",
+        "applyToChina": "Aplicar a produtos da China",
+        "save": "Salvar Honorários",
+        "saving": "Salvando Honorários...",
+        "success": "Honorários salvos com sucesso!"
+      },
+      "Taxes": {
+        "title": "Impostos e Taxas",
+        "stateIcms": "Alíquotas ICMS por Estado",
+        "stateIcmsDescription": "Configure a alíquota ICMS por UF. Selecione o DIFAL (interno / interestadual) e informe o percentual.",
+        "siscomexFee": "Taxa Siscomex",
+        "platformRates": "Outras Taxas",
+        "state": "UF",
+        "difal": "DIFAL",
+        "aliquota": "Alíquota (%)",
+        "inside": "Por dentro",
+        "outside": "Por fora",
+        "icmsRate": "Alíquota ICMS (%)",
+        "registrationValue": "Valor de Registro",
+        "additions": "Adições 1–10",
+        "additions11To20": "Adições 11–20",
+        "additions21To50": "Adições 21–50",
+        "additions51Plus": "Adições 51+",
+        "rateType": {
+          "AFRMM": "AFRMM",
+          "INTL_INSURANCE": "Seguro Internacional",
+          "CUSTOMS_BROKER_SDA": "Despachante Aduaneiro e SDA",
+          "CONTAINER_UNSTUFFING": "Desova de Container",
+          "CONTAINER_WASHING": "Lavagem de Container",
+          "PIS_DEFAULT": "PIS",
+          "COFINS_DEFAULT": "COFINS"
+        },
+        "value": "Valor",
+        "unit": "Unidade",
+        "currency": "Moeda",
+        "save": "Salvar",
+        "saveIcms": "Salvar ICMS",
+        "saveSiscomex": "Salvar Siscomex",
+        "saving": "Salvando...",
+        "success": "Configuração salva com sucesso!"
+      },
+      "Terminals": {
+        "title": "Terminais",
+        "description": "Gerencie terminais e regras de armazenagem",
+        "addTerminal": "Novo Terminal",
+        "name": "Nome",
+        "code": "Código",
+        "edit": "Editar",
+        "delete": "Excluir",
+        "noTerminals": "Nenhum terminal cadastrado.",
+        "storageRules": "Regras de Armazenagem",
+        "additionalFees": "Taxas Adicionais"
       }
     }
   }

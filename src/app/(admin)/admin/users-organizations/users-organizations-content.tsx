@@ -1,6 +1,6 @@
 'use client';
 
-import { Tabs, Chip, Button, Dropdown, Label } from '@heroui/react';
+import { Tabs, Chip, Button, Dropdown, Label, Link } from '@heroui/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Eye, UserCog, Pencil } from 'lucide-react';
@@ -10,7 +10,6 @@ import { createColumnHelper } from '@tanstack/react-table';
 import type { Profile } from '@/services/admin/profiles.service';
 import type { OrganizationWithMemberCount } from '@/services/admin';
 import { formatCNPJ, formatDate } from '@/lib/utils';
-import Link from 'next/link';
 import { parseAsString, useQueryState } from 'nuqs';
 
 // ============================================
@@ -67,9 +66,12 @@ function useProfileColumns() {
       enableSorting: false,
       cell: (info) => (
         <span className="text-sm text-muted">
-          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank">
+          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank" className="flex items-center gap-2 cursor-pointer">
             <Eye className="size-4" />
-            <Label>{t('actions.view')}</Label>
+            <div>
+              <Label className='cursor-pointer'>{t('actions.view')}</Label>
+              <Link.Icon />
+            </div>
           </Link> : '—'}
         </span>
       ),
@@ -79,9 +81,12 @@ function useProfileColumns() {
       enableSorting: false,
       cell: (info) => (
         <span className="text-sm text-muted">
-          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank">
+          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank" className="flex items-center gap-2 cursor-pointer">
             <Eye className="size-4" />
-            <Label>{t('actions.view')}</Label>
+            <div>
+            <Label className='cursor-pointer'>{t('actions.view')}</Label>
+            <Link.Icon />
+            </div>
           </Link> : '—'}
         </span>
       ),
@@ -209,9 +214,12 @@ function useOrganizationColumns() {
       enableSorting: false,
       cell: (info) => (
         <span className="text-sm text-muted">
-          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank">
+          {info.getValue() ? <Link href={info.getValue() ?? ''} target="_blank" className="flex items-center gap-2 cursor-pointer">
             <Eye className="size-4" />
-            <Label>{t('actions.view')}</Label>
+            <div>
+              <Label className='cursor-pointer'>{t('actions.view')}</Label>
+              <Link.Icon />
+            </div>
           </Link> : '—'}
         </span>
       ),

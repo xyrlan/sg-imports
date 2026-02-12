@@ -67,10 +67,11 @@ export async function ensureUserSetup(
     });
 
     if (!existingMembership) {
+      const role = metadata.role === 'ADMIN_EMPLOYEE' ? 'EMPLOYEE' : metadata.role;
       await db.insert(memberships).values({
         organizationId,
         profileId: userId,
-        role: metadata.role,
+        role: role as 'OWNER' | 'ADMIN' | 'EMPLOYEE' | 'SELLER' | 'CUSTOMS_BROKER' | 'VIEWER',
         createdAt: new Date(),
       }).onConflictDoNothing();
     }
