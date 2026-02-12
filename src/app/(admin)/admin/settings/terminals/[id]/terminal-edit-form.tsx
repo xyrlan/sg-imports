@@ -34,27 +34,27 @@ export function TerminalEditForm({ terminal }: TerminalEditFormProps) {
         className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground mb-4"
       >
         <ArrowLeft className="size-4" />
-        Voltar
+        {t('back')}
       </NextLink>
       <h2 className="text-lg font-semibold mb-4">{t('edit')} - {terminal.name}</h2>
       <form action={formAction}>
         <div className="space-y-4">
           <TextField variant="primary" isRequired>
             <Label>{t('name')}</Label>
-            <Input name="name" defaultValue={terminal.name} placeholder="Nome do terminal" />
+            <Input name="name" defaultValue={terminal.name} placeholder={t('namePlaceholder')} />
           </TextField>
           <TextField variant="primary">
             <Label>{t('code')}</Label>
-            <Input name="code" defaultValue={terminal.code ?? ''} placeholder="Código Siscomex" />
+            <Input name="code" defaultValue={terminal.code ?? ''} placeholder={t('codePlaceholder')} />
           </TextField>
           {state?.error && <FormError message={state.error} />}
           <div className="flex gap-2">
             <Button type="submit" variant="primary" isPending={isPending}>
-              {isPending ? 'Salvando...' : 'Salvar'}
+              {isPending ? t('saving') : t('save')}
             </Button>
             <NextLink href="/admin/settings">
               <Button type="button" variant="outline">
-                Cancelar
+                {t('cancel')}
               </Button>
             </NextLink>
           </div>
@@ -65,12 +65,12 @@ export function TerminalEditForm({ terminal }: TerminalEditFormProps) {
         <div className="mt-8 pt-6 border-t border-default-200">
           <h3 className="font-semibold mb-2">{t('storageRules')}</h3>
           <p className="text-sm text-muted mb-4">
-            Regras de armazenagem e taxas adicionais podem ser configuradas em breve.
+            {t('storageRulesComingSoon')}
           </p>
           <ul className="space-y-2">
             {terminal.storageRules.map((rule) => (
               <li key={rule.id} className="text-sm">
-                Tipo: {rule.type} | Tipo envio: {rule.shipmentType}
+                {t('type')}: {rule.type} | {t('shipmentType')}: {rule.shipmentType}
               </li>
             ))}
           </ul>

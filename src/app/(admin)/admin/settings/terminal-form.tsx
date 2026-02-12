@@ -41,7 +41,7 @@ export function TerminalForm({
         className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground mb-4"
       >
         <ArrowLeft className="size-4" />
-        Voltar
+        {t('back')}
       </NextLink>
       <h2 className="text-lg font-semibold mb-4">
         {isEdit ? t('edit') : t('addTerminal')}
@@ -53,7 +53,7 @@ export function TerminalForm({
             <Input
               name="name"
               defaultValue={initialData?.name ?? ''}
-              placeholder="Nome do terminal"
+              placeholder={t('namePlaceholder')}
             />
           </TextField>
           <TextField variant="primary">
@@ -61,17 +61,17 @@ export function TerminalForm({
             <Input
               name="code"
               defaultValue={initialData?.code ?? ''}
-              placeholder="Código Siscomex"
+              placeholder={t('codePlaceholder')}
             />
           </TextField>
           {state?.error && <FormError message={state.error} />}
           <div className="flex gap-2">
             <Button type="submit" variant="primary" isPending={isPending}>
-              {isPending ? 'Salvando...' : 'Salvar'}
+              {isPending ? t('saving') : t('save')}
             </Button>
             <NextLink href="/admin/settings">
               <Button type="button" variant="outline">
-                Cancelar
+                {t('cancel')}
               </Button>
             </NextLink>
           </div>

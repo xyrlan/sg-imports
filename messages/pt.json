@@ -544,13 +544,22 @@
         "title": "Terminais",
         "description": "Gerencie terminais e regras de armazenagem",
         "addTerminal": "Novo Terminal",
+        "back": "Voltar",
         "name": "Nome",
+        "namePlaceholder": "Nome do terminal",
         "code": "Código",
+        "codePlaceholder": "Código Siscomex",
         "edit": "Editar",
         "delete": "Excluir",
+        "save": "Salvar",
+        "saving": "Salvando...",
+        "cancel": "Cancelar",
         "noTerminals": "Nenhum terminal cadastrado.",
         "storageRules": "Regras de Armazenagem",
-        "additionalFees": "Taxas Adicionais"
+        "storageRulesComingSoon": "Regras de armazenagem e taxas adicionais podem ser configuradas em breve.",
+        "additionalFees": "Taxas Adicionais",
+        "type": "Tipo",
+        "shipmentType": "Tipo envio"
       }
     }
   }

@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Card } from '@heroui/react';
-import Link from 'next/link';
 import { Plus, Pencil } from 'lucide-react';
+import { AddTerminalModal } from './add-terminal-modal';
+import { EditTerminalModal } from './edit-terminal-modal';
 import type { Terminal } from '@/services/admin';
 
 interface TerminalsSectionProps {
@@ -12,18 +14,28 @@ interface TerminalsSectionProps {
 
 export function TerminalsSection({ terminals }: TerminalsSectionProps) {
   const t = useTranslations('Admin.Settings');
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingTerminal, setEditingTerminal] = useState<Terminal | null>(null);
 
   return (
     <Card className="p-6">
-      <h2 className="text-lg font-semibold mb-2">{t('Terminals.title')}</h2>
-      <p className="text-sm text-muted mb-4">{t('Terminals.description')}</p>
-      <div className="flex justify-between items-center mb-4">
-        <Link href="/admin/settings/terminals/new">
-          <Button variant="primary">
-            <Plus className="size-4" />
-            {t('Terminals.addTerminal')}
-          </Button>
-        </Link>
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">{t('Terminals.title')}</h2>
+          <p className="text-sm text-muted">{t('Terminals.description')}</p>
+        </div>
+        <div className="flex justify-between items-center">
+          <AddTerminalModal
+            isOpen={addModalOpen}
+            onOpenChange={setAddModalOpen}
+            trigger={
+              <Button variant="primary" onPress={() => setAddModalOpen(true)}>
+                <Plus className="size-4" />
+                {t('Terminals.addTerminal')}
+              </Button>
+            }
+          />
+        </div>
       </div>
       {terminals.length === 0 ? (
         <p className="text-muted">{t('Terminals.noTerminals')}</p>
@@ -40,12 +52,22 @@ export function TerminalsSection({ terminals }: TerminalsSectionProps) {
                   <span className="text-sm text-muted ml-2">({term.code})</span>
                 )}
               </div>
-              <Link href={`/admin/settings/terminals/${term.id}`}>
-                <Button size="sm" variant="secondary">
-                  <Pencil className="size-4" />
-                  {t('Terminals.edit')}
-                </Button>
-              </Link>
+              <EditTerminalModal
+                key={`${term.id}-${editingTerminal?.id === term.id}`}
+                terminal={term}
+                isOpen={editingTerminal?.id === term.id}
+                onOpenChange={(open) => setEditingTerminal(open ? term : null)}
+                trigger={
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onPress={() => setEditingTerminal(term)}
+                  >
+                    <Pencil className="size-4" />
+                    {t('Terminals.edit')}
+                  </Button>
+                }
+              />
             </li>
           ))}
         </ul>
