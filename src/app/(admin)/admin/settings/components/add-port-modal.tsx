@@ -39,8 +39,10 @@ export function AddPortModal({
 
   useEffect(() => {
     if (isOpen) {
-      setCode('');
-      setCountry('');
+      queueMicrotask(() => {
+        setCode('');
+        setCountry('');
+      });
     }
   }, [isOpen]);
 
