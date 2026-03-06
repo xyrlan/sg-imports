@@ -89,15 +89,18 @@ export function Navbar() {
 
           <NavbarProfileDropdown />
 
+
+          {canSelectOrganization && (
+            <>
           <Separator
             className="h-8 hidden md:block"
             orientation="vertical"
           />
-
-          {canSelectOrganization && (
             <div className="hidden sm:flex">
               <NavbarOrganizationSelect />
             </div>
+            </>
+
           )}
 
 <Separator
