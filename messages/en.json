@@ -125,6 +125,7 @@
   "Organization": {
     "select": "Select Organization",
     "selectDescription": "Choose the organization you want to access",
+    "myOrganizations": "My Organizations",
     "createNew": "Create new organization",
     "noOrganizations": "No organizations found",
     "CreateNew": {
@@ -150,6 +151,28 @@
       "VIEWER": "Viewer"
     }
   },
+  "ProformaQuote": {
+    "select": "Select Proforma",
+    "none": "None",
+    "createNew": "Create new proforma",
+    "createModalTitle": "New Proforma",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Proforma Jan 2025",
+    "create": "Create",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "proformaQuotes": "Proforma Quotes",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete proforma?",
+    "deleteConfirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "quoteStatus": {
+      "DRAFT": "Draft",
+      "SENT": "Sent",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "CONVERTED": "Converted"
+    }
+  },
   "OrganizationEdit": {
     "title": "Edit Organization",
     "backToProfile": "Back to Profile",
@@ -167,7 +190,15 @@
     "phonePlaceholder": "(00) 0000-0000",
     "save": "Save",
     "saving": "Saving...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "socialContract": "Social Contract",
+    "viewDocument": "View document",
+    "uploadSocialContract": "Upload social contract",
+    "replaceDocument": "Replace document",
+    "uploadDocument": "Upload document",
+    "uploading": "Uploading...",
+    "uploaded": "Uploaded",
+    "socialContractNotRequired": "Not required"
   },
   "ProfilePage": {
     "title": "My Profile",
@@ -186,6 +217,11 @@
     "organizationsCount": "You have access to {count} organization(s)",
     "registrationComplete": "Registration complete",
     "registrationPending": "Registration pending",
+    "socialContract": "Social Contract",
+    "socialContractNotRequired": "Not required",
+    "addresses": "Addresses",
+    "addressesComplete": "Complete",
+    "addressesPending": "Pending",
     "edit": "Edit",
     "completeRegistration": "Complete registration",
     "save": "Save",

@@ -8,6 +8,10 @@ import {
   getOrganizationById,
   updateOrganization,
 } from '@/services/organization.service';
+import {
+  uploadOrganizationDocument,
+  validateFile,
+} from '@/services/upload.service';
 
 const organizationEditSchema = z.object({
   tradeName: z.string().min(2, 'Nome fantasia deve ter no mínimo 2 caracteres'),
@@ -24,6 +28,11 @@ const organizationEditSchema = z.object({
 });
 
 export interface UpdateOrganizationState {
+  success?: boolean;
+  error?: string;
+}
+
+export interface UploadSocialContractState {
   success?: boolean;
   error?: string;
 }
@@ -92,6 +101,54 @@ export async function updateOrganizationAction(
     return {
       error:
         error instanceof Error ? error.message : 'Erro ao atualizar organização',
+    };
+  }
+}
+
+/**
+ * Server Action: Upload social contract for organization
+ * Only OWNER and ADMIN can upload
+ */
+export async function uploadSocialContractAction(
+  organizationId: string,
+  _prevState: UploadSocialContractState | null,
+  formData: FormData
+): Promise<UploadSocialContractState> {
+  try {
+    const user = await requireAuth();
+
+    const orgData = await getOrganizationById(organizationId, user.id);
+    if (!orgData) {
+      redirect('/dashboard/profile');
+    }
+
+    if (orgData.role !== 'OWNER' && orgData.role !== 'ADMIN') {
+      return { error: 'Sem permissão para enviar documentos desta organização' };
+    }
+
+    const file = formData.get('socialContract') as File | null;
+    if (!file || file.size === 0) {
+      return { error: 'Selecione um arquivo para enviar' };
+    }
+
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      return { error: validation.error };
+    }
+
+    const url = await uploadOrganizationDocument(file, user.id, organizationId);
+    await updateOrganization(organizationId, user.id, { socialContractUrl: url });
+
+    revalidatePath('/dashboard/profile', 'layout');
+    revalidatePath(`/dashboard/organizations/${organizationId}/edit`, 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error('Error uploading social contract:', error);
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Erro ao enviar contrato social',
     };
   }
 }

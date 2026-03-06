@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import NextLink from 'next/link';
 import {
@@ -11,12 +11,14 @@ import {
   ListBox,
   Button,
   Card,
+  Chip,
 } from '@heroui/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Upload } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
+import { FileUpload } from '@/components/ui/file-upload';
 import { useTranslations } from 'next-intl';
 
-import { updateOrganizationAction } from './actions';
+import { updateOrganizationAction, uploadSocialContractAction } from './actions';
 
 interface OrganizationEditFormProps {
   organizationId: string;
@@ -28,6 +30,7 @@ interface OrganizationEditFormProps {
     taxRegime: string | null;
     email: string | null;
     phone: string | null;
+    socialContractUrl: string | null;
   };
 }
 
@@ -42,12 +45,17 @@ export function OrganizationEditForm({
     updateOrganizationAction.bind(null, organizationId),
     null
   );
+  const [uploadState, uploadFormAction, isUploading] = useActionState(
+    uploadSocialContractAction.bind(null, organizationId),
+    null
+  );
+  const [socialContractFile, setSocialContractFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (state?.success) {
+    if (state?.success || uploadState?.success) {
       router.refresh();
     }
-  }, [state?.success, router]);
+  }, [state?.success, uploadState?.success, router]);
 
   return (
     <Card variant="default">
@@ -155,6 +163,58 @@ export function OrganizationEditForm({
             <Label>{t('phone')}</Label>
             <Input name="phone" placeholder={t('phonePlaceholder')} />
           </TextField>
+
+          {/* Social Contract */}
+          <Card variant="default">
+            <Card.Header>
+              <Card.Title>{t('socialContract')}</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              {organization.socialContractUrl ? (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-default-100 border mb-4">
+                <div className="flex items-center gap-3">
+                  <FileText className="size-5 text-muted" />
+                  <div>
+                    <p className="text-sm font-medium">{t('socialContract')}</p>
+                    <a
+                      href={organization.socialContractUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      {t('viewDocument')}
+                      <ExternalLink className="size-3" />
+                    </a>
+                  </div>
+                </div>
+                <Chip color="success" size="sm">
+                  {t('uploaded')}
+                </Chip>
+              </div>
+              ) : null}
+              <form action={uploadFormAction} className="space-y-4">
+                <FormError message={uploadState?.error} variant="danger" />
+                <FileUpload
+                label={
+                  organization.socialContractUrl
+                    ? t('replaceDocument')
+                    : t('uploadSocialContract')
+                }
+                name="socialContract"
+                onFileSelect={setSocialContractFile}
+                  disabled={isUploading}
+                />
+                <Button
+                type="submit"
+                variant="primary"
+                isDisabled={isUploading || !socialContractFile}
+              >
+                <Upload className="size-4" />
+                  {isUploading ? t('uploading') : t('uploadDocument')}
+                </Button>
+              </form>
+            </Card.Content>
+          </Card>
 
           <div className="flex gap-3 pt-4">
             <Button type="submit" variant="primary" isDisabled={isPending}>

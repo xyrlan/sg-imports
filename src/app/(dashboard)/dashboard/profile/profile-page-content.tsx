@@ -118,7 +118,7 @@ export function ProfilePageContent({
                 role === 'SELLER' || !!organization.socialContractUrl;
               const isRegistrationComplete = hasAddresses && hasSocialContract;
 
-              const canEdit = role === 'OWNER' || role === 'ADMIN';
+              const canEdit = role === 'OWNER' || role === 'ADMIN' || role === 'SELLER';
 
               return (
                 <div
@@ -154,6 +154,38 @@ export function ProfilePageContent({
                         {isRegistrationComplete
                           ? t('registrationComplete')
                           : t('registrationPending')}
+                      </Chip>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted">{t('socialContract')}:</span>
+                      {role === 'SELLER' ? (
+                        <Chip size="sm" variant="soft">
+                          {t('socialContractNotRequired')}
+                        </Chip>
+                      ) : (
+                        <Chip
+                          size="sm"
+                          color={organization.socialContractUrl ? 'success' : 'warning'}
+                          variant="soft"
+                        >
+                          {organization.socialContractUrl
+                            ? t('uploaded')
+                            : t('pending')}
+                        </Chip>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted">{t('addresses')}:</span>
+                      <Chip
+                        size="sm"
+                        color={hasAddresses ? 'success' : 'warning'}
+                        variant="soft"
+                      >
+                        {hasAddresses
+                          ? t('addressesComplete')
+                          : t('addressesPending')}
                       </Chip>
                     </div>
                   </div>

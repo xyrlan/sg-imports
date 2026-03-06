@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getOrganizationById } from '@/services/organization.service';
 import { OrganizationEditForm } from './organization-edit-form';
+import { getUserProfile } from '@/services/auth.service';
 
 interface OrganizationEditPageProps {
   params: Promise<{ id: string }>;
@@ -26,13 +27,15 @@ export default async function OrganizationEditPage({
     redirect('/login');
   }
 
+  const userProfile = await getUserProfile(user.id);
+
   const orgData = await getOrganizationById(organizationId, user.id);
 
   if (!orgData) {
     redirect('/dashboard/profile');
   }
 
-  if (orgData.role !== 'OWNER' && orgData.role !== 'ADMIN') {
+  if (orgData.role !== 'OWNER' && orgData.role !== 'ADMIN' && userProfile?.systemRole !== 'SUPER_ADMIN') {
     redirect('/dashboard/profile');
   }
 
@@ -48,6 +51,7 @@ export default async function OrganizationEditPage({
           taxRegime: orgData.organization.taxRegime,
           email: orgData.organization.email,
           phone: orgData.organization.phone,
+          socialContractUrl: orgData.organization.socialContractUrl,
         }}
       />
     </div>

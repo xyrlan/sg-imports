@@ -125,6 +125,7 @@
   "Organization": {
     "select": "选择组织",
     "selectDescription": "选择要访问的组织",
+    "myOrganizations": "我的组织",
     "createNew": "创建新组织",
     "noOrganizations": "未找到组织",
     "CreateNew": {
@@ -150,6 +151,28 @@
       "VIEWER": "查看者"
     }
   },
+  "ProformaQuote": {
+    "select": "选择形式发票",
+    "none": "无",
+    "createNew": "创建新形式发票",
+    "createModalTitle": "新建形式发票",
+    "nameLabel": "名称",
+    "namePlaceholder": "例如：2025年1月形式发票",
+    "create": "创建",
+    "creating": "创建中...",
+    "cancel": "取消",
+    "proformaQuotes": "形式发票",
+    "delete": "删除",
+    "deleteConfirmTitle": "删除形式发票？",
+    "deleteConfirm": "确定要删除「{name}」吗？此操作无法撤消。",
+    "quoteStatus": {
+      "DRAFT": "草稿",
+      "SENT": "已发送",
+      "APPROVED": "已批准",
+      "REJECTED": "已拒绝",
+      "CONVERTED": "已转换"
+    }
+  },
   "OrganizationEdit": {
     "title": "编辑组织",
     "backToProfile": "返回个人资料",
@@ -167,7 +190,15 @@
     "phonePlaceholder": "(00) 0000-0000",
     "save": "保存",
     "saving": "保存中...",
-    "cancel": "取消"
+    "cancel": "取消",
+    "socialContract": "公司章程",
+    "viewDocument": "查看文件",
+    "uploadSocialContract": "上传公司章程",
+    "replaceDocument": "替换文件",
+    "uploadDocument": "上传文件",
+    "uploading": "上传中...",
+    "uploaded": "已上传",
+    "socialContractNotRequired": "不需要"
   },
   "ProfilePage": {
     "title": "我的资料",
@@ -186,6 +217,11 @@
     "organizationsCount": "您可访问 {count} 个组织",
     "registrationComplete": "注册完成",
     "registrationPending": "注册待完成",
+    "socialContract": "公司章程",
+    "socialContractNotRequired": "不需要",
+    "addresses": "地址",
+    "addressesComplete": "完整",
+    "addressesPending": "待完成",
     "edit": "编辑",
     "completeRegistration": "完成注册",
     "save": "保存",

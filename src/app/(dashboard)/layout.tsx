@@ -2,7 +2,10 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { OrganizationProvider } from '@/contexts/organization-context';
+import { ProformaQuoteProvider } from '@/contexts/proforma-quote-context';
 import { getUserOrganizations, getOrganizationById } from '@/services/organization.service';
+import { getProformaQuotesByOrganization } from '@/services/quote.service';
+import { getProformaQuoteCookie } from '@/app/(dashboard)/actions';
 import { Navbar } from '@/components/layout';
 import type { ReactNode } from 'react';
 import { getUserProfile } from '@/services/auth.service';
@@ -79,14 +82,44 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     isLoading: false,
   };
 
+  // Step 8: Fetch proforma quote data for SELLER or SUPER_ADMIN (bypass)
+  const canSelectProforma =
+    currentOrgData.role === 'SELLER' || userProfile?.systemRole === 'SUPER_ADMIN';
+
+  let proformaInitialData = {
+    currentQuote: null as Awaited<ReturnType<typeof getProformaQuotesByOrganization>>[number] | null,
+    availableQuotes: [] as Awaited<ReturnType<typeof getProformaQuotesByOrganization>>,
+    isLoading: false,
+  };
+
+  if (canSelectProforma) {
+    const availableQuotes = await getProformaQuotesByOrganization(
+      currentOrgData.organization.id,
+      user.id
+    );
+    const activeQuoteId = await getProformaQuoteCookie();
+    const currentQuote =
+      activeQuoteId && availableQuotes.some((q) => q.id === activeQuoteId)
+        ? availableQuotes.find((q) => q.id === activeQuoteId) ?? null
+        : null;
+
+    proformaInitialData = {
+      currentQuote,
+      availableQuotes,
+      isLoading: false,
+    };
+  }
+
   return (
     <OrganizationProvider initialData={initialData}>
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="flex-1">
-          {children}
-        </main>
-      </div>
+      <ProformaQuoteProvider initialData={proformaInitialData}>
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
+      </ProformaQuoteProvider>
     </OrganizationProvider>
   );
 }

@@ -57,6 +57,13 @@
       "when": 1770917170098,
       "tag": "0007_carriers_currency_brokers",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1772820081203,
+      "tag": "0008_add_freight_webhooks",
+      "breakpoints": true
     }
   ]
 }

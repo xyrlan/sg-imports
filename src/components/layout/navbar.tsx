@@ -14,6 +14,7 @@ import { useOrganizationState } from '@/contexts/organization-context';
 
 import { NavbarProfileDropdown } from './navbar-profile-dropdown';
 import { NavbarOrganizationSelect } from './navbar-organization-select';
+import { NavbarProformaQuoteSelect } from './navbar-proforma-quote-select';
 
 interface NavbarLink {
   href: string;
@@ -24,9 +25,15 @@ interface NavbarLink {
 
 export function Navbar() {
   const t = useTranslations('Navbar');
-  const { membership } = useOrganizationState();
+  const { membership, profile } = useOrganizationState();
 
   const userRole = membership?.role || 'VIEWER';
+  const isSuperAdmin = profile?.systemRole === 'SUPER_ADMIN';
+
+  // Proforma select: only SELLER (org role) or SUPER_ADMIN (system role bypass)
+  const canSelectProforma = userRole === 'SELLER' || isSuperAdmin;
+
+  const canSelectOrganization = userRole !== 'SELLER' || isSuperAdmin ;
 
   // Define navigation links based on user role
   const navLinks: NavbarLink[] = [
@@ -70,7 +77,6 @@ export function Navbar() {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             href="/dashboard"
           >
-            <ShipIcon className="w-6 h-6 text-accent" />
             <h1 className="font-bold text-lg max-md:hidden">
               SG Imports
             </h1>
@@ -88,9 +94,20 @@ export function Navbar() {
             orientation="vertical"
           />
 
-          {userRole === 'OWNER' && (
+          {canSelectOrganization && (
             <div className="hidden sm:flex">
               <NavbarOrganizationSelect />
+            </div>
+          )}
+
+<Separator
+            className="h-8 hidden md:block"
+            orientation="vertical"
+          />
+
+          {canSelectProforma && (
+            <div className="hidden sm:flex">
+              <NavbarProformaQuoteSelect />
             </div>
           )}
         </div>

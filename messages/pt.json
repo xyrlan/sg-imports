@@ -125,6 +125,7 @@
   "Organization": {
     "select": "Selecionar Organização",
     "selectDescription": "Escolha a organização que deseja acessar",
+    "myOrganizations": "Minhas Organizações",
     "createNew": "Criar nova organização",
     "noOrganizations": "Nenhuma organização encontrada",
     "CreateNew": {
@@ -150,6 +151,28 @@
       "VIEWER": "Visualizador"
     }
   },
+  "ProformaQuote": {
+    "select": "Selecionar Proforma",
+    "none": "Nenhum",
+    "createNew": "Criar novo proforma",
+    "createModalTitle": "Novo Proforma",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Ex: Proforma Jan 2025",
+    "create": "Criar",
+    "creating": "Criando...",
+    "cancel": "Cancelar",
+    "proformaQuotes": "Proformas",
+    "delete": "Excluir",
+    "deleteConfirmTitle": "Excluir proforma?",
+    "deleteConfirm": "Tem certeza que deseja excluir \"{name}\"? Esta ação não pode ser desfeita.",
+    "quoteStatus": {
+      "DRAFT": "Rascunho",
+      "SENT": "Enviado",
+      "APPROVED": "Aprovado",
+      "REJECTED": "Rejeitado",
+      "CONVERTED": "Convertido"
+    }
+  },
   "OrganizationEdit": {
     "title": "Editar Organização",
     "backToProfile": "Voltar ao Perfil",
@@ -167,7 +190,15 @@
     "phonePlaceholder": "(00) 0000-0000",
     "save": "Salvar",
     "saving": "Salvando...",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "socialContract": "Contrato Social",
+    "viewDocument": "Ver documento",
+    "uploadSocialContract": "Enviar contrato social",
+    "replaceDocument": "Substituir documento",
+    "uploadDocument": "Enviar documento",
+    "uploading": "Enviando...",
+    "uploaded": "Enviado",
+    "socialContractNotRequired": "Não exigido"
   },
   "ProfilePage": {
     "title": "Meu Perfil",
@@ -186,6 +217,11 @@
     "organizationsCount": "Você tem acesso a {count} organização(ões)",
     "registrationComplete": "Cadastro completo",
     "registrationPending": "Cadastro pendente",
+    "socialContract": "Contrato Social",
+    "socialContractNotRequired": "Não exigido",
+    "addresses": "Endereços",
+    "addressesComplete": "Completos",
+    "addressesPending": "Pendentes",
     "edit": "Editar",
     "completeRegistration": "Completar cadastro",
     "save": "Salvar",

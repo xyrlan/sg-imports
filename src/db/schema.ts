@@ -9,7 +9,9 @@ import {
   pgEnum,
   primaryKey,
   jsonb,
-  boolean
+  boolean,
+  unique,
+  index
 } from 'drizzle-orm/pg-core';
 
 export type ProductSnapshot = {
@@ -84,6 +86,10 @@ export const transactionTypeEnum = pgEnum('transaction_type', [
   'TAXES',        // Pagamento de impostos
   'SERVICE_FEE'   // Honorários do sistema
 ]);
+export const walletTransactionTypeEnum = pgEnum('wallet_transaction_type', [
+  'CREDIT',
+  'DEBIT'
+]);
 export const documentTypeEnum = pgEnum('document_type', [
   'COMMERCIAL_INVOICE',
   'PACKING_LIST',
@@ -107,6 +113,9 @@ export const rateTypeEnum = pgEnum('rate_type', [
   'COFINS_DEFAULT'
 ]);
 export const rateUnitEnum = pgEnum('rate_unit', ['PERCENT', 'FIXED_BRL', 'FIXED_USD', 'PER_CONTAINER_BRL']);
+export const webhookStatusEnum = pgEnum('webhook_status', ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']);
+export const freightProposalStatusEnum = pgEnum('freight_proposal_status', ['DRAFT', 'SENT', 'APPROVED', 'REJECTED']);
+export const pricingScopeEnum = pgEnum('pricing_scope', ['CARRIER', 'PORT', 'SPECIFIC']);
 
 // ==========================================
 // 2. AUTH & ORGANIZATION
@@ -199,6 +208,36 @@ export const suppliers = pgTable('suppliers', {
   address: text('address'),
   siscomexId: text('siscomex_id').unique(),
 });
+
+export const subSuppliers = pgTable('sub_suppliers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  supplierId: uuid('supplier_id').references(() => suppliers.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  taxId: text('tax_id'), // TIN number
+  countryCode: text('country_code').default('CN'),
+  email: text('email'),
+  address: text('address'),
+  siscomexId: text('siscomex_id').unique(),
+});
+
+export const suppliersWallets = pgTable('suppliers_wallets', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  supplierId: uuid('supplier_id').references(() => suppliers.id, { onDelete: 'cascade' }).notNull(),
+  balanceUsd: decimal('balance_usd', { precision: 10, scale: 2 }).notNull().default('0'),
+});
+
+export const suppliersWalletTransactions = pgTable('suppliers_wallet_transactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  walletId: uuid('wallet_id').references(() => suppliersWallets.id, { onDelete: 'cascade' }).notNull(),
+  exchangeContractId: uuid('exchange_contract_id').references(() => exchangeContracts.id, { onDelete: 'cascade' }),
+  orderId: uuid('order_id').references(() => shipments.id, { onDelete: 'cascade' }),
+  transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }),
+  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+  type: walletTransactionTypeEnum('type').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.walletId, t.orderId, t.type] }),
+]);
 
 export const products = pgTable('products', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -445,7 +484,8 @@ export const transactions = pgTable('transactions', {
   // Valores
   amountBrl: decimal('amount_brl', { precision: 12, scale: 2 }), // Quanto saiu da conta em Reais
   amountUsd: decimal('amount_usd', { precision: 12, scale: 2 }), // Quanto chegou lá fora (se aplicável)
-  exchangeRate: decimal('exchange_rate', { precision: 10, scale: 4 }), // Taxa usada
+  /** Taxa usada — OBRIGATÓRIO preencher no momento do pagamento (dólar travado para fins fiscais) */
+  exchangeRate: decimal('exchange_rate', { precision: 10, scale: 4 }),
   
   // Integração Bancária (Asaas / Ebanx)
   gatewayId: text('gateway_id'), // asaasPaymentId do legado
@@ -601,8 +641,116 @@ export const integrationLogs = pgTable('integration_logs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+/** Webhook events queue — inbound events from Asaas, ZapSign, ShipsGo with retry support */
+export const webhookEvents = pgTable(
+  'webhook_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    provider: text('provider').$type<'ZAPSIGN' | 'SHIPSGO' | 'ASAAS' | 'SISCOMEX'>().notNull(),
+    eventType: text('event_type').notNull(),
+    externalId: text('external_id').notNull(),
+    payload: jsonb('payload').notNull(),
+    status: webhookStatusEnum('status').default('PENDING').notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    lastError: text('last_error'),
+    processedAt: timestamp('processed_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [
+    unique('webhook_events_provider_external_id_event_type_key').on(t.provider, t.externalId, t.eventType),
+    index('webhook_events_status_created_at_idx').on(t.status, t.createdAt),
+  ]
+);
+
 // ==========================================
-// 12. RELATIONS (Application Level) - COMPLETO
+// 12. FREIGHT MANAGEMENT (InternacionalFreight, FreightProposal, PricingRule)
+// ==========================================
+
+/** Base freight rates by carrier, container type, and ports */
+export const internationalFreights = pgTable('international_freights', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'cascade' }),
+  containerType: containerTypeEnum('container_type').notNull(),
+  portOfLoadingId: uuid('port_of_loading_id').references(() => ports.id).notNull(),
+  portOfDischargeId: uuid('port_of_discharge_id').references(() => ports.id).notNull(),
+  value: decimal('value', { precision: 10, scale: 2 }).notNull(),
+  currency: currencyEnum('currency').default('USD').notNull(),
+  freeTimeDays: integer('free_time_days').default(0),
+  expectedProfit: decimal('expected_profit', { precision: 10, scale: 2 }),
+  validFrom: timestamp('valid_from').defaultNow().notNull(),
+  validTo: timestamp('valid_to'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/** Commercial proposals sent to clients (based on internationalFreights) */
+export const freightProposals = pgTable('freight_proposals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
+  internationalFreightId: uuid('international_freight_id').references(() => internationalFreights.id, { onDelete: 'restrict' }).notNull(),
+  status: freightProposalStatusEnum('status').default('DRAFT').notNull(),
+  freightValue: decimal('freight_value', { precision: 10, scale: 2 }).notNull(),
+  totalValue: decimal('total_value', { precision: 10, scale: 2 }).notNull(),
+  customTaxes: jsonb('custom_taxes'),
+  transitTimeDays: integer('transit_time_days'),
+  validUntil: timestamp('valid_until'),
+  pdfUrl: text('pdf_url'),
+  cnpj: text('cnpj'),
+  email: text('email'),
+  reference: text('reference'),
+  incoterm: incotermEnum('incoterm').default('FOB'),
+  createdById: uuid('created_by_id').references(() => profiles.id, { onDelete: 'restrict' }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/** Admin tariff rules — carrier/port/container scope */
+export const pricingRules = pgTable('pricing_rules', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'restrict' }).notNull(),
+  portId: uuid('port_id').references(() => ports.id, { onDelete: 'restrict' }),
+  containerType: containerTypeEnum('container_type'),
+  scope: pricingScopeEnum('scope').default('SPECIFIC').notNull(),
+  validFrom: timestamp('valid_from').notNull(),
+  validTo: timestamp('valid_to'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/** Fee items within a pricing rule (AFRMM, desova, etc.) */
+export const pricingItems = pgTable('pricing_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pricingRuleId: uuid('pricing_rule_id').references(() => pricingRules.id, { onDelete: 'cascade' }),
+  shipmentId: uuid('shipment_id').references(() => shipments.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+  currency: currencyEnum('currency').default('BRL').notNull(),
+  basis: feeBasisEnum('basis').default('PER_CONTAINER').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/** Snapshot of freight used for a shipment (1:1 with shipment) */
+export const shipmentFreightReceipts = pgTable('shipment_freight_receipts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  shipmentId: uuid('shipment_id').references(() => shipments.id, { onDelete: 'cascade' }).notNull().unique(),
+  carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'restrict' }).notNull(),
+  containerType: containerTypeEnum('container_type').notNull(),
+  containerQuantity: integer('container_quantity').default(1).notNull(),
+  portOfLoadingId: uuid('port_of_loading_id').references(() => ports.id, { onDelete: 'restrict' }).notNull(),
+  portOfDischargeId: uuid('port_of_discharge_id').references(() => ports.id, { onDelete: 'restrict' }).notNull(),
+  freightValue: decimal('freight_value', { precision: 10, scale: 2 }).notNull(),
+  dolarQuotation: decimal('dolar_quotation', { precision: 10, scale: 4 }).notNull(),
+  documentId: uuid('document_id').references(() => shipmentDocuments.id, { onDelete: 'set null' }),
+  freightExpenses: jsonb('freight_expenses').$type<Record<string, unknown>[]>().default([]),
+  pricingItems: jsonb('pricing_items').$type<Record<string, unknown>[]>().default([]),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ==========================================
+// 13. RELATIONS (Application Level) - COMPLETO
 // ==========================================
 
 export const organizationsRelations = relations(organizations, ({ many, one }) => ({
@@ -611,6 +759,7 @@ export const organizationsRelations = relations(organizations, ({ many, one }) =
   shipments: many(shipments),
   quotes: many(quotes),
   suppliers: many(suppliers),
+  freightProposals: many(freightProposals),
   feeConfig: one(serviceFeeConfigs, {
     fields: [organizations.id],
     references: [serviceFeeConfigs.organizationId]
@@ -629,6 +778,7 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
   uploadedDocuments: many(shipmentDocuments),
   changeRequests: many(shipmentChangeRequests),
   notifications: many(notifications),
+  freightProposalsCreated: many(freightProposals),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -647,6 +797,8 @@ export const shipmentsRelations = relations(shipments, ({ one, many }) => ({
   expenses: many(shipmentExpenses),
   transactions: many(transactions),
   documents: many(shipmentDocuments),
+  pricingItems: many(pricingItems),
+  freightReceipt: one(shipmentFreightReceipts),
   
   // Auditoria e Histórico
   stepHistory: many(shipmentStepHistory),
@@ -695,6 +847,7 @@ export const currencyExchangeBrokersRelations = relations(
 export const shipmentDocumentsRelations = relations(shipmentDocuments, ({ one }) => ({
   shipment: one(shipments, { fields: [shipmentDocuments.shipmentId], references: [shipments.id] }),
   uploadedBy: one(profiles, { fields: [shipmentDocuments.uploadedById], references: [profiles.id] }),
+  freightReceipt: one(shipmentFreightReceipts),
 }));
 
 export const shipmentChangeRequestsRelations = relations(shipmentChangeRequests, ({ one }) => ({
@@ -717,5 +870,51 @@ export const storageRulesRelations = relations(storageRules, ({ one, many }) => 
 
 export const storagePeriodsRelations = relations(storagePeriods, ({ one }) => ({
   rule: one(storageRules, { fields: [storagePeriods.ruleId], references: [storageRules.id] }),
+}));
+
+export const carriersRelations = relations(carriers, ({ many }) => ({
+  internationalFreights: many(internationalFreights),
+  pricingRules: many(pricingRules),
+  freightReceipts: many(shipmentFreightReceipts),
+}));
+
+export const internationalFreightsRelations = relations(internationalFreights, ({ one, many }) => ({
+  carrier: one(carriers, { fields: [internationalFreights.carrierId], references: [carriers.id] }),
+  portOfLoading: one(ports, { fields: [internationalFreights.portOfLoadingId], references: [ports.id], relationName: 'portOfLoading' }),
+  portOfDischarge: one(ports, { fields: [internationalFreights.portOfDischargeId], references: [ports.id], relationName: 'portOfDischarge' }),
+  freightProposals: many(freightProposals),
+}));
+
+export const freightProposalsRelations = relations(freightProposals, ({ one }) => ({
+  organization: one(organizations, { fields: [freightProposals.organizationId], references: [organizations.id] }),
+  internationalFreight: one(internationalFreights, { fields: [freightProposals.internationalFreightId], references: [internationalFreights.id] }),
+  createdBy: one(profiles, { fields: [freightProposals.createdById], references: [profiles.id] }),
+}));
+
+export const pricingRulesRelations = relations(pricingRules, ({ one, many }) => ({
+  carrier: one(carriers, { fields: [pricingRules.carrierId], references: [carriers.id] }),
+  port: one(ports, { fields: [pricingRules.portId], references: [ports.id] }),
+  items: many(pricingItems),
+}));
+
+export const pricingItemsRelations = relations(pricingItems, ({ one }) => ({
+  pricingRule: one(pricingRules, { fields: [pricingItems.pricingRuleId], references: [pricingRules.id] }),
+  shipment: one(shipments, { fields: [pricingItems.shipmentId], references: [shipments.id] }),
+}));
+
+export const shipmentFreightReceiptsRelations = relations(shipmentFreightReceipts, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentFreightReceipts.shipmentId], references: [shipments.id] }),
+  carrier: one(carriers, { fields: [shipmentFreightReceipts.carrierId], references: [carriers.id] }),
+  portOfLoading: one(ports, { fields: [shipmentFreightReceipts.portOfLoadingId], references: [ports.id], relationName: 'freightReceiptLoading' }),
+  portOfDischarge: one(ports, { fields: [shipmentFreightReceipts.portOfDischargeId], references: [ports.id], relationName: 'freightReceiptDischarge' }),
+  document: one(shipmentDocuments, { fields: [shipmentFreightReceipts.documentId], references: [shipmentDocuments.id] }),
+}));
+
+export const portsRelations = relations(ports, ({ many }) => ({
+  internationalFreightsAsLoading: many(internationalFreights, { relationName: 'portOfLoading' }),
+  internationalFreightsAsDischarge: many(internationalFreights, { relationName: 'portOfDischarge' }),
+  pricingRules: many(pricingRules),
+  freightReceiptsAsLoading: many(shipmentFreightReceipts, { relationName: 'freightReceiptLoading' }),
+  freightReceiptsAsDischarge: many(shipmentFreightReceipts, { relationName: 'freightReceiptDischarge' }),
 }));
 

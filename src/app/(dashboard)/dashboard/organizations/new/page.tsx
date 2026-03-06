@@ -14,17 +14,26 @@ import { createOrganization } from './actions';
 export default function CreateOrganizationPage() {
   const t = useTranslations('Organization');
   const router = useRouter();
-  const { membership } = useOrganizationState();
+  const { membership, isLoading, profile } = useOrganizationState();
   const [state, formAction, isPending] = useActionState(createOrganization, null);
 
   useEffect(() => {
-    if (membership?.role !== 'OWNER') {
+    // Only redirect when we've finished loading and confirmed user is not OWNER
+    if (!isLoading && membership && membership.role !== 'OWNER' && profile?.systemRole !== 'SUPER_ADMIN') {
       router.replace('/dashboard');
     }
-  }, [membership?.role, router]);
+  }, [membership, isLoading, router, profile]);
 
-  if (membership?.role !== 'OWNER') {
-    return null;
+  // Show loading or redirect - avoid flash before redirect
+  if (isLoading || !membership) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <p className="text-muted">Carregando...</p>
+      </div>
+    );
+  }
+  if (membership.role !== 'OWNER' && profile?.systemRole !== 'SUPER_ADMIN') {
+    return null; // Redirect in progress
   }
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {

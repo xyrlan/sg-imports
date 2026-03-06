@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select, ListBox, Label, Button } from '@heroui/react';
+import { Select, ListBox, Label, Header, Separator } from '@heroui/react';
 import { useTranslations } from 'next-intl';
 import { Building2, Plus } from 'lucide-react';
 
 import { useOrganization } from '@/contexts/organization-context';
+
+const CREATE_NEW_KEY = 'createNew';
 
 export function NavbarOrganizationSelect() {
   const t = useTranslations('Organization');
@@ -21,7 +23,7 @@ export function NavbarOrganizationSelect() {
   const [isSwitching, setIsSwitching] = useState(false);
 
   const handleOrganizationChange = async (key: string | number | null) => {
-    if (!key) return;
+    if (!key || key === CREATE_NEW_KEY) return;
 
     const selectedOrgId = key.toString();
 
@@ -43,7 +45,7 @@ export function NavbarOrganizationSelect() {
       <Select
         aria-label={t('select')}
         className="max-w-64"
-        defaultValue={currentOrganization?.id}
+        value={currentOrganization?.id}
         isDisabled={isLoading || isSwitching}
         placeholder={t('select')}
         onChange={handleOrganizationChange}
@@ -55,35 +57,43 @@ export function NavbarOrganizationSelect() {
         </Select.Trigger>
         <Select.Popover>
           <ListBox>
-            {availableOrganizations.map((org) => (
-              <ListBox.Item
-                key={org.organization.id}
-                id={org.organization.id}
-                textValue={org.organization.name}
-              >
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-muted" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{org.organization.name}</span>
-                    <span className="text-xs text-muted">
-                      {t(`role.${org.role}`)}
-                    </span>
+            <ListBox.Section>
+              <Header>{t('myOrganizations')}</Header>
+              {availableOrganizations.map((org) => (
+                <ListBox.Item
+                  key={org.organization.id}
+                  id={org.organization.id}
+                  textValue={org.organization.name}
+                  className={org.organization.id === currentOrganization?.id ? 'hidden' : undefined}
+                >
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{org.organization.name}</span>
+                      <span className="text-xs text-muted">
+                        {t(`role.${org.role}`)}
+                      </span>
+                    </div>
                   </div>
+                </ListBox.Item>
+              ))}
+            </ListBox.Section>
+            <Separator />
+            <ListBox.Section>
+              <ListBox.Item
+                id={CREATE_NEW_KEY}
+                textValue={t('createNew')}
+                onPress={() => router.push('/dashboard/organizations/new')}
+              >
+                <div className="flex items-center gap-2 text-accent">
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium">{t('createNew')}</span>
                 </div>
               </ListBox.Item>
-            ))}
+            </ListBox.Section>
           </ListBox>
         </Select.Popover>
       </Select>
-      <Button
-        isIconOnly
-        variant="ghost"
-        size="sm"
-        aria-label={t('createNew')}
-        onPress={() => router.push('/dashboard/organizations/new')}
-      >
-        <Plus className="w-4 h-4" />
-      </Button>
     </div>
   );
 }
