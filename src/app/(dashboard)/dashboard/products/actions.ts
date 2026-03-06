@@ -1,0 +1,204 @@
+'use server';
+
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { hsCodes, suppliers } from '@/db/schema';
+import { createClient } from '@/lib/supabase/server';
+import { getOrganizationById } from '@/services/organization.service';
+import { createProduct } from '@/services/product.service';
+import { uploadProductPhotos } from '@/services/upload.service';
+
+const tieredPriceInfoSchema = z.array(
+  z.object({ beginAmount: z.number(), price: z.string() })
+);
+const variantAttributesSchema = z.record(z.string(), z.string());
+
+const variantSchema = z.object({
+  sku: z.string().min(1, 'SKU is required'),
+  name: z.string().min(1, 'Variant name is required'),
+  priceUsd: z.string().min(1, 'Price is required'),
+  boxQuantity: z.coerce.number().int().min(1, 'Quantity per box must be at least 1').default(1),
+  boxWeight: z.string().min(1, 'Box weight is required').default('0'),
+  height: z.string().optional(),
+  width: z.string().optional(),
+  length: z.string().optional(),
+  netWeight: z.string().optional(),
+  unitWeight: z.string().optional(),
+  tieredPriceInfo: tieredPriceInfoSchema.optional(),
+  attributes: variantAttributesSchema.optional(),
+});
+
+const createProductSchema = z.object({
+  organizationId: z.string().uuid('Invalid organization'),
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  hsCodeId: z.union([z.string().uuid(), z.literal('')]).optional(),
+  supplierId: z.union([z.string().uuid(), z.literal('')]).optional(),
+  variants: z.array(variantSchema),
+});
+
+export interface CreateProductState {
+  error?: string;
+  success?: boolean;
+}
+
+export async function createProductAction(
+  _prevState: CreateProductState | null,
+  formData: FormData
+): Promise<CreateProductState> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      redirect('/login');
+    }
+
+    const variantSkus = formData.getAll('variantSku') as string[];
+    const variantNames = formData.getAll('variantName') as string[];
+    const priceUsds = formData.getAll('priceUsd') as string[];
+    const boxQuantities = (formData.getAll('variantBoxQuantity') as string[]) ?? [];
+    const boxWeights = (formData.getAll('variantBoxWeight') as string[]) ?? [];
+    const heights = (formData.getAll('variantHeight') as string[]) ?? [];
+    const widths = (formData.getAll('variantWidth') as string[]) ?? [];
+    const lengths = (formData.getAll('variantLength') as string[]) ?? [];
+    const netWeights = (formData.getAll('variantNetWeight') as string[]) ?? [];
+    const unitWeights = (formData.getAll('variantUnitWeight') as string[]) ?? [];
+    const tieredPriceInfos = (formData.getAll('variantTieredPriceInfo') as string[]) ?? [];
+    const attributesList = (formData.getAll('variantAttributes') as string[]) ?? [];
+
+    const parseTieredPriceInfo = (raw: string) => {
+      const trimmed = raw?.trim();
+      if (!trimmed) return undefined;
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        const result = tieredPriceInfoSchema.safeParse(parsed);
+        return result.success ? result.data : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const parseAttributes = (raw: string) => {
+      const trimmed = raw?.trim();
+      if (!trimmed) return undefined;
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        const result = variantAttributesSchema.safeParse(parsed);
+        return result.success ? result.data : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+
+    const rawVariants = variantNames.map((name, i) => ({
+      sku: (variantSkus[i] ?? '').trim(),
+      name: (name ?? '').trim(),
+      priceUsd: (priceUsds[i] ?? '').trim(),
+      boxQuantity: (boxQuantities[i] ?? '').trim() || '1',
+      boxWeight: (boxWeights[i] ?? '').trim() || '0',
+      height: (heights[i] ?? '').trim() || undefined,
+      width: (widths[i] ?? '').trim() || undefined,
+      length: (lengths[i] ?? '').trim() || undefined,
+      netWeight: (netWeights[i] ?? '').trim() || undefined,
+      unitWeight: (unitWeights[i] ?? '').trim() || undefined,
+      tieredPriceInfo: parseTieredPriceInfo(tieredPriceInfos[i] ?? ''),
+      attributes: parseAttributes(attributesList[i] ?? ''),
+    }));
+    const variants =
+      rawVariants.filter((v) => v.sku || v.name || v.priceUsd).length > 0
+        ? rawVariants.filter((v) => v.sku || v.name || v.priceUsd)
+        : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: '1', boxWeight: '0' }];
+
+    const photoEntries = formData.getAll('photos');
+    const photoFiles = photoEntries.filter((e): e is File => e instanceof File);
+
+    const rawData = {
+      organizationId: formData.get('organizationId') as string,
+      name: (formData.get('name') as string)?.trim(),
+      description: (formData.get('description') as string)?.trim() || undefined,
+      hsCodeId: (formData.get('hsCodeId') as string)?.trim() || undefined,
+      supplierId: (formData.get('supplierId') as string)?.trim() || undefined,
+      variants,
+    };
+
+    const validated = createProductSchema.safeParse(rawData);
+    if (!validated.success) {
+      return {
+        error: validated.error.issues[0]?.message ?? 'Invalid data',
+      };
+    }
+
+    const access = await getOrganizationById(validated.data.organizationId, user.id);
+    if (!access) {
+      return { error: 'Forbidden' };
+    }
+
+    let photoUrls: string[] = [];
+    if (photoFiles.length > 0) {
+      photoUrls = await uploadProductPhotos(
+        photoFiles,
+        user.id,
+        validated.data.organizationId
+      );
+    }
+
+    const rawHsCodeId = validated.data.hsCodeId;
+    const rawSupplierId = validated.data.supplierId;
+    const hsCodeId =
+      rawHsCodeId && rawHsCodeId !== '' && rawHsCodeId !== '__none__'
+        ? rawHsCodeId
+        : undefined;
+    const supplierId =
+      rawSupplierId && rawSupplierId !== '' && rawSupplierId !== '__none__'
+        ? rawSupplierId
+        : undefined;
+
+    await createProduct(validated.data.organizationId, {
+      name: validated.data.name,
+      description: validated.data.description,
+      photos: photoUrls.length > 0 ? photoUrls : undefined,
+      hsCodeId,
+      supplierId,
+      variants: (validated.data.variants ?? []).map((v) => ({
+        sku: v.sku,
+        name: v.name,
+        priceUsd: v.priceUsd.replace(',', '.'),
+        boxQuantity: Number(String(v.boxQuantity).replace(',', '.')) || 1,
+        boxWeight: String(v.boxWeight).replace(',', '.') || '0',
+        height: v.height?.replace(',', '.') || undefined,
+        width: v.width?.replace(',', '.') || undefined,
+        length: v.length?.replace(',', '.') || undefined,
+        netWeight: v.netWeight?.replace(',', '.') || undefined,
+        unitWeight: v.unitWeight?.replace(',', '.') || undefined,
+        tieredPriceInfo: v.tieredPriceInfo,
+        attributes: v.attributes,
+      })),
+    });
+
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) {
+      throw err;
+    }
+    return {
+      error: err instanceof Error ? err.message : 'Failed to create product',
+    };
+  }
+}
+
+export async function getProductFormOptions(organizationId: string) {
+  const [hsCodesList, suppliersList] = await Promise.all([
+    db.select({ id: hsCodes.id, code: hsCodes.code }).from(hsCodes).orderBy(hsCodes.code),
+    db
+      .select({ id: suppliers.id, name: suppliers.name })
+      .from(suppliers)
+      .where(eq(suppliers.organizationId, organizationId))
+      .orderBy(suppliers.name),
+  ]);
+  return { hsCodes: hsCodesList, suppliers: suppliersList };
+}

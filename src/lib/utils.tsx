@@ -21,3 +21,12 @@ export function formatDate(date: Date) {
     year: 'numeric',
   });
 }
+
+export function formatCurrency(value: number | string, locale = 'en-US', currency = 'USD') {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '—';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).format(num);
+}

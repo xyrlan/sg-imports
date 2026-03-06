@@ -46,6 +46,31 @@ export type ProductSnapshot = {
 };
 
 // ==========================================
+// Product Variant Types (Alibaba/1688 compatible)
+// ==========================================
+
+/** Alibaba-style: property_id -> value_id mapping for i18n */
+export type VariantAttributes = Record<string, string>;
+
+/** Single tier: from quantity X onward, use this price */
+export type PriceTier = { beginAmount: number; price: string };
+
+/** Array of tiers, sorted by beginAmount ascending */
+export type TieredPriceInfo = PriceTier[];
+
+/** Get effective price for quantity from tiered pricing; falls back to priceUsd if no tiers */
+export function getPriceForQuantity(
+  tieredPriceInfo: TieredPriceInfo | null | undefined,
+  quantity: number,
+  fallbackPrice: string
+): string {
+  if (!tieredPriceInfo || tieredPriceInfo.length === 0) return fallbackPrice;
+  const sorted = [...tieredPriceInfo].sort((a, b) => b.beginAmount - a.beginAmount);
+  const tier = sorted.find((t) => quantity >= t.beginAmount);
+  return tier ? tier.price : fallbackPrice;
+}
+
+// ==========================================
 // 1. ENUMS (Postgres Types)
 // ==========================================
 export const systemRoleEnum = pgEnum('system_role', ['USER', 'SUPER_ADMIN', 'SUPER_ADMIN_EMPLOYEE']);
@@ -242,14 +267,10 @@ export const suppliersWalletTransactions = pgTable('suppliers_wallet_transaction
 export const products = pgTable('products', {
   id: uuid('id').defaultRandom().primaryKey(),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
-  sku: text('internal_code').notNull(),
+  styleCode: text('style_code'), // Optional: style/product grouping code (SPU level)
   name: text('name').notNull(),
   description: text('description'),
   photos: text('photos').array(),
-
-  // Dados Logísticos Base
-  boxQuantity: integer('box_quantity').notNull(),
-  boxWeight: decimal('box_weight', { precision: 10, scale: 3 }).notNull(),
 
   // Foreign Keys
   hsCodeId: uuid('hs_code_id').references(() => hsCodes.id),
@@ -261,18 +282,38 @@ export const products = pgTable('products', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const productVariants = pgTable('product_variants', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  productId: uuid('product_id').references(() => products.id, { onDelete: 'cascade' }).notNull(),
-  name: text('name').notNull(), // Ex: "Azul - G"
-  priceUsd: decimal('price_usd', { precision: 10, scale: 2 }).notNull(),
+export const productVariants = pgTable(
+  'product_variants',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id').references(() => products.id, { onDelete: 'cascade' }).notNull(),
+    organizationId: uuid('organization_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    sku: text('sku').notNull(), // Stock Keeping Unit — unique per org (Alibaba/1688)
+    name: text('name').notNull(), // Ex: "Azul - G" or "Default" for simple products
+    priceUsd: decimal('price_usd', { precision: 10, scale: 2 }).notNull(), // Base price / first tier
 
-  // Dimensões específicas
-  height: decimal('height', { precision: 10, scale: 2 }),
-  width: decimal('width', { precision: 10, scale: 2 }),
-  length: decimal('length', { precision: 10, scale: 2 }),
-  netWeight: decimal('net_weight', { precision: 10, scale: 3 }),
-});
+    // Alibaba/1688: logistics at SKU level (consistency for freight calculation)
+    boxQuantity: integer('box_quantity').notNull().default(1),
+    boxWeight: decimal('box_weight', { precision: 10, scale: 3 }).notNull().default('0'),
+
+    // Alibaba/1688: property_id:value_id mapping for i18n
+    attributes: jsonb('attributes').$type<VariantAttributes>(),
+
+    // Tiered pricing: [{ beginAmount: 1, price: "10.00" }, { beginAmount: 100, price: "9.00" }]
+    tieredPriceInfo: jsonb('tiered_price_info').$type<TieredPriceInfo>(),
+
+    // Dimensões específicas
+    height: decimal('height', { precision: 10, scale: 2 }),
+    width: decimal('width', { precision: 10, scale: 2 }),
+    length: decimal('length', { precision: 10, scale: 2 }),
+    netWeight: decimal('net_weight', { precision: 10, scale: 3 }),
+    // Unit weight with packaging (kg) — for chargeable/volumetric weight
+    unitWeight: decimal('unit_weight', { precision: 10, scale: 3 }),
+  },
+  (t) => [unique('product_variants_org_sku').on(t.organizationId, t.sku)]
+);
 
 // ==========================================
 // 4. COMMERCIAL (QUOTES & SHIPMENTS)
@@ -786,6 +827,10 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   hsCode: one(hsCodes, { fields: [products.hsCodeId], references: [hsCodes.id] }),
   supplier: one(suppliers, { fields: [products.supplierId], references: [suppliers.id] }),
   variants: many(productVariants),
+}));
+
+export const productVariantsRelations = relations(productVariants, ({ one }) => ({
+  product: one(products, { fields: [productVariants.productId], references: [products.id] }),
 }));
 
 export const shipmentsRelations = relations(shipments, ({ one, many }) => ({

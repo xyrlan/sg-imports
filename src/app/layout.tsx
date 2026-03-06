@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import { Toast } from "@heroui/react";
 import "./globals.css";
 import { getLocale } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
@@ -44,6 +45,7 @@ export default async function RootLayout({
               <ThemeToggle initialTheme={theme} fontVariableClass={fontVariableClasses} />
             </div>
             {children}
+            <Toast.Provider placement="top end" />
           </NuqsAdapter>
         </NextIntlClientProvider>
       </body>
