@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { products, productVariants } from '@/db/schema';
-import { eq, and, sql, desc, asc } from 'drizzle-orm';
+import { products, productVariants, quoteItems } from '@/db/schema';
+import { eq, and, sql, desc, asc, inArray } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { TieredPriceInfo, VariantAttributes } from '@/db/schema';
 
@@ -106,6 +106,20 @@ export interface CreateProductInput {
   variants: CreateProductVariantInput[];
 }
 
+export interface UpdateProductVariantInput extends CreateProductVariantInput {
+  id?: string;
+}
+
+export interface UpdateProductInput {
+  name: string;
+  styleCode?: string;
+  description?: string;
+  hsCodeId?: string;
+  supplierId?: string;
+  photos?: string[];
+  variants: UpdateProductVariantInput[];
+}
+
 /**
  * Create product (Alibaba pattern: at least one variant required)
  */
@@ -159,6 +173,118 @@ export async function createProduct(
   });
 
   return result as ProductWithVariants;
+}
+
+/**
+ * Update product and its variants
+ */
+export async function updateProduct(
+  productId: string,
+  orgId: string,
+  data: UpdateProductInput
+): Promise<ProductWithVariants> {
+  const rawHsCodeId = data.hsCodeId && data.hsCodeId !== '' ? data.hsCodeId : null;
+  const rawSupplierId = data.supplierId && data.supplierId !== '' ? data.supplierId : null;
+
+  await db
+    .update(products)
+    .set({
+      name: data.name,
+      styleCode: data.styleCode ?? null,
+      description: data.description ?? null,
+      photos: data.photos ?? null,
+      hsCodeId: rawHsCodeId,
+      supplierId: rawSupplierId,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(products.id, productId), eq(products.organizationId, orgId)));
+
+  const existingVariants = await db.query.productVariants.findMany({
+    where: eq(productVariants.productId, productId),
+  });
+  const existingIds = new Set(existingVariants.map((v) => v.id));
+  const payloadIds = new Set(
+    (data.variants ?? []).filter((v): v is UpdateProductVariantInput & { id: string } => !!v.id).map((v) => v.id)
+  );
+
+  const toDelete = existingVariants.filter((v) => !payloadIds.has(v.id));
+  if (toDelete.length > 0) {
+    await db.delete(productVariants).where(
+      inArray(
+        productVariants.id,
+        toDelete.map((v) => v.id)
+      )
+    );
+  }
+
+  const variantInputs =
+    (data.variants ?? []).length > 0
+      ? data.variants
+      : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: 1, boxWeight: '0' }];
+
+  for (const v of variantInputs) {
+    const input = v as UpdateProductVariantInput;
+    const variantData = {
+      sku: input.sku,
+      name: input.name,
+      priceUsd: input.priceUsd,
+      boxQuantity: input.boxQuantity ?? 1,
+      boxWeight: input.boxWeight ?? '0',
+      height: input.height ?? null,
+      width: input.width ?? null,
+      length: input.length ?? null,
+      netWeight: input.netWeight ?? null,
+      unitWeight: input.unitWeight ?? null,
+      attributes: input.attributes ?? null,
+      tieredPriceInfo: input.tieredPriceInfo ?? null,
+    };
+
+    if (input.id && existingIds.has(input.id)) {
+      await db
+        .update(productVariants)
+        .set(variantData)
+        .where(eq(productVariants.id, input.id));
+    } else {
+      await db.insert(productVariants).values({
+        productId,
+        organizationId: orgId,
+        ...variantData,
+      });
+    }
+  }
+
+  const [result] = await db.query.products.findMany({
+    where: eq(products.id, productId),
+    with: { variants: true },
+  });
+
+  return result as ProductWithVariants;
+}
+
+/**
+ * Delete product (variants cascade). Fails if product variants are in quote items.
+ */
+export async function deleteProduct(productId: string, orgId: string): Promise<void> {
+  const product = await db.query.products.findFirst({
+    where: and(eq(products.id, productId), eq(products.organizationId, orgId)),
+    with: { variants: true },
+  });
+
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  const variantIds = product.variants.map((v) => v.id);
+  if (variantIds.length > 0) {
+    const inUse = await db.query.quoteItems.findFirst({
+      where: inArray(quoteItems.variantId, variantIds),
+    });
+    if (inUse) {
+      throw new Error('Product is in use in quotes and cannot be deleted');
+    }
+  }
+
+  await db.delete(products).where(and(eq(products.id, productId), eq(products.organizationId, orgId)));
 }
 
 export interface ImportRow {

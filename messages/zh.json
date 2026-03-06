@@ -717,9 +717,18 @@
       "boxQty": "箱数",
       "boxWeight": "箱重 (kg)"
     },
+    "Actions": {
+      "label": "操作",
+      "edit": "编辑",
+      "delete": "删除",
+      "cancel": "取消",
+      "deleteTitle": "删除产品",
+      "deleteConfirm": "确定要删除此产品吗？"
+    },
     "CreateProduct": {
       "addNew": "添加产品",
-      "heading": "添加新产品"
+      "heading": "添加新产品",
+      "editHeading": "编辑产品"
     },
     "Form": {
       "productName": "产品名称",
@@ -765,6 +774,7 @@
       "addAttribute": "添加属性",
       "cancel": "取消",
       "createProduct": "创建产品",
+      "updateProduct": "更新产品",
       "nameRequired": "名称为必填",
       "skuRequired": "SKU为必填",
       "variantNameRequired": "变体名称为必填",

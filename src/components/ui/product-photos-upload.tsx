@@ -8,6 +8,8 @@ interface ProductPhotosUploadProps {
   label?: string;
   helpText?: string;
   disabled?: boolean;
+  /** Existing photo URLs (for edit mode) */
+  initialPhotos?: string[];
 }
 
 export function ProductPhotosUpload({
@@ -15,10 +17,16 @@ export function ProductPhotosUpload({
   label = 'Product photos',
   helpText = 'JPG, PNG, WebP, GIF (máx. 5MB cada)',
   disabled = false,
+  initialPhotos = [],
 }: ProductPhotosUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const [existingUrls, setExistingUrls] = useState<string[]>(initialPhotos);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setExistingUrls(initialPhotos);
+  }, [initialPhotos]);
 
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   useEffect(() => {
@@ -28,6 +36,8 @@ export function ProductPhotosUpload({
     }, 0);
     return () => urls.forEach((url) => URL.revokeObjectURL(url));
   }, [files]);
+
+  const totalCount = existingUrls.length + files.length;
 
   const updateInputFiles = (newFiles: File[]) => {
     setFiles(newFiles);
@@ -68,9 +78,13 @@ export function ProductPhotosUpload({
     }
   };
 
-  const handleRemove = (index: number) => {
+  const handleRemoveFile = (index: number) => {
     const newFiles = files.filter((_, i) => i !== index);
     updateInputFiles(newFiles);
+  };
+
+  const handleRemoveExisting = (index: number) => {
+    setExistingUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleClick = () => {
@@ -104,10 +118,40 @@ export function ProductPhotosUpload({
           className="hidden"
           disabled={disabled}
         />
+        {existingUrls.length > 0 && (
+          <input
+            type="hidden"
+            name="existingPhotos"
+            value={JSON.stringify(existingUrls)}
+          />
+        )}
 
-        {files.length > 0 ? (
+        {totalCount > 0 ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {existingUrls.map((url, index) => (
+                <div
+                  key={`existing-${index}-${url}`}
+                  className="relative group aspect-square rounded-lg overflow-hidden bg-default-100 border border-divider"
+                >
+                  <img
+                    src={url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveExisting(index);
+                    }}
+                    disabled={disabled}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                </div>
+              ))}
               {files.map((file, index) => (
                 <div
                   key={`${file.name}-${index}`}
@@ -124,7 +168,7 @@ export function ProductPhotosUpload({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRemove(index);
+                      handleRemoveFile(index);
                     }}
                     disabled={disabled}
                     className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -138,7 +182,7 @@ export function ProductPhotosUpload({
               ))}
             </div>
             <p className="text-sm text-muted">
-              {files.length} imagem(ns) selecionada(s). Clique para adicionar mais.
+              {totalCount} imagem(ns) selecionada(s). Clique para adicionar mais.
             </p>
           </div>
         ) : (

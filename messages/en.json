@@ -717,9 +717,18 @@
       "boxQty": "Box Qty",
       "boxWeight": "Box Weight (kg)"
     },
+    "Actions": {
+      "label": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete product",
+      "deleteConfirm": "Are you sure you want to delete this product?"
+    },
     "CreateProduct": {
       "addNew": "Add new product",
-      "heading": "Add new product"
+      "heading": "Add new product",
+      "editHeading": "Edit product"
     },
     "Form": {
       "productName": "Product Name",
@@ -765,6 +774,7 @@
       "addAttribute": "Add attribute",
       "cancel": "Cancel",
       "createProduct": "Create Product",
+      "updateProduct": "Update Product",
       "nameRequired": "Name is required",
       "skuRequired": "SKU is required",
       "variantNameRequired": "Variant name is required",

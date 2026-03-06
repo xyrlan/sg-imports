@@ -717,9 +717,18 @@
       "boxQty": "Qtd. Caixa",
       "boxWeight": "Peso Caixa (kg)"
     },
+    "Actions": {
+      "label": "Ações",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "cancel": "Cancelar",
+      "deleteTitle": "Excluir produto",
+      "deleteConfirm": "Tem certeza que deseja excluir este produto?"
+    },
     "CreateProduct": {
       "addNew": "Adicionar produto",
-      "heading": "Adicionar novo produto"
+      "heading": "Adicionar novo produto",
+      "editHeading": "Editar produto"
     },
     "Form": {
       "productName": "Nome do Produto",
@@ -765,6 +774,7 @@
       "addAttribute": "Adicionar atributo",
       "cancel": "Cancelar",
       "createProduct": "Criar Produto",
+      "updateProduct": "Atualizar Produto",
       "nameRequired": "Nome é obrigatório",
       "skuRequired": "SKU é obrigatório",
       "variantNameRequired": "Nome da variante é obrigatório",

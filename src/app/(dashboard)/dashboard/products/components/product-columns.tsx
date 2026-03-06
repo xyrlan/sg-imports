@@ -1,14 +1,64 @@
 'use client';
 
 import { createColumnHelper } from '@tanstack/react-table';
-import type { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { Button, Dropdown, Label } from '@heroui/react';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductWithVariants } from '@/services/product.service';
 
 const columnHelper = createColumnHelper<ProductWithVariants>();
 
+interface ProductColumnsActions {
+  onEdit: (product: ProductWithVariants) => void;
+  onDelete: (product: ProductWithVariants) => void;
+}
+
+function ProductRowActions({
+  product,
+  onEdit,
+  onDelete,
+}: {
+  product: ProductWithVariants;
+  onEdit: (product: ProductWithVariants) => void;
+  onDelete: (product: ProductWithVariants) => void;
+}) {
+  const t = useTranslations('Products.Actions');
+
+  function handleAction(key: string | number) {
+    if (key === 'edit') onEdit(product);
+    if (key === 'delete') onDelete(product);
+  }
+
+  return (
+    <Dropdown>
+      <Button
+        aria-label={t('label')}
+        variant="ghost"
+        size="sm"
+        isIconOnly
+      >
+        <MoreHorizontal className="size-4" />
+      </Button>
+      <Dropdown.Popover>
+        <Dropdown.Menu onAction={(key) => handleAction(key)}>
+          <Dropdown.Item id="edit" textValue={t('edit')}>
+            <Pencil className="size-4" />
+            <Label>{t('edit')}</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id="delete" textValue={t('delete')} className="text-danger">
+            <Trash2 className="size-4" />
+            <Label>{t('delete')}</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
+  );
+}
+
 export function getProductColumns(
-  t: ReturnType<typeof useTranslations<'Products.Columns'>>
+  t: ReturnType<typeof useTranslations<'Products.Columns'>>,
+  actions: ProductColumnsActions
 ) {
   return [
     columnHelper.accessor((row) => {
@@ -56,6 +106,18 @@ export function getProductColumns(
       cell: (info) => (
         <span className="text-sm text-muted">{info.getValue() ?? '—'}</span>
       ),
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: '',
+      cell: (info) => (
+        <ProductRowActions
+          product={info.row.original}
+          onEdit={actions.onEdit}
+          onDelete={actions.onDelete}
+        />
+      ),
+      size: 50,
     }),
   ];
 }

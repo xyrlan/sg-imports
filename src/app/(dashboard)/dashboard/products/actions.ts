@@ -7,7 +7,12 @@ import { db } from '@/db';
 import { hsCodes, suppliers } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
 import { getOrganizationById } from '@/services/organization.service';
-import { createProduct } from '@/services/product.service';
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  type UpdateProductVariantInput,
+} from '@/services/product.service';
 import { uploadProductPhotos } from '@/services/upload.service';
 
 const tieredPriceInfoSchema = z.array(
@@ -38,6 +43,10 @@ const createProductSchema = z.object({
   hsCodeId: z.union([z.string().uuid(), z.literal('')]).optional(),
   supplierId: z.union([z.string().uuid(), z.literal('')]).optional(),
   variants: z.array(variantSchema),
+});
+
+const updateProductSchema = createProductSchema.extend({
+  productId: z.string().uuid('Product ID is required'),
 });
 
 export interface CreateProductSubmittedData {
@@ -239,6 +248,273 @@ export async function createProductAction(
     }
     return {
       error: err instanceof Error ? err.message : 'Failed to create product',
+    };
+  }
+}
+
+export async function updateProductAction(
+  _prevState: CreateProductState | null,
+  formData: FormData
+): Promise<CreateProductState> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      redirect('/login');
+    }
+
+    const productId = formData.get('productId') as string;
+    if (!productId) {
+      return { error: 'Product ID is required' };
+    }
+
+    const variantIds = (formData.getAll('variantId') as string[]).filter(Boolean);
+    const variantSkus = formData.getAll('variantSku') as string[];
+    const variantNames = formData.getAll('variantName') as string[];
+    const priceUsds = formData.getAll('priceUsd') as string[];
+    const boxQuantities = (formData.getAll('variantBoxQuantity') as string[]) ?? [];
+    const boxWeights = (formData.getAll('variantBoxWeight') as string[]) ?? [];
+    const heights = (formData.getAll('variantHeight') as string[]) ?? [];
+    const widths = (formData.getAll('variantWidth') as string[]) ?? [];
+    const lengths = (formData.getAll('variantLength') as string[]) ?? [];
+    const netWeights = (formData.getAll('variantNetWeight') as string[]) ?? [];
+    const unitWeights = (formData.getAll('variantUnitWeight') as string[]) ?? [];
+    const tieredPriceInfos = (formData.getAll('variantTieredPriceInfo') as string[]) ?? [];
+    const attributesList = (formData.getAll('variantAttributes') as string[]) ?? [];
+
+    const parseTieredPriceInfo = (raw: string) => {
+      const trimmed = raw?.trim();
+      if (!trimmed) return undefined;
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        const result = tieredPriceInfoSchema.safeParse(parsed);
+        return result.success ? result.data : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const parseAttributes = (raw: string) => {
+      const trimmed = raw?.trim();
+      if (!trimmed) return undefined;
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        const result = variantAttributesSchema.safeParse(parsed);
+        return result.success ? result.data : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+
+    const rawVariants: Array<{
+      id?: string;
+      sku: string;
+      name: string;
+      priceUsd: string;
+      boxQuantity: string;
+      boxWeight: string;
+      height?: string;
+      width?: string;
+      length?: string;
+      netWeight?: string;
+      unitWeight?: string;
+      tieredPriceInfo?: { beginAmount: number; price: string }[];
+      attributes?: Record<string, string>;
+    }> = variantNames.map((name, i) => ({
+      id: variantIds[i]?.trim() || undefined,
+      sku: (variantSkus[i] ?? '').trim(),
+      name: (name ?? '').trim(),
+      priceUsd: (priceUsds[i] ?? '').trim(),
+      boxQuantity: (boxQuantities[i] ?? '').trim() || '1',
+      boxWeight: (boxWeights[i] ?? '').trim() || '0',
+      height: (heights[i] ?? '').trim() || undefined,
+      width: (widths[i] ?? '').trim() || undefined,
+      length: (lengths[i] ?? '').trim() || undefined,
+      netWeight: (netWeights[i] ?? '').trim() || undefined,
+      unitWeight: (unitWeights[i] ?? '').trim() || undefined,
+      tieredPriceInfo: parseTieredPriceInfo(tieredPriceInfos[i] ?? ''),
+      attributes: parseAttributes(attributesList[i] ?? ''),
+    }));
+
+    const variants =
+      rawVariants.filter((v) => v.sku || v.name || v.priceUsd).length > 0
+        ? rawVariants.filter((v) => v.sku || v.name || v.priceUsd)
+        : [{ id: undefined, sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: '1', boxWeight: '0' }];
+
+    const existingPhotosRaw = formData.get('existingPhotos') as string | null;
+    let existingPhotos: string[] = [];
+    if (existingPhotosRaw?.trim()) {
+      try {
+        const parsed = JSON.parse(existingPhotosRaw) as unknown;
+        existingPhotos = Array.isArray(parsed) ? parsed.filter((p): p is string => typeof p === 'string') : [];
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const photoEntries = formData.getAll('photos');
+    const photoFiles = photoEntries
+      .filter((e): e is File => e instanceof File)
+      .filter((f) => f.size > 0 && f.type?.startsWith('image/'));
+
+    const rawData = {
+      organizationId: formData.get('organizationId') as string,
+      productId,
+      name: (formData.get('name') as string)?.trim(),
+      styleCode: (formData.get('styleCode') as string)?.trim() || undefined,
+      description: (formData.get('description') as string)?.trim() || undefined,
+      hsCodeId: (formData.get('hsCodeId') as string)?.trim() || undefined,
+      supplierId: (formData.get('supplierId') as string)?.trim() || undefined,
+      variants,
+    };
+
+    const validated = updateProductSchema.safeParse({
+      ...rawData,
+      variants: rawVariants.map((v) => ({
+        sku: v.sku,
+        name: v.name,
+        priceUsd: v.priceUsd,
+        boxQuantity: v.boxQuantity,
+        boxWeight: v.boxWeight,
+        height: v.height,
+        width: v.width,
+        length: v.length,
+        netWeight: v.netWeight,
+        unitWeight: v.unitWeight,
+        tieredPriceInfo: v.tieredPriceInfo,
+        attributes: v.attributes,
+      })),
+    });
+
+    if (!validated.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validated.error.issues) {
+        const path = issue.path.map(String).join('.');
+        if (path && path !== 'productId' && !fieldErrors[path]) {
+          fieldErrors[path] = issue.message;
+        }
+      }
+      const submittedData: CreateProductSubmittedData = {
+        name: rawData.name ?? '',
+        styleCode: rawData.styleCode ?? '',
+        description: rawData.description ?? '',
+        hsCodeId: rawData.hsCodeId ?? '',
+        supplierId: rawData.supplierId ?? '',
+        variants: rawVariants.map((v) => ({
+          sku: v.sku,
+          name: v.name,
+          priceUsd: v.priceUsd,
+          boxQuantity: String(v.boxQuantity),
+          boxWeight: v.boxWeight,
+          height: v.height ?? '',
+          width: v.width ?? '',
+          length: v.length ?? '',
+          netWeight: v.netWeight ?? '',
+          unitWeight: v.unitWeight ?? '',
+        })),
+      };
+      return { fieldErrors, submittedData };
+    }
+
+    const access = await getOrganizationById(validated.data.organizationId, user.id);
+    if (!access) {
+      return { error: 'Forbidden' };
+    }
+
+    let newPhotoUrls: string[] = [];
+    if (photoFiles.length > 0) {
+      newPhotoUrls = await uploadProductPhotos(
+        photoFiles,
+        user.id,
+        validated.data.organizationId
+      );
+    }
+    const photoUrls = [...existingPhotos, ...newPhotoUrls];
+
+    const rawHsCodeId = validated.data.hsCodeId;
+    const rawSupplierId = validated.data.supplierId;
+    const hsCodeId =
+      rawHsCodeId && rawHsCodeId !== '' && rawHsCodeId !== '__none__'
+        ? rawHsCodeId
+        : undefined;
+    const supplierId =
+      rawSupplierId && rawSupplierId !== '' && rawSupplierId !== '__none__'
+        ? rawSupplierId
+        : undefined;
+
+    const variantInputs: UpdateProductVariantInput[] = variants.map((v) => ({
+      id: v.id,
+      sku: v.sku,
+      name: v.name,
+      priceUsd: v.priceUsd.replace(',', '.'),
+      boxQuantity: Number(String(v.boxQuantity).replace(',', '.')) || 1,
+      boxWeight: String(v.boxWeight).replace(',', '.') || '0',
+      height: v.height?.replace(',', '.') || undefined,
+      width: v.width?.replace(',', '.') || undefined,
+      length: v.length?.replace(',', '.') || undefined,
+      netWeight: v.netWeight?.replace(',', '.') || undefined,
+      unitWeight: v.unitWeight?.replace(',', '.') || undefined,
+      tieredPriceInfo: v.tieredPriceInfo,
+      attributes: v.attributes,
+    }));
+
+    await updateProduct(productId, validated.data.organizationId, {
+      name: validated.data.name,
+      styleCode: validated.data.styleCode,
+      description: validated.data.description,
+      photos: photoUrls.length > 0 ? photoUrls : undefined,
+      hsCodeId,
+      supplierId,
+      variants: variantInputs,
+    });
+
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) {
+      throw err;
+    }
+    return {
+      error: err instanceof Error ? err.message : 'Failed to update product',
+    };
+  }
+}
+
+export interface DeleteProductResult {
+  success?: boolean;
+  error?: string;
+}
+
+export async function deleteProductAction(
+  productId: string,
+  organizationId: string
+): Promise<DeleteProductResult> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      redirect('/login');
+    }
+
+    const access = await getOrganizationById(organizationId, user.id);
+    if (!access) {
+      return { error: 'Forbidden' };
+    }
+
+    await deleteProduct(productId, organizationId);
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) {
+      throw err;
+    }
+    return {
+      error: err instanceof Error ? err.message : 'Failed to delete product',
     };
   }
 }
