@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/ui/data-table';
 import { getProductColumns } from './product-columns';
 import { ProductActions } from './product-actions';
@@ -16,7 +18,9 @@ export function ProductsTable({
   organizationId,
   onMutate,
 }: ProductsTableProps) {
-  const columns = getProductColumns();
+  const t = useTranslations('Products.Table');
+  const tCols = useTranslations('Products.Columns');
+  const columns = useMemo(() => getProductColumns(tCols), [tCols]);
 
   return (
     <div className="space-y-4">
@@ -27,7 +31,7 @@ export function ProductsTable({
       <DataTable<ProductWithVariants>
         columns={columns}
         data={initialProducts}
-        searchPlaceholder="Search products..."
+        searchPlaceholder={t('searchPlaceholder')}
       />
     </div>
   );

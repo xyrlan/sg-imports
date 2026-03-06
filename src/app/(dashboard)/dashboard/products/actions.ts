@@ -33,14 +33,37 @@ const variantSchema = z.object({
 const createProductSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required'),
+  styleCode: z.string().optional(),
   description: z.string().optional(),
   hsCodeId: z.union([z.string().uuid(), z.literal('')]).optional(),
   supplierId: z.union([z.string().uuid(), z.literal('')]).optional(),
   variants: z.array(variantSchema),
 });
 
+export interface CreateProductSubmittedData {
+  name: string;
+  styleCode: string;
+  description: string;
+  hsCodeId: string;
+  supplierId: string;
+  variants: Array<{
+    sku: string;
+    name: string;
+    priceUsd: string;
+    boxQuantity: string;
+    boxWeight: string;
+    height: string;
+    width: string;
+    length: string;
+    netWeight: string;
+    unitWeight: string;
+  }>;
+}
+
 export interface CreateProductState {
   error?: string;
+  fieldErrors?: Record<string, string>;
+  submittedData?: CreateProductSubmittedData;
   success?: boolean;
 }
 
@@ -115,11 +138,14 @@ export async function createProductAction(
         : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: '1', boxWeight: '0' }];
 
     const photoEntries = formData.getAll('photos');
-    const photoFiles = photoEntries.filter((e): e is File => e instanceof File);
+    const photoFiles = photoEntries
+      .filter((e): e is File => e instanceof File)
+      .filter((f) => f.size > 0 && f.type?.startsWith('image/'));
 
     const rawData = {
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
+      styleCode: (formData.get('styleCode') as string)?.trim() || undefined,
       description: (formData.get('description') as string)?.trim() || undefined,
       hsCodeId: (formData.get('hsCodeId') as string)?.trim() || undefined,
       supplierId: (formData.get('supplierId') as string)?.trim() || undefined,
@@ -128,9 +154,34 @@ export async function createProductAction(
 
     const validated = createProductSchema.safeParse(rawData);
     if (!validated.success) {
-      return {
-        error: validated.error.issues[0]?.message ?? 'Invalid data',
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validated.error.issues) {
+        const path = issue.path.map(String).join('.');
+        if (path && !fieldErrors[path]) {
+          fieldErrors[path] = issue.message;
+        }
+      }
+      const error = fieldErrors.organizationId ?? undefined;
+      const submittedData: CreateProductSubmittedData = {
+        name: rawData.name ?? '',
+        styleCode: rawData.styleCode ?? '',
+        description: rawData.description ?? '',
+        hsCodeId: rawData.hsCodeId ?? '',
+        supplierId: rawData.supplierId ?? '',
+        variants: rawVariants.map((v) => ({
+          sku: v.sku,
+          name: v.name,
+          priceUsd: v.priceUsd,
+          boxQuantity: String(v.boxQuantity),
+          boxWeight: v.boxWeight,
+          height: v.height ?? '',
+          width: v.width ?? '',
+          length: v.length ?? '',
+          netWeight: v.netWeight ?? '',
+          unitWeight: v.unitWeight ?? '',
+        })),
       };
+      return { fieldErrors, submittedData, ...(error && { error }) };
     }
 
     const access = await getOrganizationById(validated.data.organizationId, user.id);
@@ -160,6 +211,7 @@ export async function createProductAction(
 
     await createProduct(validated.data.organizationId, {
       name: validated.data.name,
+      styleCode: validated.data.styleCode,
       description: validated.data.description,
       photos: photoUrls.length > 0 ? photoUrls : undefined,
       hsCodeId,

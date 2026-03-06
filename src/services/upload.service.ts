@@ -129,6 +129,17 @@ export function validateFile(
   return { valid: true };
 }
 
+const ALLOWED_IMAGE_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/x-png', // alternative PNG MIME (some browsers/OS)
+  'image/webp',
+  'image/gif',
+];
+
+const ALLOWED_IMAGE_EXTENSIONS = ['jpeg', 'jpg', 'png', 'webp', 'gif'];
+
 /**
  * Validate image file type and size
  * @param file - File to validate
@@ -147,15 +158,11 @@ export function validateImageFile(
     };
   }
 
-  const allowedTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/webp',
-    'image/gif',
-  ];
+  const mimeValid = file.type && ALLOWED_IMAGE_MIME_TYPES.includes(file.type);
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const extValid = ext && ALLOWED_IMAGE_EXTENSIONS.includes(ext);
 
-  if (!allowedTypes.includes(file.type)) {
+  if (!mimeValid && !extValid) {
     return {
       valid: false,
       error: 'Tipo de arquivo não permitido. Use JPG, PNG, WebP ou GIF',
@@ -199,10 +206,17 @@ export async function uploadProductPhotos(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    const contentType =
+      file.type && ALLOWED_IMAGE_MIME_TYPES.includes(file.type)
+        ? file.type === 'image/x-png'
+          ? 'image/png'
+          : file.type
+        : `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+
     const { error } = await supabase.storage
       .from(PRODUCT_IMAGES_BUCKET)
       .upload(filePath, buffer, {
-        contentType: file.type,
+        contentType,
         cacheControl: '3600',
         upsert: true,
       });

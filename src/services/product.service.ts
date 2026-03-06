@@ -98,6 +98,7 @@ export interface CreateProductVariantInput {
 
 export interface CreateProductInput {
   name: string;
+  styleCode?: string;
   description?: string;
   hsCodeId?: string;
   supplierId?: string;
@@ -117,6 +118,7 @@ export async function createProduct(
     .values({
       organizationId: orgId,
       name: data.name,
+      styleCode: data.styleCode ?? null,
       description: data.description ?? null,
       hsCodeId: data.hsCodeId ?? null,
       supplierId: data.supplierId ?? null,
