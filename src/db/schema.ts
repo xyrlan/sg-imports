@@ -251,18 +251,20 @@ export const suppliersWallets = pgTable('suppliers_wallets', {
   balanceUsd: decimal('balance_usd', { precision: 10, scale: 2 }).notNull().default('0'),
 });
 
-export const suppliersWalletTransactions = pgTable('suppliers_wallet_transactions', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  walletId: uuid('wallet_id').references(() => suppliersWallets.id, { onDelete: 'cascade' }).notNull(),
+export const suppliersWalletTransactions = pgTable(
+  'suppliers_wallet_transactions',
+  {
+    id: uuid('id').defaultRandom(),
+    walletId: uuid('wallet_id').references(() => suppliersWallets.id, { onDelete: 'cascade' }).notNull(),
   exchangeContractId: uuid('exchange_contract_id').references(() => exchangeContracts.id, { onDelete: 'cascade' }),
   orderId: uuid('order_id').references(() => shipments.id, { onDelete: 'cascade' }),
   transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   type: walletTransactionTypeEnum('type').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (t) => [
-  primaryKey({ columns: [t.walletId, t.orderId, t.type] }),
-]);
+  },
+  (t) => [primaryKey({ columns: [t.walletId, t.orderId, t.type] })]
+);
 
 export const products = pgTable('products', {
   id: uuid('id').defaultRandom().primaryKey(),
