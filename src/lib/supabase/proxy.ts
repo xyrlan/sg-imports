@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   // Define public routes that don't require authentication
   const publicRoutes = ['/login', '/register']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-  const isAuthCallback = pathname.startsWith('/auth')
+  const isAuthCallback = pathname.startsWith('/auth') || pathname.startsWith('/api/auth')
   const isVerifyEmail = pathname.startsWith('/verify-email')
 
   // Case 1: User is NOT logged in
@@ -54,7 +54,11 @@ export async function updateSession(request: NextRequest) {
     // Redirect to login for protected routes
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   // Case 2: User IS logged in
@@ -68,7 +72,11 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     // Default redirect to dashboard (onboarding page will handle incomplete setup)
     url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

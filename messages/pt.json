@@ -656,5 +656,16 @@
         "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita."
       }
     }
+  },
+  "NotFound": {
+    "title": "Página não encontrada",
+    "description": "A página que você está procurando não existe ou foi movida.",
+    "backHome": "Voltar ao início"
+  },
+  "Error": {
+    "title": "Algo deu errado",
+    "description": "Ocorreu um erro inesperado. Tente novamente.",
+    "tryAgain": "Tentar novamente",
+    "backHome": "Voltar ao início"
   }
 }

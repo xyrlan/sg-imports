@@ -656,5 +656,16 @@
         "deleteConfirm": "确定要删除「{name}」？此操作无法撤消。"
       }
     }
+  },
+  "NotFound": {
+    "title": "页面未找到",
+    "description": "您查找的页面不存在或已被移动。",
+    "backHome": "返回首页"
+  },
+  "Error": {
+    "title": "出错了",
+    "description": "发生意外错误。请重试。",
+    "tryAgain": "重试",
+    "backHome": "返回首页"
   }
 }

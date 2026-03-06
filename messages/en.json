@@ -656,5 +656,16 @@
         "deleteConfirm": "Do you really want to delete \"{name}\"? This action cannot be undone."
       }
     }
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "backHome": "Back to home"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "tryAgain": "Try again",
+    "backHome": "Back to home"
   }
 }
