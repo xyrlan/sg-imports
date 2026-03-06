@@ -20,13 +20,11 @@ export function ProductPhotosUpload({
   initialPhotos = [],
 }: ProductPhotosUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [existingUrls, setExistingUrls] = useState<string[]>(initialPhotos);
+  const [existingUrls, setExistingUrls] = useState<string[]>(
+    () => initialPhotos ?? []
+  );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setExistingUrls(initialPhotos);
-  }, [initialPhotos]);
 
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   useEffect(() => {
