@@ -163,6 +163,7 @@ export function SimulationDetailContent({
       {items.length > 0 ? (
         <SimulationItemsList
           items={items}
+          simulationId={simulation.id}
           organizationId={organizationId}
           onMutate={handleMutate}
         />

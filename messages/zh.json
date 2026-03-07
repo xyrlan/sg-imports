@@ -901,7 +901,9 @@
       "itemQuantity": "数量",
       "itemPrice": "单价",
       "itemTotal": "总计",
-      "removeItem": "移除项目"
+      "removeItem": "移除项目",
+      "editItem": "编辑项目",
+      "saveItem": "保存"
     },
     "AddProduct": {
       "addProduct": "添加产品",

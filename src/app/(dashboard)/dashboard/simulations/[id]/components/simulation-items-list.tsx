@@ -1,23 +1,27 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/ui/data-table';
 import { getSimulationItemColumns } from './simulation-item-columns';
+import { EditSimulationItemModal } from './edit-simulation-item-modal';
 import { removeSimulationItemAction } from '../../actions';
 import type { SimulationItem } from '@/services/simulation.service';
 
 interface SimulationItemsListProps {
   items: SimulationItem[];
+  simulationId: string;
   organizationId: string;
   onMutate?: () => void;
 }
 
 export function SimulationItemsList({
   items,
+  simulationId,
   organizationId,
   onMutate,
 }: SimulationItemsListProps) {
+  const [editingItem, setEditingItem] = useState<SimulationItem | null>(null);
   const t = useTranslations('Simulations.Detail');
 
   const handleRemove = useCallback(
@@ -32,16 +36,30 @@ export function SimulationItemsList({
     [organizationId, onMutate]
   );
 
+  const handleEdit = useCallback((item: SimulationItem) => {
+    setEditingItem(item);
+  }, []);
+
   const columns = useMemo(
-    () => getSimulationItemColumns(t, { onRemove: handleRemove }),
-    [t, handleRemove]
+    () => getSimulationItemColumns(t, { onRemove: handleRemove, onEdit: handleEdit }),
+    [t, handleRemove, handleEdit]
   );
 
   return (
-    <DataTable<SimulationItem>
-      columns={columns}
-      data={items}
-      searchPlaceholder={t('searchItems')}
-    />
+    <>
+      <DataTable<SimulationItem>
+        columns={columns}
+        data={items}
+        searchPlaceholder={t('searchItems')}
+      />
+      <EditSimulationItemModal
+        item={editingItem}
+        simulationId={simulationId}
+        organizationId={organizationId}
+        open={!!editingItem}
+        onOpenChange={(open) => !open && setEditingItem(null)}
+        onMutate={onMutate}
+      />
+    </>
   );
 }

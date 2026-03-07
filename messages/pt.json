@@ -901,7 +901,9 @@
       "itemQuantity": "Qtd",
       "itemPrice": "Preço unit.",
       "itemTotal": "Total",
-      "removeItem": "Remover item"
+      "removeItem": "Remover item",
+      "editItem": "Editar item",
+      "saveItem": "Salvar"
     },
     "AddProduct": {
       "addProduct": "Adicionar produto",

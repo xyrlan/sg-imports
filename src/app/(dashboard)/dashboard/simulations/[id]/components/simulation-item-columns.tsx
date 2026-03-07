@@ -2,7 +2,7 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@heroui/react';
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { SimulationItem } from '@/services/simulation.service';
 
@@ -32,6 +32,7 @@ function getItemSku(item: SimulationItem): string {
 
 interface SimulationItemColumnsActions {
   onRemove: (item: SimulationItem) => void;
+  onEdit?: (item: SimulationItem) => void;
 }
 
 export function getSimulationItemColumns(
@@ -81,18 +82,35 @@ export function getSimulationItemColumns(
     columnHelper.display({
       id: 'actions',
       header: '',
-      cell: (info) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          isIconOnly
-          aria-label={t('removeItem')}
-          onPress={() => actions.onRemove(info.row.original)}
-        >
-          <Trash2 className="size-4 text-danger" />
-        </Button>
-      ),
-      size: 50,
+      cell: (info) => {
+        const item = info.row.original;
+        const canEdit = !!item.simulatedProductSnapshot && actions.onEdit;
+        return (
+          <div className="flex items-center gap-1">
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={t('editItem')}
+                onPress={() => actions.onEdit?.(item)}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              aria-label={t('removeItem')}
+              onPress={() => actions.onRemove(item)}
+            >
+              <Trash2 className="size-4 text-danger" />
+            </Button>
+          </div>
+        );
+      },
+      size: 80,
     }),
   ];
 }

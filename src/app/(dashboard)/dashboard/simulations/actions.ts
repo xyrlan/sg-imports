@@ -83,6 +83,7 @@ const updateItemSchema = z.object({
   organizationId: z.string().uuid(),
   quantity: z.coerce.number().int().min(1).optional(),
   priceUsd: z.string().min(1).optional(),
+  simulatedProductSnapshot: productSnapshotSchema.optional(),
 });
 
 export interface CreateSimulationState {
@@ -380,7 +381,7 @@ export interface UpdateSimulationItemResult {
 export async function updateSimulationItemAction(
   itemId: string,
   organizationId: string,
-  updates: { quantity?: number; priceUsd?: string }
+  updates: { quantity?: number; priceUsd?: string; simulatedProductSnapshot?: ProductSnapshot }
 ): Promise<UpdateSimulationItemResult> {
   try {
     const user = await requireAuthOrRedirect();
@@ -395,17 +396,29 @@ export async function updateSimulationItemAction(
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
     }
 
+    const updatePayload: {
+      quantity?: number;
+      priceUsd?: string;
+      simulatedProductSnapshot?: ProductSnapshot;
+    } = {};
+    if (validated.data.quantity !== undefined) updatePayload.quantity = validated.data.quantity;
+    if (validated.data.priceUsd !== undefined) updatePayload.priceUsd = validated.data.priceUsd;
+    if (validated.data.simulatedProductSnapshot !== undefined) {
+      updatePayload.simulatedProductSnapshot = validated.data.simulatedProductSnapshot;
+    }
+
     const updated = await updateSimulationItem(
       validated.data.itemId,
       validated.data.organizationId,
       user.id,
-      {
-        quantity: validated.data.quantity,
-        priceUsd: validated.data.priceUsd,
-      }
+      updatePayload
     );
 
-    return updated ? { success: true } : { error: 'Failed to update item' };
+    if (updated) {
+      revalidatePath(`/dashboard/simulations/${updated.quoteId}`);
+      return { success: true };
+    }
+    return { error: 'Failed to update item' };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;

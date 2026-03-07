@@ -490,6 +490,7 @@ export async function removeSimulationItem(
 export interface UpdateSimulationItemInput {
   quantity?: number;
   priceUsd?: string;
+  simulatedProductSnapshot?: ProductSnapshot;
 }
 
 /**
@@ -524,6 +525,9 @@ export async function updateSimulationItem(
   const values: Partial<Record<string, unknown>> = {};
   if (updates.quantity !== undefined) values.quantity = updates.quantity;
   if (updates.priceUsd !== undefined) values.priceUsd = updates.priceUsd;
+  if (updates.simulatedProductSnapshot !== undefined) {
+    values.simulatedProductSnapshot = updates.simulatedProductSnapshot;
+  }
 
   if (Object.keys(values).length === 0) {
     return item;
@@ -531,8 +535,17 @@ export async function updateSimulationItem(
 
   const newQuantity = updates.quantity ?? item.quantity;
   const newPriceUsd = updates.priceUsd ?? item.priceUsd;
+  const snap = (updates.simulatedProductSnapshot ?? item.simulatedProductSnapshot) as ProductSnapshot | null;
 
-  if (updates.quantity !== undefined) {
+  const needsLogisticsRecalc =
+    updates.quantity !== undefined ||
+    updates.simulatedProductSnapshot !== undefined;
+  const needsTaxRecalc =
+    updates.quantity !== undefined ||
+    updates.priceUsd !== undefined ||
+    updates.simulatedProductSnapshot !== undefined;
+
+  if (needsLogisticsRecalc && (item.variantId || snap)) {
     const quantity = newQuantity;
     let cbmSnapshot: Decimal;
     let weightSnapshot: Decimal;
@@ -564,8 +577,7 @@ export async function updateSimulationItem(
         values.weightSnapshot = weightSnapshot.toFixed(3);
         values.cbmSnapshot = cbmSnapshot.toFixed(6);
       }
-    } else if (item.simulatedProductSnapshot) {
-      const snap = item.simulatedProductSnapshot as ProductSnapshot;
+    } else if (snap) {
       const carton =
         snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
           ? {
@@ -593,21 +605,46 @@ export async function updateSimulationItem(
     values.unitPriceUsdSnapshot = newPriceUsd;
   }
 
-  if (updates.quantity !== undefined || updates.priceUsd !== undefined) {
+  if (needsTaxRecalc) {
     const quantity = newQuantity;
     const unitPriceUsd = newPriceUsd;
     const lineTotal = new Decimal(unitPriceUsd).times(quantity);
-    const rates = {
-      ii: String(item.iiRateSnapshot ?? 0),
-      ipi: String(item.ipiRateSnapshot ?? 0),
-      pis: String(item.pisRateSnapshot ?? 0),
-      cofins: String(item.cofinsRateSnapshot ?? 0),
-    };
+    let rates: { ii: string; ipi: string; pis: string; cofins: string };
+
+    if (snap?.taxSnapshot) {
+      rates = {
+        ii: String(snap.taxSnapshot.ii ?? 0),
+        ipi: String(snap.taxSnapshot.ipi ?? 0),
+        pis: String(snap.taxSnapshot.pis ?? 0),
+        cofins: String(snap.taxSnapshot.cofins ?? 0),
+      };
+    } else if (snap?.hsCode) {
+      const [hc] = await db.select().from(hsCodes).where(eq(hsCodes.code, snap.hsCode));
+      rates = hc
+        ? {
+            ii: String(hc.ii ?? 0),
+            ipi: String(hc.ipi ?? 0),
+            pis: String(hc.pis ?? 0),
+            cofins: String(hc.cofins ?? 0),
+          }
+        : { ii: '0', ipi: '0', pis: '0', cofins: '0' };
+    } else {
+      rates = {
+        ii: String(item.iiRateSnapshot ?? 0),
+        ipi: String(item.ipiRateSnapshot ?? 0),
+        pis: String(item.pisRateSnapshot ?? 0),
+        cofins: String(item.cofinsRateSnapshot ?? 0),
+      };
+    }
     const taxValues = computeImportTaxes(lineTotal, quantity, unitPriceUsd, rates);
     values.iiValueSnapshot = taxValues.ii.toFixed(4);
     values.ipiValueSnapshot = taxValues.ipi.toFixed(4);
     values.pisValueSnapshot = taxValues.pis.toFixed(4);
     values.cofinsValueSnapshot = taxValues.cofins.toFixed(4);
+    values.iiRateSnapshot = rates.ii;
+    values.ipiRateSnapshot = rates.ipi;
+    values.pisRateSnapshot = rates.pis;
+    values.cofinsRateSnapshot = rates.cofins;
   }
 
   const [updated] = await db
