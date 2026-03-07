@@ -1,27 +1,16 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getUserOrganizations } from '@/services/organization.service';
+import { requireAuthWithOrgs } from '@/services/auth.service';
 import { OrganizationSelector } from '@/app/select-organization/organization-selector';
 
 /**
  * Organization Selection Page
- * 
+ *
  * Server Component that fetches available organizations
  * and displays them for user selection
  */
 export default async function SelectOrganizationPage() {
-  // Validate authentication
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { userOrgs } = await requireAuthWithOrgs();
 
-  if (error || !user) {
-    redirect('/login');
-  }
-
-  // Fetch user's organizations
-  const userOrgs = await getUserOrganizations(user.id);
-
-  // If no organizations, redirect to create-organization (fallback to prevent redirect loop)
   if (userOrgs.length === 0) {
     redirect('/create-organization');
   }

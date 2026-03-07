@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser, getUserProfile } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import { OrganizationEditForm } from './organization-edit-form';
-import { getUserProfile } from '@/services/auth.service';
 
 interface OrganizationEditPageProps {
   params: Promise<{ id: string }>;
@@ -17,15 +16,8 @@ export default async function OrganizationEditPage({
 }: OrganizationEditPageProps) {
   const { id: organizationId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    redirect('/login');
-  }
+  const user = await getAuthenticatedUser();
+  if (!user) redirect('/login');
 
   const userProfile = await getUserProfile(user.id);
 

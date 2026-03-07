@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuthOrRedirect } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import {
   createSimulation,
@@ -85,15 +85,7 @@ export async function createSimulationAction(
   formData: FormData
 ): Promise<CreateSimulationState> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const rawData = {
       organizationId: formData.get('organizationId') as string,
@@ -143,15 +135,7 @@ export async function deleteSimulationAction(
   organizationId: string
 ): Promise<DeleteSimulationResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const access = await getOrganizationById(organizationId, user.id);
     if (!access) {
@@ -183,15 +167,7 @@ export async function addSimulationItemFromCatalogAction(
   priceUsd: string
 ): Promise<AddSimulationItemResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const validated = addCatalogItemSchema.safeParse({
       simulationId,
@@ -235,15 +211,7 @@ export async function addSimulatedProductAction(
   priceUsd: string
 ): Promise<AddSimulationItemResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const validated = addSimulatedItemSchema.safeParse({
       simulationId,
@@ -289,15 +257,7 @@ export async function removeSimulationItemAction(
   organizationId: string
 ): Promise<RemoveSimulationItemResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const validated = removeItemSchema.safeParse({ itemId, organizationId });
     if (!validated.success) {
@@ -332,15 +292,7 @@ export async function updateSimulationItemAction(
   updates: { quantity?: number; priceUsd?: string }
 ): Promise<UpdateSimulationItemResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const validated = updateItemSchema.safeParse({
       itemId,

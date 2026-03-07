@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
-import { getUserOrganizations, getOrganizationById } from '@/services/organization.service';
+import {
+  requireAuthWithOrgs,
+  getOrganizationCookie,
+} from '@/services/auth.service';
+import { getOrganizationById } from '@/services/organization.service';
 import { getProfile } from '@/services/profile.service';
 import { OnboardingForm } from './onboarding-form';
 
@@ -16,27 +18,13 @@ import { OnboardingForm } from './onboarding-form';
  * Note: Service fee config will be managed by admin in the dashboard.
  */
 export default async function OnboardingPage() {
-  // Step 1: Validate authentication
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { user, userOrgs } = await requireAuthWithOrgs();
 
-  if (error || !user) {
-    redirect('/login');
-  }
-
-  // Step 2: Get user's organizations
-  const userOrgs = await getUserOrganizations(user.id);
-
-  // If user has no organizations at all, they shouldn't be here
-  // They should go through the registration flow first
   if (userOrgs.length === 0) {
-    redirect('/login');
+    redirect('/create-organization');
   }
 
-  // Step 3: Get the organization to onboard
-  // Try to get from cookie, otherwise redirect to Route Handler to set it
-  const cookieStore = await cookies();
-  const activeOrgId = cookieStore.get('active_organization_id')?.value;
+  const activeOrgId = await getOrganizationCookie();
 
   if (!activeOrgId || !userOrgs.find(org => org.organization.id === activeOrgId)) {
     // Redirect to Route Handler to set cookie (cookies can only be modified in Route Handlers or Server Actions)

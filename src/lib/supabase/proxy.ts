@@ -1,8 +1,13 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+import {
+  verifyOrganizationCookie,
+  COOKIE_ORG_NAME,
+  COOKIE_SIG_NAME,
+} from '@/lib/cookie-signature';
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,78 +16,108 @@ export async function updateSession(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
-          )
+          );
         },
       },
     }
-  )
+  );
 
-  // Use getUser() para maior segurança, ou continue com getClaims() se performance for crítica
-  const { data: { user } } = await supabase.auth.getUser()
-  const { pathname } = request.nextUrl
+  const { data: { user } } = await supabase.auth.getUser();
+  const { pathname } = request.nextUrl;
 
-  // Configurações de rotas
-  const publicRoutes = ['/login', '/register']
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-  const isAuthFlow = pathname.startsWith('/auth') || pathname.startsWith('/api/auth') || pathname.startsWith('/verify-email')
+  // State machine: route classification
+  const isLoggingOut = pathname === '/logout';
+  const isAuthFlow = ['/login', '/register', '/auth', '/api/auth', '/verify-email'].some(
+    (p) => pathname.startsWith(p)
+  );
+  const isOnboardingRoute =
+    pathname.startsWith('/onboarding') || pathname.startsWith('/api/onboarding');
+  const isOrgSelectionRoute =
+    pathname.startsWith('/select-organization') ||
+    pathname.startsWith('/create-organization');
 
-  // 1. Caso: Usuário não autenticado
+  // 1. Not logged in
   if (!user) {
-    if (isPublicRoute || isAuthFlow) {
-      return supabaseResponse
+    if (isAuthFlow) {
+      return supabaseResponse;
     }
-    return redirectTo('/login', request, supabaseResponse)
+    return redirectTo('/login', request, supabaseResponse);
   }
 
-  // 2. Caso: Usuário autenticado
-  const isOnboarded = user.user_metadata?.onboarded === true
-  const hasOrg = request.cookies.has('active_organization_id')
-
-  // Lógica de Redirecionamento de Auth (Não deixa logado ir para /login)
-  if (isPublicRoute) {
-    return redirectTo('/dashboard', request, supabaseResponse)
+  // 2. Logged in on Auth routes (Login/Register)
+  if (isAuthFlow && !isLoggingOut) {
+    return redirectTo('/dashboard', request, supabaseResponse);
   }
 
-  // Lógica de Onboarding
-  if (!isOnboarded) {
-    const allowed = ['/onboarding', '/logout', '/api/onboarding']
-    if (!allowed.some(path => pathname.startsWith(path))) {
-      return redirectTo('/onboarding', request, supabaseResponse)
-    }
-    return supabaseResponse
+  // 3. Logged in - business flow
+  const isOnboarded = user.user_metadata?.onboarded === true;
+  const hasOrg = request.cookies.has(COOKIE_ORG_NAME);
+  const orgId = request.cookies.get(COOKIE_ORG_NAME)?.value;
+  const sig = request.cookies.get(COOKIE_SIG_NAME)?.value;
+  const hasValidSig = hasOrg && orgId && sig
+    ? verifyOrganizationCookie(orgId, sig)
+    : false;
+
+  // Missing onboarding
+  if (
+    !isOnboarded &&
+    !isOnboardingRoute &&
+    !isOrgSelectionRoute &&
+    !isLoggingOut
+  ) {
+    return redirectTo('/onboarding', request, supabaseResponse);
   }
 
-  // Lógica de Seleção de Organização
-  if (isOnboarded && !hasOrg) {
-    const allowed = ['/select-organization', '/create-organization', '/logout']
-    if (!allowed.some(path => pathname.startsWith(path))) {
-      return redirectTo('/select-organization', request, supabaseResponse)
-    }
-    return supabaseResponse
+  // Onboarded but no org (or invalid signature)
+  if (
+    isOnboarded &&
+    (!hasOrg || !hasValidSig) &&
+    !isOrgSelectionRoute &&
+    !isLoggingOut &&
+    !isOnboardingRoute
+  ) {
+    return redirectTo('/select-organization', request, supabaseResponse, {
+      clearOrgCookies: hasOrg && !hasValidSig,
+    });
   }
 
-  // Se logado, onboarded e com org, não faz sentido estar em onboarding ou select
-  if (pathname === '/onboarding' || pathname === '/select-organization') {
-    return redirectTo('/dashboard', request, supabaseResponse)
+  // All set, but trying to access onboarding/select
+  if (
+    isOnboarded &&
+    hasOrg &&
+    hasValidSig &&
+    (isOnboardingRoute || isOrgSelectionRoute)
+  ) {
+    return redirectTo('/dashboard', request, supabaseResponse);
   }
 
-  return supabaseResponse
+  return supabaseResponse;
 }
 
-// Helper para garantir que cookies sejam passados no redirecionamento
-function redirectTo(path: string, request: NextRequest, responseWithCookies: NextResponse) {
-  const url = request.nextUrl.clone()
-  url.pathname = path
-  const res = NextResponse.redirect(url)
-  
-  // Copia os cookies que o Supabase possa ter setado/atualizado
-  responseWithCookies.cookies.getAll().forEach(cookie => {
-    res.cookies.set(cookie.name, cookie.value, cookie)
-  })
-  
-  return res
+function redirectTo(
+  path: string,
+  request: NextRequest,
+  responseWithCookies: NextResponse,
+  options?: { clearOrgCookies?: boolean }
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = path;
+  const res = NextResponse.redirect(url);
+
+  if (options?.clearOrgCookies) {
+    res.cookies.delete(COOKIE_ORG_NAME);
+    res.cookies.delete(COOKIE_SIG_NAME);
+  }
+
+  responseWithCookies.cookies.getAll().forEach((cookie) => {
+    res.cookies.set(cookie.name, cookie.value, cookie);
+  });
+
+  return res;
 }

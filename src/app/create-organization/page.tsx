@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { getUserOrganizations } from '@/services/organization.service';
+import { requireAuthWithOrgs } from '@/services/auth.service';
 import { CreateOrganizationForm } from './create-organization-form';
 
 /**
@@ -10,14 +9,7 @@ import { CreateOrganizationForm } from './create-organization-form';
  * Accessible when !isOnboarded (middleware allows this route).
  */
 export default async function CreateOrganizationPage() {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    redirect('/login');
-  }
-
-  const userOrgs = await getUserOrganizations(user.id);
+  const { userOrgs } = await requireAuthWithOrgs();
 
   if (userOrgs.length > 0) {
     redirect('/select-organization');

@@ -1,32 +1,11 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { createClient } from '@/lib/supabase/server';
-import { getOrganizationById } from '@/services/organization.service';
+import { requireAuthAndOrg } from '@/services/auth.service';
 import { getProductsByOrganization } from '@/services/product.service';
 import { ProductsPageContent } from './components/products-page-content';
 
 export default async function ProductsPage() {
   const t = await getTranslations('Products');
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    redirect('/login');
-  }
-
-  const cookieStore = await cookies();
-  const activeOrgId = cookieStore.get('active_organization_id')?.value;
-
-  if (!activeOrgId) {
-    redirect('/select-organization');
-  }
-
-  const access = await getOrganizationById(activeOrgId, user.id);
-
-  if (!access) {
-    redirect('/select-organization');
-  }
+  const { activeOrgId } = await requireAuthAndOrg();
 
   const { data: initialProducts, paging } = await getProductsByOrganization(activeOrgId, {
     page: 1,

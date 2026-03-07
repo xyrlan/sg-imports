@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import { getProductsByOrganization } from '@/services/product.service';
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,12 +12,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await getAuthenticatedUser();
+    if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
     const { id: orgId } = await params;
     const access = await getOrganizationById(orgId, user.id);

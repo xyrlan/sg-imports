@@ -1,6 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getUserProfile } from '@/services/auth.service';
+import { getAuthenticatedUser, getUserProfile } from '@/services/auth.service';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import type { ReactNode } from 'react';
 
@@ -13,15 +12,9 @@ import type { ReactNode } from 'react';
  * 3. Renders sidebar + main content area
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  // Step 1: Validate authentication
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
+  if (!user) redirect('/login');
 
-  if (error || !user) {
-    redirect('/login');
-  }
-
-  // Step 2: Check super-admin role
   const profile = await getUserProfile(user.id);
 
   if (!profile || profile.systemRole !== 'SUPER_ADMIN') {

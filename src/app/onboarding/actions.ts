@@ -2,8 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/services/auth.service';
+import { requireAuth, updateUserMetadata } from '@/services/auth.service';
 import { updateOrganization, getOrganizationById } from '@/services/organization.service';
 import { createAddress, fetchAddressFromCEP, type ViaCEPResponse } from '@/services/address.service';
 import { createServiceFeeConfig, getOrCreateServiceFeeConfig } from '@/services/config.service';
@@ -335,13 +334,11 @@ export async function completeOnboarding(): Promise<void> {
     // Set organization cookie
     await setOrganizationCookie(orgId);
 
-    // Set user_metadata.onboarded so proxy stops redirecting to /onboarding
-    const supabase = await createClient();
-    await supabase.auth.updateUser({ data: { onboarded: true } });
+    await updateUserMetadata({ onboarded: true });
 
-    // Revalidate and redirect
+    // Revalidate and redirect with hint for AuthSessionRefresher
     revalidatePath('/dashboard', 'layout');
-    redirect('/dashboard');
+    redirect('/dashboard?from=onboarding');
   } catch (error) {
     console.error('Error completing onboarding:', error);
     redirect('/onboarding');

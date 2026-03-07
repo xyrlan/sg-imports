@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { signOut } from '@/services/auth.service';
 
 /**
  * Logout Page - Signs out and redirects to login
  * Escape hatch for users stuck in redirect loops
  */
 export default async function LogoutPage() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await signOut();
   redirect('/login');
 }

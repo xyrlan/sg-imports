@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import { importProductsFromRows, type ImportRow } from '@/services/product.service';
 import { NextRequest, NextResponse } from 'next/server';
@@ -99,12 +99,8 @@ async function parseFile(file: File): Promise<ImportRow[]> {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await getAuthenticatedUser();
+    if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

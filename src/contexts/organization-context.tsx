@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { organizations, memberships, profiles } from '@/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
 
@@ -42,6 +42,11 @@ interface OrganizationProviderProps {
  */
 export function OrganizationProvider({ children, initialData }: OrganizationProviderProps) {
   const [state, setState] = useState<OrganizationState>(initialData);
+
+  // Sync state when server sends fresh initialData (e.g. after AuthSessionRefresher's router.refresh())
+  useEffect(() => {
+    setState(initialData);
+  }, [initialData]);
 
   const switchOrganization = useCallback(async (orgId: string) => {
     setState(prev => ({ ...prev, isLoading: true }));

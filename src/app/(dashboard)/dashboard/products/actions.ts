@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { hsCodes, suppliers } from '@/db/schema';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuthOrRedirect } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import {
   createProduct,
@@ -81,15 +81,7 @@ export async function createProductAction(
   formData: FormData
 ): Promise<CreateProductState> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const variantSkus = formData.getAll('variantSku') as string[];
     const variantNames = formData.getAll('variantName') as string[];
@@ -257,15 +249,7 @@ export async function updateProductAction(
   formData: FormData
 ): Promise<CreateProductState> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const productId = formData.get('productId') as string;
     if (!productId) {
@@ -492,15 +476,7 @@ export async function deleteProductAction(
   organizationId: string
 ): Promise<DeleteProductResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     const access = await getOrganizationById(organizationId, user.id);
     if (!access) {

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { db } from '@/db';
 import { memberships, organizations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -14,10 +15,9 @@ export interface UserOrganization {
 
 /**
  * Fetch all organizations where the user has membership
- * @param userId - Profile ID from Supabase Auth
- * @returns Array of organizations with user's role
+ * Cached per userId per request to deduplicate when multiple components need it
  */
-export async function getUserOrganizations(userId: string): Promise<UserOrganization[]> {
+export const getUserOrganizations = cache(async (userId: string): Promise<UserOrganization[]> => {
   const userMemberships = await db.query.memberships.findMany({
     where: eq(memberships.profileId, userId),
     with: {
@@ -30,19 +30,16 @@ export async function getUserOrganizations(userId: string): Promise<UserOrganiza
     role: membership.role,
     membership,
   }));
-}
+});
 
 /**
  * Get specific organization with user's membership details
- * Validates that the user has access to the organization
- * @param orgId - Organization UUID
- * @param userId - Profile ID from Supabase Auth
- * @returns Organization data with membership or null if no access
+ * Cached per (orgId, userId) per request to deduplicate when multiple components need it
  */
-export async function getOrganizationById(
+export const getOrganizationById = cache(async (
   orgId: string,
   userId: string
-): Promise<UserOrganization | null> {
+): Promise<UserOrganization | null> => {
   const membership = await db.query.memberships.findFirst({
     where: and(
       eq(memberships.organizationId, orgId),
@@ -62,7 +59,7 @@ export async function getOrganizationById(
     role: membership.role,
     membership,
   };
-}
+});
 
 export interface UpdateOrganizationData {
   tradeName?: string;

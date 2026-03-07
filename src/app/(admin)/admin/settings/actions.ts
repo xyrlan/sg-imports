@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getUserProfile } from '@/services/auth.service';
+import { requireSuperAdmin } from '@/services/auth.service';
 import {
   upsertGlobalServiceFeeConfig,
   upsertStateIcmsRates,
@@ -21,17 +21,6 @@ import {
 } from '@/services/admin';
 import { z } from 'zod';
 import { RATE_TYPES } from './constants';
-
-async function requireSuperAdmin() {
-  const { createClient } = await import('@/lib/supabase/server');
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
-  const profile = await getUserProfile(user.id);
-  if (!profile || profile.systemRole !== 'SUPER_ADMIN') {
-    throw new Error('Forbidden');
-  }
-}
 
 const honorariosSchema = z.object({
   minimumWageBrl: z.string().min(1),

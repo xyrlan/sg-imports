@@ -1,34 +1,24 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dropdown, Avatar, Label } from '@heroui/react';
 import { User, Settings, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useOrganizationState } from '@/contexts/organization-context';
-import { createClient } from '@/lib/supabase/client';
+import { signOutAction } from '@/app/actions/auth';
 
 export function NavbarProfileDropdown() {
   const t = useTranslations('Navbar.Profile');
   const router = useRouter();
   const { membership, currentOrganization, profile } = useOrganizationState();
-  const [isPending, startTransition] = useTransition();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = async () => {
     try {
       setIsLoggingOut(true);
-      const supabase = createClient();
-      
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-      
-      // Redirect to login page
-      startTransition(() => {
-        router.push('/login');
-        router.refresh();
-      });
+      await signOutAction();
     } catch (error) {
       console.error('Error signing out:', error);
       setIsLoggingOut(false);
@@ -74,7 +64,7 @@ export function NavbarProfileDropdown() {
         }}>
           <Dropdown.Item
             id="my-profile"
-            isDisabled={isLoggingOut || isPending}
+            isDisabled={isLoggingOut}
             textValue={t('myProfile')}
           >
             <div className="flex items-center gap-2">
@@ -85,7 +75,7 @@ export function NavbarProfileDropdown() {
 
           <Dropdown.Item
             id="settings"
-            isDisabled={isLoggingOut || isPending}
+            isDisabled={isLoggingOut}
             textValue={t('settings')}
           >
             <div className="flex items-center gap-2">
@@ -96,7 +86,7 @@ export function NavbarProfileDropdown() {
 
           <Dropdown.Item
             id="logout"
-            isDisabled={isLoggingOut || isPending}
+            isDisabled={isLoggingOut}
             textValue={t('logout')}
             variant="danger"
           >

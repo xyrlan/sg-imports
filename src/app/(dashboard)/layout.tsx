@@ -1,13 +1,13 @@
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getAuthenticatedUser, getOrganizationCookie } from '@/services/auth.service';
 import { OrganizationProvider } from '@/contexts/organization-context';
 import { ProformaQuoteProvider } from '@/contexts/proforma-quote-context';
 import { getUserOrganizations, getOrganizationById } from '@/services/organization.service';
 import { getProformaQuotesByOrganization } from '@/services/quote.service';
 import { getProformaQuoteCookie } from '@/app/(dashboard)/actions';
 import { Navbar } from '@/components/layout';
-import type { ReactNode } from 'react';
+import { AuthSessionRefresher } from '@/components/auth/auth-session-refresher';
+import { Suspense, type ReactNode } from 'react';
 import { getUserProfile } from '@/services/auth.service';
 
 /**
@@ -23,48 +23,28 @@ import { getUserProfile } from '@/services/auth.service';
  * server components have access to organization context
  */
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  // Step 1: Validate authentication
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
+  if (!user) redirect('/login');
 
-  if (error || !user) {
-    redirect('/login');
-  }
-
-  // Step 2: Read organization cookie
-  const cookieStore = await cookies();
-  const activeOrgId = cookieStore.get('active_organization_id')?.value;
-
-  // Step 3: Fetch user's organizations
+  const activeOrgId = await getOrganizationCookie();
   const userOrgs = await getUserOrganizations(user.id);
-
-  // Step 4: Fetch user profile
   const userProfile = await getUserProfile(user.id);
 
-  // Step 4: Handle organization selection logic
+  // Handle organization selection (edge cases; middleware is primary)
   if (!activeOrgId) {
     // No cookie set - force organization selection
     if (userOrgs.length === 0) {
-      // User has no organizations - redirect to onboarding/creation page
-      redirect('/onboarding');
+      redirect('/create-organization');
     }
     
     // User has organizations but hasn't selected one
     redirect('/select-organization');
   }
 
-  // Step 5: Fetch selected organization data
   const currentOrgData = await getOrganizationById(activeOrgId, user.id);
+  if (!currentOrgData) redirect('/select-organization');
 
-  // Step 6: Security check - Ensure user has access to selected org
-  if (!currentOrgData) {
-    // Cookie contains invalid org ID or user lost access
-    // Redirect to selection page (it will set a new valid cookie)
-    redirect('/select-organization');
-  }
-
-  // Step 6.5: Check if organization needs onboarding
-  // Organization needs onboarding if missing billing or delivery address
+  // Edge case: org missing addresses (metadata says onboarded but DB inconsistent)
   const needsOnboarding = 
     !currentOrgData.organization.billingAddressId || 
     !currentOrgData.organization.deliveryAddressId;
@@ -73,7 +53,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect('/onboarding');
   }
 
-  // Step 7: Prepare initial state for client provider
   const initialData = {
     currentOrganization: currentOrgData.organization,
     membership: currentOrgData.membership,
@@ -82,7 +61,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     isLoading: false,
   };
 
-  // Step 8: Fetch proforma quote data for SELLER or SUPER_ADMIN (bypass)
   const canSelectProforma =
     currentOrgData.role === 'SELLER' || userProfile?.systemRole === 'SUPER_ADMIN';
 
@@ -113,6 +91,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <OrganizationProvider initialData={initialData}>
       <ProformaQuoteProvider initialData={proformaInitialData}>
+        <Suspense fallback={null}>
+          <AuthSessionRefresher />
+        </Suspense>
         <div className="min-h-screen bg-background">
           <Navbar />
           <main className="flex-1">

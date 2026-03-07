@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuthOrRedirect } from '@/services/auth.service';
 import { createFirstOrganization } from '@/services/organization.service';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
 
@@ -27,15 +27,7 @@ export async function createFirstOrganizationAction(
   formData: FormData
 ): Promise<CreateFirstOrganizationState> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      redirect('/login');
-    }
+    const user = await requireAuthOrRedirect();
 
     // Ensure profile exists (required for membership FK - user may have no profile if trigger failed)
     const { ensureProfileExists } = await import('@/services/user-setup.service');
