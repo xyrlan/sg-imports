@@ -21,9 +21,9 @@ export default async function SelectOrganizationPage() {
   // Fetch user's organizations
   const userOrgs = await getUserOrganizations(user.id);
 
-  // If no organizations, redirect to onboarding
+  // If no organizations, redirect to create-organization (fallback to prevent redirect loop)
   if (userOrgs.length === 0) {
-    redirect('/onboarding');
+    redirect('/create-organization');
   }
 
   return (

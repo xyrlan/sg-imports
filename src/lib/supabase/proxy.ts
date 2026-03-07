@@ -63,8 +63,45 @@ export async function updateSession(request: NextRequest) {
 
   // Case 2: User IS logged in
   // Allow access to verify-email page (for post-registration flow)
-  if (isVerifyEmail) {
-    return supabaseResponse
+  if (user) {
+    // 1. Pegue as flags de estado (recomendo usar user_metadata do Supabase para ser rápido)
+    const isOnboarded = user.user_metadata?.onboarded === true;
+    const hasOrg = request.cookies.has('active_organization_id');
+
+    // 2. Proteção de Onboarding - rotas permitidas quando !isOnboarded
+    const allowedWhenNotOnboarded = ['/onboarding', '/create-organization', '/select-organization', '/login', '/logout'];
+    if (!isOnboarded && !allowedWhenNotOnboarded.includes(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
+
+    // 3. Proteção de Seleção de Organização
+    // Se já fez onboarding, mas não escolheu a empresa
+    if (isOnboarded && !hasOrg && pathname !== '/select-organization' && pathname !== '/onboarding') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/select-organization';
+      return NextResponse.redirect(url);
+    }
+
+    // 4. Se ele já tem tudo, não deixa ele voltar para onboarding ou select-org
+    if (isOnboarded && hasOrg && (pathname === '/onboarding' || pathname === '/select-organization')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+
+    // 5. Permitir /login e /logout para usuários logados (trocar conta ou sair)
+    if (pathname === '/login' || pathname === '/logout') {
+      return supabaseResponse;
+    }
+
+    // 6. Redirecionar usuários logados para longe de outras rotas públicas (/register)
+    if (isPublicRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
   }
 
   // Redirect authenticated users away from auth pages

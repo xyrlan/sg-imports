@@ -5,7 +5,8 @@ import {
   PackageOpen, 
   ClipboardList, 
   ShipIcon, 
-  FileText 
+  FileText, 
+  ClipboardPen
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Separator, Link } from '@heroui/react';
@@ -54,6 +55,12 @@ export function Navbar() {
       label: t('shipments'),
       icon: <ShipIcon className="w-5 h-5" />,
       roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'CUSTOMS_BROKER', 'VIEWER'],
+    },
+    {
+      href: '/dashboard/simulations',
+      label: t('simulations'),
+      icon: <ClipboardPen className="w-5 h-5" />,
+      roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'SELLER', 'VIEWER'],
     },
     {
       href: '/dashboard/products',

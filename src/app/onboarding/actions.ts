@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/services/auth.service';
 import { updateOrganization, getOrganizationById } from '@/services/organization.service';
 import { createAddress, fetchAddressFromCEP, type ViaCEPResponse } from '@/services/address.service';
@@ -333,6 +334,10 @@ export async function completeOnboarding(): Promise<void> {
 
     // Set organization cookie
     await setOrganizationCookie(orgId);
+
+    // Set user_metadata.onboarded so proxy stops redirecting to /onboarding
+    const supabase = await createClient();
+    await supabase.auth.updateUser({ data: { onboarded: true } });
 
     // Revalidate and redirect
     revalidatePath('/dashboard', 'layout');

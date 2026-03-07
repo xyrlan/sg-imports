@@ -7,8 +7,8 @@ import {
   terminals,
   storageRules,
   storagePeriods,
-  type StorageRuleAdditionalFee,
 } from '@/db/schema';
+import type { StorageRuleAdditionalFee } from '@/db/types';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc, and, ne } from 'drizzle-orm';
 

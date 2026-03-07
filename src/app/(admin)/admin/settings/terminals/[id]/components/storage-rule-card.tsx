@@ -10,7 +10,7 @@ import {
   getShipmentTypeLabel,
 } from '@/lib/storage-utils';
 import type { StorageRule, StoragePeriod } from '@/services/admin';
-import type { StorageRuleAdditionalFee } from '@/db/schema';
+import type { StorageRuleAdditionalFee } from '@/db/types';
 
 export interface StorageRuleWithPeriods extends StorageRule {
   periods: StoragePeriod[];

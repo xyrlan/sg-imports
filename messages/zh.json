@@ -36,7 +36,8 @@
       "noAccount": "还没有账户？",
       "registerOwner": "注册为客户",
       "registerSeller": "注册为卖家",
-      "submitting": "登录中..."
+      "submitting": "登录中...",
+      "logoutAndSwitchAccount": "退出并切换账户"
     },
     "VerifyEmail": {
       "title": "验证您的电子邮件",
@@ -243,6 +244,7 @@
     "orders": "订单",
     "shipments": "货运",
     "products": "产品",
+    "simulations": "模拟",
     "Profile": {
       "noOrganization": "无组织",
       "myProfile": "我的资料",
@@ -816,6 +818,80 @@
       "button": "导出 CSV",
       "success": "导出完成",
       "error": "导出 CSV 失败"
+    }
+  },
+  "Simulations": {
+    "title": "模拟",
+    "description": "创建和管理报价模拟",
+    "Table": {
+      "searchPlaceholder": "搜索模拟..."
+    },
+    "Columns": {
+      "name": "名称",
+      "status": "状态",
+      "updatedAt": "更新"
+    },
+    "Status": {
+      "DRAFT": "草稿",
+      "SENT": "已发送",
+      "APPROVED": "已批准",
+      "REJECTED": "已拒绝",
+      "CONVERTED": "已转换"
+    },
+    "Actions": {
+      "label": "操作",
+      "view": "查看",
+      "edit": "编辑",
+      "delete": "删除",
+      "cancel": "取消",
+      "deleteTitle": "删除模拟",
+      "deleteConfirm": "确定要删除此模拟吗？"
+    },
+    "CreateSimulation": {
+      "addNew": "新建模拟",
+      "heading": "创建模拟",
+      "nameLabel": "名称",
+      "namePlaceholder": "例如：2025年第一季度成本估算",
+      "create": "创建",
+      "cancel": "取消"
+    },
+    "Detail": {
+      "back": "返回",
+      "status": "状态",
+      "emptyMessage": "此模拟中尚无产品。从目录添加产品或创建模拟产品。",
+      "addFirstProduct": "添加产品",
+      "itemName": "产品",
+      "itemSku": "SKU",
+      "itemQuantity": "数量",
+      "itemPrice": "单价",
+      "itemTotal": "总计",
+      "removeItem": "移除项目"
+    },
+    "AddProduct": {
+      "addProduct": "添加产品",
+      "heading": "添加产品到模拟",
+      "tabCatalog": "从目录",
+      "tabSimulated": "模拟产品",
+      "searchProducts": "搜索产品...",
+      "noProducts": "未找到产品。请先将产品添加到目录。",
+      "quantity": "数量",
+      "priceUsd": "价格 (USD)",
+      "add": "添加"
+    },
+    "SimulatedProduct": {
+      "name": "产品名称",
+      "namePlaceholder": "产品名称",
+      "sku": "SKU",
+      "skuPlaceholder": "例如：SIM-001（可选）",
+      "description": "描述",
+      "descriptionPlaceholder": "产品描述（可选）",
+      "priceUsd": "单价 (USD)",
+      "quantity": "数量",
+      "boxQuantity": "每箱数量",
+      "boxWeight": "箱重 (kg)",
+      "hsCode": "HS 编码 / NCM",
+      "supplierName": "供应商名称",
+      "supplierNamePlaceholder": "供应商名称（可选）"
     }
   }
 }

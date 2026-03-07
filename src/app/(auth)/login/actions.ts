@@ -57,8 +57,8 @@ export async function loginAction(
     const organizations = await getUserOrganizations(data.user.id);
 
     if (organizations.length === 0) {
-      // No organizations - redirect to onboarding
-      redirect('/onboarding');
+      // No organizations - redirect to create-organization (fallback to prevent redirect loop)
+      redirect('/create-organization');
     } else if (organizations.length === 1) {
       // Single organization - go directly to dashboard
       redirect('/dashboard');

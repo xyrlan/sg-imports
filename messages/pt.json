@@ -36,7 +36,8 @@
       "noAccount": "Não tem uma conta?",
       "registerOwner": "Cadastrar como Cliente",
       "registerSeller": "Cadastrar como Vendedor",
-      "submitting": "Entrando..."
+      "submitting": "Entrando...",
+      "logoutAndSwitchAccount": "Sair e trocar conta"
     },
     "VerifyEmail": {
       "title": "Verifique seu e-mail",
@@ -243,6 +244,7 @@
     "orders": "Pedidos",
     "shipments": "Embarques",
     "products": "Produtos",
+    "simulations": "Simulações",
     "Profile": {
       "noOrganization": "Sem Organização",
       "myProfile": "Meu Perfil",
@@ -816,6 +818,80 @@
       "button": "Exportar CSV",
       "success": "Exportação concluída",
       "error": "Falha ao exportar CSV"
+    }
+  },
+  "Simulations": {
+    "title": "Simulações",
+    "description": "Crie e gerencie simulações de cotações",
+    "Table": {
+      "searchPlaceholder": "Buscar simulações..."
+    },
+    "Columns": {
+      "name": "Nome",
+      "status": "Status",
+      "updatedAt": "Atualizado"
+    },
+    "Status": {
+      "DRAFT": "Rascunho",
+      "SENT": "Enviado",
+      "APPROVED": "Aprovado",
+      "REJECTED": "Rejeitado",
+      "CONVERTED": "Convertido"
+    },
+    "Actions": {
+      "label": "Ações",
+      "view": "Ver",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "cancel": "Cancelar",
+      "deleteTitle": "Excluir simulação",
+      "deleteConfirm": "Tem certeza que deseja excluir esta simulação?"
+    },
+    "CreateSimulation": {
+      "addNew": "Nova simulação",
+      "heading": "Criar simulação",
+      "nameLabel": "Nome",
+      "namePlaceholder": "ex: Estimativa custos Q1 2025",
+      "create": "Criar",
+      "cancel": "Cancelar"
+    },
+    "Detail": {
+      "back": "Voltar",
+      "status": "Status",
+      "emptyMessage": "Nenhum produto nesta simulação ainda. Adicione produtos do seu catálogo ou crie um produto simulado.",
+      "addFirstProduct": "Adicionar produto",
+      "itemName": "Produto",
+      "itemSku": "SKU",
+      "itemQuantity": "Qtd",
+      "itemPrice": "Preço unit.",
+      "itemTotal": "Total",
+      "removeItem": "Remover item"
+    },
+    "AddProduct": {
+      "addProduct": "Adicionar produto",
+      "heading": "Adicionar produto à simulação",
+      "tabCatalog": "Do catálogo",
+      "tabSimulated": "Produto simulado",
+      "searchProducts": "Buscar produtos...",
+      "noProducts": "Nenhum produto encontrado. Adicione produtos ao catálogo primeiro.",
+      "quantity": "Quantidade",
+      "priceUsd": "Preço (USD)",
+      "add": "Adicionar"
+    },
+    "SimulatedProduct": {
+      "name": "Nome do produto",
+      "namePlaceholder": "Nome do produto",
+      "sku": "SKU",
+      "skuPlaceholder": "ex: SIM-001 (opcional)",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descrição do produto (opcional)",
+      "priceUsd": "Preço unitário (USD)",
+      "quantity": "Quantidade",
+      "boxQuantity": "Quantidade por caixa",
+      "boxWeight": "Peso da caixa (kg)",
+      "hsCode": "Código HS / NCM",
+      "supplierName": "Nome do fornecedor",
+      "supplierNamePlaceholder": "Nome do fornecedor (opcional)"
     }
   }
 }

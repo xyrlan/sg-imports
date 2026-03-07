@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { products, productVariants, quoteItems } from '@/db/schema';
 import { eq, and, sql, desc, asc, inArray } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
-import type { TieredPriceInfo, VariantAttributes } from '@/db/schema';
+import type { TieredPriceInfo, VariantAttributes } from '@/db/types';
 
 export type Product = InferSelectModel<typeof products>;
 export type ProductVariant = InferSelectModel<typeof productVariants>;

@@ -1,0 +1,82 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { Button } from '@heroui/react';
+import { ArrowLeft, PackageOpen } from 'lucide-react';
+import { SimulationItemsList } from './simulation-items-list';
+import type { Simulation, SimulationItem } from '@/services/simulation.service';
+import type { ProductWithVariants } from '@/services/product.service';
+import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
+
+interface SimulationDetailContentProps {
+  simulation: Simulation;
+  items: SimulationItem[];
+  organizationId: string;
+  products: ProductWithVariants[];
+}
+
+export function SimulationDetailContent({
+  simulation,
+  items,
+  organizationId,
+  products,
+}: SimulationDetailContentProps) {
+  const t = useTranslations('Simulations.Detail');
+  const tStatus = useTranslations('Simulations.Status');
+  const router = useRouter();
+
+  const handleMutate = () => {
+    router.refresh();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/simulations">
+            <Button variant="ghost" size="sm" className="inline-flex items-center gap-2">
+              <ArrowLeft className="size-4" />
+              {t('back')}
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">{simulation.name}</h1>
+            <p className="text-sm text-muted">
+              {t('status')}: {simulation.status ? tStatus(simulation.status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'CONVERTED') : '—'}
+            </p>
+          </div>
+        </div>
+        <AddProductToSimulationModal
+          simulationId={simulation.id}
+          organizationId={organizationId}
+          products={products}
+          onMutate={handleMutate}
+        />
+      </div>
+
+      {items.length > 0 ? (
+        <SimulationItemsList
+          items={items}
+          organizationId={organizationId}
+          onMutate={handleMutate}
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 border border-dashed rounded-lg">
+          <PackageOpen className="size-12 text-muted mb-4" />
+          <p className="text-muted text-center max-w-sm mb-4">
+            {t('emptyMessage')}
+          </p>
+          <AddProductToSimulationModal
+            simulationId={simulation.id}
+            organizationId={organizationId}
+            products={products}
+            onMutate={handleMutate}
+            triggerLabel={t('addFirstProduct')}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -11,64 +11,17 @@ import {
   jsonb,
   boolean,
   unique,
-  index
+  index,
+  check
 } from 'drizzle-orm/pg-core';
 
-export type ProductSnapshot = {
-  // Identificação
-  sku?: string;          // Opcional na simulação
-  name: string;
-  nameEnglish?: string;  // Importante para Siscomex
-  description?: string;
-  photos?: string[];
+import { 
+  ProductSnapshot, 
+  VariantAttributes, 
+  StorageRuleAdditionalFee, 
+  TieredPriceInfo
+} from './types';
 
-  // Logística (Crucial para cálculo de frete)
-  boxQuantity: number;   // Qtd por caixa master
-  boxWeight: number;     // Peso da caixa master (kg)
-  netWeight?: number;    // Peso líquido unitário
-  
-  // Dimensões (Opcional, mas bom ter)
-  height?: number;
-  width?: number;
-  length?: number;
-
-  // Fiscal & Origem (A GRANDE DIFERENÇA)
-  // No banco real é 'hsCodeId' (UUID). Aqui guardamos o CÓDIGO e os IMPOSTOS do momento.
-  hsCode: string;        // Ex: "8504.40.10"
-  taxSnapshot?: {        // Opcional: Congelar os impostos usados na simulação
-    ii: number;
-    ipi: number;
-    pis: number;
-    cofins: number;
-  };
-
-  supplierName?: string; // Em vez de supplierId
-};
-
-// ==========================================
-// Product Variant Types (Alibaba/1688 compatible)
-// ==========================================
-
-/** Alibaba-style: property_id -> value_id mapping for i18n */
-export type VariantAttributes = Record<string, string>;
-
-/** Single tier: from quantity X onward, use this price */
-export type PriceTier = { beginAmount: number; price: string };
-
-/** Array of tiers, sorted by beginAmount ascending */
-export type TieredPriceInfo = PriceTier[];
-
-/** Get effective price for quantity from tiered pricing; falls back to priceUsd if no tiers */
-export function getPriceForQuantity(
-  tieredPriceInfo: TieredPriceInfo | null | undefined,
-  quantity: number,
-  fallbackPrice: string
-): string {
-  if (!tieredPriceInfo || tieredPriceInfo.length === 0) return fallbackPrice;
-  const sorted = [...tieredPriceInfo].sort((a, b) => b.beginAmount - a.beginAmount);
-  const tier = sorted.find((t) => quantity >= t.beginAmount);
-  return tier ? tier.price : fallbackPrice;
-}
 
 // ==========================================
 // 1. ENUMS (Postgres Types)
@@ -344,13 +297,23 @@ export const quotes = pgTable('quotes', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const quoteItems = pgTable('quote_items', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  quoteId: uuid('quote_id').references(() => quotes.id, { onDelete: 'cascade' }).notNull(),
-  variantId: uuid('variant_id').references(() => productVariants.id).notNull(),
-  quantity: integer('quantity').notNull(),
-  priceUsd: decimal('price_usd', { precision: 10, scale: 2 }).notNull(), // Snapshot do preço
-});
+export const quoteItems = pgTable(
+  'quote_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    quoteId: uuid('quote_id').references(() => quotes.id, { onDelete: 'cascade' }).notNull(),
+    variantId: uuid('variant_id').references(() => productVariants.id), // Nullable: item do catálogo OU simulado
+    simulatedProductSnapshot: jsonb('simulated_product_snapshot').$type<ProductSnapshot>(), // Preenchido quando item é simulado (não cadastrado)
+    quantity: integer('quantity').notNull(),
+    priceUsd: decimal('price_usd', { precision: 10, scale: 2 }).notNull(), // Snapshot do preço
+  },
+  (t) => [
+    check(
+      'quote_items_variant_or_simulated',
+      sql`(${t.variantId} IS NOT NULL) OR (${t.simulatedProductSnapshot} IS NOT NULL)`
+    ),
+  ]
+);
 
 export const shipments = pgTable('shipments', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -444,12 +407,6 @@ export const terminals = pgTable('terminals', {
   code: text('code'), // Código Siscomex
 });
 
-/** Additional fee item within a storage rule (free-form) */
-export type StorageRuleAdditionalFee = {
-  name: string;
-  value: number;
-  basis: 'PER_BOX' | 'PER_BL' | 'PER_WM' | 'PER_CONTAINER';
-};
 
 export const storageRules = pgTable('storage_rules', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -866,6 +823,11 @@ export const quotesRelations = relations(quotes, ({ one, many }) => ({
   organization: one(organizations, { fields: [quotes.organizationId], references: [organizations.id] }),
   items: many(quoteItems),
   generatedShipment: one(shipments, { fields: [quotes.generatedShipmentId], references: [shipments.id] }),
+}));
+
+export const quoteItemsRelations = relations(quoteItems, ({ one }) => ({
+  quote: one(quotes, { fields: [quoteItems.quoteId], references: [quotes.id] }),
+  variant: one(productVariants, { fields: [quoteItems.variantId], references: [productVariants.id] }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one, many }) => ({

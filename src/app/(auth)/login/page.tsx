@@ -81,6 +81,13 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Logout / Switch account */}
+          <div className="mb-4">
+            <Link href="/logout" className="text-sm text-muted hover:text-foreground">
+              {t('logoutAndSwitchAccount')}
+            </Link>
+          </div>
+
           {/* Registration Links */}
           <div className="flex flex-col gap-2">
             <Link href="/register/owner">

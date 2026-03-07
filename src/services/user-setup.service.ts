@@ -10,6 +10,29 @@ export interface UserMetadata {
 }
 
 /**
+ * Ensures that a profile exists for the user (required for memberships FK)
+ * Creates minimal profile if missing - used when creating first organization
+ */
+export async function ensureProfileExists(
+  userId: string,
+  email: string,
+  fullName?: string
+): Promise<void> {
+  const existing = await db.query.profiles.findFirst({
+    where: eq(profiles.id, userId),
+  });
+  if (!existing) {
+    await db.insert(profiles).values({
+      id: userId,
+      email,
+      fullName: fullName ?? email.split('@')[0],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+}
+
+/**
  * Ensures that profile, organization, and membership exist for a user
  * This is a fallback in case the database trigger fails or is disabled
  * @param userId - User ID from auth.users

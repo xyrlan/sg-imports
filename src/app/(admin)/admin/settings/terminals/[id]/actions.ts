@@ -11,7 +11,7 @@ import {
   findStorageRuleConflict,
 } from '@/services/admin';
 import { z } from 'zod';
-import type { StorageRuleAdditionalFee } from '@/db/schema';
+import type { StorageRuleAdditionalFee } from '@/db/types';
 
 async function requireSuperAdmin() {
   const { createClient } = await import('@/lib/supabase/server');

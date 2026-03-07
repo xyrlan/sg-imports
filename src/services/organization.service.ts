@@ -114,6 +114,56 @@ export interface CreateOrganizationForOwnerInput {
 }
 
 /**
+ * Create the first organization for a user with zero organizations
+ * Used as fallback when ensureUserSetup fails or user has no orgs
+ * @param userId - Profile ID from Supabase Auth
+ * @param data - Organization name and CNPJ
+ * @returns Created organization or error if user already has orgs or CNPJ exists
+ */
+export async function createFirstOrganization(
+  userId: string,
+  data: CreateOrganizationForOwnerInput
+): Promise<{ organization: Organization } | { error: string }> {
+  const userOrgs = await getUserOrganizations(userId);
+  if (userOrgs.length > 0) {
+    return { error: 'Você já possui organizações. Use a seleção de organização.' };
+  }
+
+  const [existingOrg] = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.document, data.document))
+    .limit(1);
+
+  if (existingOrg) {
+    return { error: 'Este CNPJ já está cadastrado no sistema' };
+  }
+
+  const [newOrg] = await db
+    .insert(organizations)
+    .values({
+      name: data.name,
+      document: data.document,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  if (!newOrg) {
+    return { error: 'Erro ao criar organização' };
+  }
+
+  await db.insert(memberships).values({
+    organizationId: newOrg.id,
+    profileId: userId,
+    role: 'OWNER',
+    createdAt: new Date(),
+  });
+
+  return { organization: newOrg };
+}
+
+/**
  * Create a new organization and add the current user as OWNER
  * Only users who already have at least one organization with OWNER role can use this
  * @param userId - Profile ID from Supabase Auth

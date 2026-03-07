@@ -24,7 +24,7 @@ import {
   type StorageRuleActionState,
 } from '../actions';
 import type { StorageRuleWithPeriods } from './storage-rule-card';
-import type { StorageRuleAdditionalFee } from '@/db/schema';
+import type { StorageRuleAdditionalFee } from '@/db/types';
 import type { StoragePeriod } from '@/services/admin';
 import {
   getContainerTypeLabel,
