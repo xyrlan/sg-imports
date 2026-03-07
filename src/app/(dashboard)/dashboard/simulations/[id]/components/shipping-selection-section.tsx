@@ -2,9 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Button, Card } from '@heroui/react';
+import { Button, Card, Input, Label, TextField } from '@heroui/react';
 import { toast } from '@heroui/react';
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { startTransition } from 'react';
 import { useFreightModality } from '@/hooks/useFreightModality';
 import { FreightModalityCards } from './freight-modality-cards';
@@ -55,6 +55,14 @@ export function ShippingSelectionSection({ simulation, onMutate }: ShippingSelec
   const [state, formAction, isPending] = useActionState(updateSimulationAction, null);
   const didRefreshRef = useRef(false);
 
+  const existingMetadata = (simulation.metadata as ShippingMetadata | null) ?? {};
+  const [totalFreightUsd, setTotalFreightUsd] = useState(
+    () => existingMetadata.totalFreightUsd?.toString() ?? '',
+  );
+  const [totalInsuranceUsd, setTotalInsuranceUsd] = useState(
+    () => existingMetadata.totalInsuranceUsd?.toString() ?? '',
+  );
+
   useEffect(() => {
     if (
       !isPending &&
@@ -84,6 +92,8 @@ export function ShippingSelectionSection({ simulation, onMutate }: ShippingSelec
     const metadata: ShippingMetadata = {
       totalChargeableWeight,
       isOverride: isOverride || undefined,
+      totalFreightUsd: parseFloat(totalFreightUsd) || 0,
+      totalInsuranceUsd: parseFloat(totalInsuranceUsd) || 0,
     };
     if (selectedModality === 'SEA_FCL' && selectedEquipment) {
       metadata.equipmentType = selectedEquipment.type;
@@ -118,6 +128,27 @@ export function ShippingSelectionSection({ simulation, onMutate }: ShippingSelec
           containerType={selectedEquipment?.type}
           containerQuantity={selectedEquipment?.quantity}
         />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <TextField
+            variant="primary"
+            value={totalFreightUsd}
+            onChange={setTotalFreightUsd}
+            isDisabled={isPending}
+          >
+            <Label>{t('totalFreightUsd')}</Label>
+            <Input type="text" inputMode="decimal" placeholder="0.00" />
+          </TextField>
+          <TextField
+            variant="primary"
+            value={totalInsuranceUsd}
+            onChange={setTotalInsuranceUsd}
+            isDisabled={isPending}
+          >
+            <Label>{t('totalInsuranceUsd')}</Label>
+            <Input type="text" inputMode="decimal" placeholder="0.00" />
+          </TextField>
+        </div>
 
         {validationResult.ok === false && validationResult.kind === 'soft' && (
           <div className="text-warning text-sm flex items-center gap-2">

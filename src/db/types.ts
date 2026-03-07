@@ -56,4 +56,6 @@ export interface ShippingMetadata {
   equipmentQuantity?: number;
   totalChargeableWeight?: number;
   isOverride?: boolean;
+  totalFreightUsd?: number;
+  totalInsuranceUsd?: number;
 }

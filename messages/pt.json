@@ -944,7 +944,21 @@
     "ShippingSelection": {
       "confirmModality": "Confirmar Modalidade",
       "softWarning": "Atenção: Volume no limite. Sujeito à aprovação do fornecedor no estufamento.",
-      "hardBlockToast": "Carga excede o limite permitido. Ajuste o volume ou peso."
+      "hardBlockToast": "Carga excede o limite permitido. Ajuste o volume ou peso.",
+      "totalFreightUsd": "Frete Internacional (USD)",
+      "totalInsuranceUsd": "Seguro (USD)"
+    },
+    "FinancialSummary": {
+      "title": "Resumo Financeiro",
+      "totalFobUsd": "Total FOB (USD)",
+      "totalFreightUsd": "Total Frete (USD)",
+      "totalInsuranceUsd": "Total Seguro (USD)",
+      "totalTaxesBrl": "Total Impostos (BRL)",
+      "totalLandedCostBrl": "Custo Posto Total (BRL)",
+      "breakdown": "Breakdown de custos",
+      "productShare": "Produto",
+      "logisticsShare": "Logística",
+      "taxesShare": "Impostos"
     },
     "SimulatedProduct": {
       "name": "Nome do produto",

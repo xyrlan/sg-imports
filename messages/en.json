@@ -944,7 +944,21 @@
     "ShippingSelection": {
       "confirmModality": "Confirm Modality",
       "softWarning": "Warning: Volume at limit. Subject to supplier approval for stuffing.",
-      "hardBlockToast": "Cargo exceeds allowed limit. Adjust volume or weight."
+      "hardBlockToast": "Cargo exceeds allowed limit. Adjust volume or weight.",
+      "totalFreightUsd": "International Freight (USD)",
+      "totalInsuranceUsd": "Insurance (USD)"
+    },
+    "FinancialSummary": {
+      "title": "Financial Summary",
+      "totalFobUsd": "Total FOB (USD)",
+      "totalFreightUsd": "Total Freight (USD)",
+      "totalInsuranceUsd": "Total Insurance (USD)",
+      "totalTaxesBrl": "Total Taxes (BRL)",
+      "totalLandedCostBrl": "Total Landed Cost (BRL)",
+      "breakdown": "Cost breakdown",
+      "productShare": "Product",
+      "logisticsShare": "Logistics",
+      "taxesShare": "Taxes"
     },
     "SimulatedProduct": {
       "name": "Product name",

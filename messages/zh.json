@@ -944,7 +944,21 @@
     "ShippingSelection": {
       "confirmModality": "确认运输方式",
       "softWarning": "注意：体积接近上限。需经供应商确认装柜。",
-      "hardBlockToast": "货物超出允许限制。请调整体积或重量。"
+      "hardBlockToast": "货物超出允许限制。请调整体积或重量。",
+      "totalFreightUsd": "国际运费 (USD)",
+      "totalInsuranceUsd": "保险费 (USD)"
+    },
+    "FinancialSummary": {
+      "title": "财务摘要",
+      "totalFobUsd": "FOB 总计 (USD)",
+      "totalFreightUsd": "运费总计 (USD)",
+      "totalInsuranceUsd": "保险费总计 (USD)",
+      "totalTaxesBrl": "税费总计 (BRL)",
+      "totalLandedCostBrl": "到岸成本总计 (BRL)",
+      "breakdown": "成本构成",
+      "productShare": "产品",
+      "logisticsShare": "物流",
+      "taxesShare": "税费"
     },
     "SimulatedProduct": {
       "name": "产品名称",

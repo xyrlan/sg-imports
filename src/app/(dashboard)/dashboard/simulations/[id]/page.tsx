@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation';
 import { requireAuthAndOrg } from '@/services/auth.service';
 import { SimulationDetailContent } from './components/simulation-detail-content';
-import { getSimulationById } from '@/services/simulation.service';
+import {
+  getSimulationById,
+  getQuoteFinancialSummary,
+} from '@/services/simulation.service';
 import { getProductsByOrganization } from '@/services/product.service';
 
 export default async function SimulationDetailPage({
@@ -12,9 +15,10 @@ export default async function SimulationDetailPage({
   const { id } = await params;
   const { user, activeOrgId } = await requireAuthAndOrg();
 
-  const [data, productsResult] = await Promise.all([
+  const [data, productsResult, summary] = await Promise.all([
     getSimulationById(id, activeOrgId, user.id),
     getProductsByOrganization(activeOrgId, { pageSize: 200 }),
+    getQuoteFinancialSummary(id, activeOrgId, user.id),
   ]);
 
   if (!data) {
@@ -28,6 +32,7 @@ export default async function SimulationDetailPage({
         items={data.items}
         organizationId={activeOrgId}
         products={productsResult.data}
+        financialSummary={summary}
       />
     </div>
   );

@@ -8,10 +8,15 @@ import { Button, Input, Label, TextField, FieldError } from '@heroui/react';
 import { ArrowLeft, PackageOpen } from 'lucide-react';
 import { useActionState } from 'react';
 import { SimulationItemsList } from './simulation-items-list';
-import type { Simulation, SimulationItem } from '@/services/simulation.service';
+import type {
+  Simulation,
+  SimulationItem,
+  QuoteFinancialSummary,
+} from '@/services/simulation.service';
 import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
 import { ShippingSelectionSection } from './shipping-selection-section';
+import { SimulationFinancialSummary } from './simulation-financial-summary';
 import { updateSimulationAction } from '../../actions';
 
 interface SimulationDetailContentProps {
@@ -19,6 +24,7 @@ interface SimulationDetailContentProps {
   items: SimulationItem[];
   organizationId: string;
   products: ProductWithVariants[];
+  financialSummary?: QuoteFinancialSummary | null;
 }
 
 export function SimulationDetailContent({
@@ -26,6 +32,7 @@ export function SimulationDetailContent({
   items,
   organizationId,
   products,
+  financialSummary = null,
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
@@ -92,11 +99,15 @@ export function SimulationDetailContent({
       </div>
 
       {items.length > 0 && (
-          <ShippingSelectionSection
-            simulation={simulation}
-            onMutate={handleMutate}
-          />
-        )}
+        <ShippingSelectionSection
+          simulation={simulation}
+          onMutate={handleMutate}
+        />
+      )}
+
+      {items.length > 0 && (
+        <SimulationFinancialSummary summary={financialSummary ?? null} />
+      )}
 
       <form onSubmit={handleSettingsSubmit} className="rounded-lg border p-4 space-y-4">
         <h3 className="text-sm font-semibold text-default-700">{t('settings')}</h3>

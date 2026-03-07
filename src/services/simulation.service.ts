@@ -14,6 +14,11 @@ import {
   getVolumetricWeightSeaLCL,
 } from '@/lib/logistics';
 import { computeImportTaxes } from '@/lib/import-taxes';
+import {
+  calculateLandedCost,
+  type LandedCostItemInput,
+  type LandedCostItemResult,
+} from '@/lib/landed-cost';
 
 type Quote = InferSelectModel<typeof quotes>;
 type QuoteItem = InferSelectModel<typeof quoteItems>;
@@ -659,4 +664,147 @@ export async function updateSimulationItem(
     await recalculateQuoteTotals(item.quote.id);
   }
   return updated ?? null;
+}
+
+export interface CalculateAndSaveQuoteTaxesResult {
+  success: boolean;
+  items?: LandedCostItemResult[];
+  error?: string;
+}
+
+/**
+ * Calcula e persiste os impostos (Landed Cost) na cotação.
+ * Busca quote + items, chama o motor de cálculo, faz batch update em quote_items.
+ *
+ * @param quoteId - Quote UUID
+ * @param organizationId - Organization UUID
+ * @param userId - Profile ID from Supabase Auth
+ * @param totalFreightUsd - Frete total em USD
+ * @param totalInsuranceUsd - Seguro total em USD
+ */
+export async function calculateAndSaveQuoteTaxes(
+  quoteId: string,
+  organizationId: string,
+  userId: string,
+  totalFreightUsd: number,
+  totalInsuranceUsd: number,
+): Promise<CalculateAndSaveQuoteTaxesResult> {
+  const data = await getSimulationById(quoteId, organizationId, userId);
+  if (!data) {
+    return { success: false, error: 'Simulation not found or no access' };
+  }
+
+  const { simulation, items } = data;
+
+  const targetDolar = Number(simulation.targetDolar ?? 0);
+  const exchangeRateIof = Number(simulation.exchangeRateIof ?? 0);
+  const shippingModality = simulation.shippingModality;
+
+  if (targetDolar <= 0) {
+    return { success: false, error: 'Target exchange rate (target_dolar) is required' };
+  }
+
+  if (!shippingModality) {
+    return { success: false, error: 'Shipping modality is required' };
+  }
+
+  if (items.length === 0) {
+    return { success: false, error: 'No items in simulation' };
+  }
+
+  const landedInputs: LandedCostItemInput[] = items.map((i) => ({
+    id: i.id,
+    priceUsd: i.priceUsd ?? '0',
+    quantity: i.quantity,
+    weightSnapshot: i.weightSnapshot ?? '0',
+    iiRate: i.iiRateSnapshot ?? '0',
+    ipiRate: i.ipiRateSnapshot ?? '0',
+    pisRate: i.pisRateSnapshot ?? '0',
+    cofinsRate: i.cofinsRateSnapshot ?? '0',
+  }));
+
+  const results = calculateLandedCost(
+    {
+      targetDolar,
+      exchangeRateIof,
+      shippingModality,
+    },
+    landedInputs,
+    totalFreightUsd,
+    totalInsuranceUsd,
+  );
+
+  await db.transaction(async (tx) => {
+    for (const r of results) {
+      await tx
+        .update(quoteItems)
+        .set({
+          iiValueSnapshot: r.iiValue.toFixed(4),
+          ipiValueSnapshot: r.ipiValue.toFixed(4),
+          pisValueSnapshot: r.pisValue.toFixed(4),
+          cofinsValueSnapshot: r.cofinsValue.toFixed(4),
+        })
+        .where(eq(quoteItems.id, r.id));
+    }
+  });
+
+  return { success: true, items: results };
+}
+
+export interface QuoteFinancialSummary {
+  totalFobUsd: number;
+  totalFreightUsd: number;
+  totalInsuranceUsd: number;
+  totalTaxesBrl: number;
+  totalLandedCostBrl: number;
+  effectiveDolar: number;
+}
+
+/**
+ * Agrega os valores dos itens calculados e retorna o breakdown financeiro.
+ * Usa totalFreightUsd e totalInsuranceUsd do metadata quando disponíveis.
+ */
+export async function getQuoteFinancialSummary(
+  quoteId: string,
+  organizationId: string,
+  userId: string,
+): Promise<QuoteFinancialSummary | null> {
+  const data = await getSimulationById(quoteId, organizationId, userId);
+  if (!data) return null;
+
+  const { simulation, items } = data;
+  const metadata = (simulation.metadata as ShippingMetadata | null) ?? {};
+  const totalFreightUsd = metadata.totalFreightUsd ?? 0;
+  const totalInsuranceUsd = metadata.totalInsuranceUsd ?? 0;
+
+  const targetDolar = Number(simulation.targetDolar ?? 0);
+  const exchangeRateIof = Number(simulation.exchangeRateIof ?? 0);
+  const effectiveDolar =
+    targetDolar > 0 ? targetDolar * (1 + exchangeRateIof / 100) : 0;
+
+  let totalFobUsd = 0;
+  let totalTaxesBrl = 0;
+
+  for (const i of items) {
+    const fob = Number(i.priceUsd ?? 0) * i.quantity;
+    totalFobUsd += fob;
+    totalTaxesBrl +=
+      Number(i.iiValueSnapshot ?? 0) +
+      Number(i.ipiValueSnapshot ?? 0) +
+      Number(i.pisValueSnapshot ?? 0) +
+      Number(i.cofinsValueSnapshot ?? 0);
+  }
+
+  const totalCifBrl =
+    (totalFobUsd + totalFreightUsd + totalInsuranceUsd) * effectiveDolar;
+  const totalLandedCostBrl = totalCifBrl + totalTaxesBrl;
+
+  return {
+    totalFobUsd,
+    totalFreightUsd,
+    totalInsuranceUsd,
+    totalTaxesBrl,
+    totalLandedCostBrl,
+    effectiveDolar,
+  };
 }

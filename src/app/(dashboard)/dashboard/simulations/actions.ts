@@ -12,6 +12,7 @@ import {
   addSimulationItem,
   removeSimulationItem,
   updateSimulationItem,
+  calculateAndSaveQuoteTaxes,
 } from '@/services/simulation.service';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 
@@ -145,6 +146,8 @@ const shippingMetadataSchema = z.object({
   equipmentQuantity: z.number().int().min(1).optional(),
   totalChargeableWeight: z.number().optional(),
   isOverride: z.boolean().optional(),
+  totalFreightUsd: z.number().min(0).optional(),
+  totalInsuranceUsd: z.number().min(0).optional(),
 });
 
 const updateSimulationSchema = z.object({
@@ -231,6 +234,22 @@ export async function updateSimulationAction(
       return { error: 'Simulation not found or could not be updated' };
     }
 
+    const metadata = validated.data.metadata as { totalFreightUsd?: number; totalInsuranceUsd?: number } | undefined;
+    const totalFreightUsd = metadata?.totalFreightUsd ?? 0;
+    const totalInsuranceUsd = metadata?.totalInsuranceUsd ?? 0;
+    if (validated.data.metadata !== undefined) {
+      const taxResult = await calculateAndSaveQuoteTaxes(
+        validated.data.simulationId,
+        validated.data.organizationId,
+        user.id,
+        totalFreightUsd,
+        totalInsuranceUsd,
+      );
+      if (!taxResult.success) {
+        return { error: taxResult.error ?? 'Failed to calculate taxes' };
+      }
+    }
+
     revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
     return {};
   } catch (err) {
@@ -239,6 +258,67 @@ export async function updateSimulationAction(
     }
     return {
       error: err instanceof Error ? err.message : 'Failed to update simulation',
+    };
+  }
+}
+
+const calculateQuoteTaxesSchema = z.object({
+  simulationId: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  totalFreightUsd: z.coerce.number().min(0),
+  totalInsuranceUsd: z.coerce.number().min(0),
+});
+
+export interface CalculateQuoteTaxesResult {
+  success?: boolean;
+  error?: string;
+}
+
+export async function calculateQuoteTaxesAction(
+  simulationId: string,
+  organizationId: string,
+  totalFreightUsd: number,
+  totalInsuranceUsd: number,
+): Promise<CalculateQuoteTaxesResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+
+    const validated = calculateQuoteTaxesSchema.safeParse({
+      simulationId,
+      organizationId,
+      totalFreightUsd,
+      totalInsuranceUsd,
+    });
+
+    if (!validated.success) {
+      return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
+    }
+
+    const access = await getOrganizationById(validated.data.organizationId, user.id);
+    if (!access) {
+      return { error: 'Forbidden' };
+    }
+
+    const result = await calculateAndSaveQuoteTaxes(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+      validated.data.totalFreightUsd,
+      validated.data.totalInsuranceUsd,
+    );
+
+    if (!result.success) {
+      return { error: result.error ?? 'Failed to calculate taxes' };
+    }
+
+    revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) {
+      throw err;
+    }
+    return {
+      error: err instanceof Error ? err.message : 'Failed to calculate taxes',
     };
   }
 }
