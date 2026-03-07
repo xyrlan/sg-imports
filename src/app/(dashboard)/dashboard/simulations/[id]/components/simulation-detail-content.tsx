@@ -4,17 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { startTransition, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button, Input, Label, Select, ListBox, TextField, FieldError } from '@heroui/react';
+import { Button, Input, Label, TextField, FieldError } from '@heroui/react';
 import { ArrowLeft, PackageOpen } from 'lucide-react';
 import { useActionState } from 'react';
 import { SimulationItemsList } from './simulation-items-list';
 import type { Simulation, SimulationItem } from '@/services/simulation.service';
 import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
+import { ShippingSelectionSection } from './shipping-selection-section';
 import { updateSimulationAction } from '../../actions';
-import { getShipmentTypeLabel } from '@/lib/storage-utils';
-
-const SHIPPING_MODALITIES = ['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS'] as const;
 
 interface SimulationDetailContentProps {
   simulation: Simulation;
@@ -34,9 +32,6 @@ export function SimulationDetailContent({
   const router = useRouter();
 
   const [updateState, updateAction, isUpdatePending] = useActionState(updateSimulationAction, null);
-  const [shippingModality, setShippingModality] = useState<string | null>(
-    simulation.shippingModality ?? null
-  );
   const [exchangeRateIof, setExchangeRateIof] = useState(simulation.exchangeRateIof ?? '');
   const didRefreshRef = useRef(false);
 
@@ -50,7 +45,6 @@ export function SimulationDetailContent({
     const formData = new FormData(form);
     formData.set('simulationId', simulation.id);
     formData.set('organizationId', organizationId);
-    formData.set('shippingModality', shippingModality && shippingModality !== '__none__' ? shippingModality : '');
     startTransition(() => {
       updateAction(formData);
     });
@@ -97,39 +91,16 @@ export function SimulationDetailContent({
         />
       </div>
 
+      {items.length > 0 && (
+          <ShippingSelectionSection
+            simulation={simulation}
+            onMutate={handleMutate}
+          />
+        )}
+
       <form onSubmit={handleSettingsSubmit} className="rounded-lg border p-4 space-y-4">
         <h3 className="text-sm font-semibold text-default-700">{t('settings')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>{t('shippingModality')}</Label>
-            <Select
-              variant="primary"
-              value={shippingModality ?? '__none__'}
-              onChange={(k) =>
-                setShippingModality(k === '__none__' ? null : (k as string))
-              }
-              isDisabled={isUpdatePending}
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBox.Item key="__none__" id="__none__" textValue={t('none')}>
-                    {t('none')}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                  {SHIPPING_MODALITIES.map((m) => (
-                    <ListBox.Item key={m} id={m} textValue={getShipmentTypeLabel(m)}>
-                      {getShipmentTypeLabel(m)}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                  ))}
-                </ListBox>
-              </Select.Popover>
-            </Select>
-          </div>
           <div className="flex flex-col gap-2">
             <TextField
               variant="primary"

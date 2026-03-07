@@ -4,8 +4,11 @@
 
 export const CONTAINER_TYPE_LABELS: Record<string, string> = {
   GP_20: '20\' GP',
+  '20GP': '20\' GP',
   GP_40: '40\' GP',
+  '40NOR': '40\' NOR',
   HC_40: '40\' HC',
+  '40HC': '40\' HC',
   RF_20: '20\' RF',
   RF_40: '40\' RF',
 };

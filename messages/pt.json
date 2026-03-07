@@ -916,6 +916,36 @@
       "priceUsd": "Preço (USD)",
       "add": "Adicionar"
     },
+    "FreightModalityCards": {
+      "title": "Modalidade de transporte",
+      "SEA_LCL": "LCL (Carga Compartilhada)",
+      "SEA_FCL": "FCL (Container Fechado)",
+      "AIR": "Aéreo",
+      "EXPRESS": "Expresso",
+      "suggested": "Sugerido",
+      "containerSize": "Tamanho do container"
+    },
+    "FreightCapacityProgress": {
+      "fclTitle": "Capacidade do container",
+      "fclTitlePlural": "Capacidade dos containers",
+      "weight": "Peso",
+      "volume": "Volume",
+      "weightExceeded": "O limite de peso do container foi ultrapassado",
+      "volumeExceeded": "O limite de volume do container foi ultrapassado",
+      "softWarning": "Atenção: Volume no limite. Sujeito à aprovação do fornecedor no estufamento.",
+      "lclTitle": "Métricas LCL",
+      "totalCbm": "Total CBM",
+      "chargeableWeight": "Peso taxável",
+      "lclViabilityAlert": "Volume próximo do limite de viabilidade LCL (15 m³). Considere FCL.",
+      "airTitle": "Métricas Aéreo",
+      "expressTitle": "Métricas Expresso",
+      "volumetricNote": "Peso taxável = máximo entre peso bruto e peso volumétrico (fator 1:6 para aéreo)."
+    },
+    "ShippingSelection": {
+      "confirmModality": "Confirmar Modalidade",
+      "softWarning": "Atenção: Volume no limite. Sujeito à aprovação do fornecedor no estufamento.",
+      "hardBlockToast": "Carga excede o limite permitido. Ajuste o volume ou peso."
+    },
     "SimulatedProduct": {
       "name": "Nome do produto",
       "namePlaceholder": "Nome do produto",

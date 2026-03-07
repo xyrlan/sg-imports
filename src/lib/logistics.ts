@@ -4,6 +4,135 @@
  */
 
 import Decimal from 'decimal.js';
+import type { FreightProfile } from '@/types/freight';
+
+/** Capacidades reais de mercado (m³, kg) — Single Source of Truth */
+export const CONTAINER_CAPACITIES = {
+  '20GP': { maxCbm: 33, maxWeight: 28_000 },
+  '40NOR': { maxCbm: 67, maxWeight: 28_000 },
+  '40HC': { maxCbm: 76, maxWeight: 28_000 },
+} as const;
+
+export const LCL_VIABILITY_THRESHOLDS = { maxCbm: 15, maxWeight: 10_000 };
+
+/** AIR: fator de estiva 1:6 (volume_cm³ / 6000 = peso vol. kg) */
+export const AIR_VOLUMETRIC_DIVISOR = 6000;
+
+/**
+ * Calcula o perfil ótimo de frete com base em CBM e peso.
+ * LCL: < 15 CBM e < 10.000 kg. Caso contrário: SEA_FCL com containers otimizados.
+ */
+export function calculateOptimalFreightProfile(
+  totalCbm: number,
+  totalWeight: number,
+): FreightProfile {
+  const { maxCbm: lclCbm, maxWeight: lclWeight } = LCL_VIABILITY_THRESHOLDS;
+
+  if (totalWeight < lclWeight && totalCbm < lclCbm) {
+    return {
+      suggestedModality: 'SEA_LCL',
+      isContainerized: false,
+      capacity: { maxWeight: null, maxVolume: null },
+    };
+  }
+
+  const cap20 = CONTAINER_CAPACITIES['20GP'];
+  const cap40NOR = CONTAINER_CAPACITIES['40NOR'];
+  const cap40HC = CONTAINER_CAPACITIES['40HC'];
+
+  const needByWeight = (maxW: number) => Math.ceil(totalWeight / maxW);
+  const needByVolume = (maxV: number) => Math.ceil(totalCbm / maxV);
+  const needFor = (maxW: number, maxV: number) =>
+    Math.max(needByWeight(maxW), needByVolume(maxV));
+
+  if (totalWeight <= cap20.maxWeight && totalCbm <= cap20.maxCbm) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '20GP', quantity: 1 },
+      capacity: { maxWeight: cap20.maxWeight, maxVolume: cap20.maxCbm },
+    };
+  }
+
+  if (totalWeight <= cap40NOR.maxWeight && totalCbm <= cap40NOR.maxCbm) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '40NOR', quantity: 1 },
+      capacity: { maxWeight: cap40NOR.maxWeight, maxVolume: cap40NOR.maxCbm },
+    };
+  }
+
+  if (totalWeight <= cap40HC.maxWeight && totalCbm <= cap40HC.maxCbm) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '40HC', quantity: 1 },
+      capacity: { maxWeight: cap40HC.maxWeight, maxVolume: cap40HC.maxCbm },
+    };
+  }
+
+  const norNeed = needFor(cap40NOR.maxWeight, cap40NOR.maxCbm);
+  const hqNeed = needFor(cap40HC.maxWeight, cap40HC.maxCbm);
+
+  if (norNeed <= 2) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '40NOR', quantity: norNeed },
+      capacity: {
+        maxWeight: cap40NOR.maxWeight * norNeed,
+        maxVolume: cap40NOR.maxCbm * norNeed,
+      },
+    };
+  }
+
+  if (hqNeed <= 2) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '40HC', quantity: 2 },
+      capacity: {
+        maxWeight: cap40HC.maxWeight * 2,
+        maxVolume: cap40HC.maxCbm * 2,
+      },
+    };
+  }
+
+  if (norNeed <= 3) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '40NOR', quantity: 3 },
+      capacity: {
+        maxWeight: cap40NOR.maxWeight * 3,
+        maxVolume: cap40NOR.maxCbm * 3,
+      },
+    };
+  }
+
+  if (hqNeed <= 3) {
+    return {
+      suggestedModality: 'SEA_FCL',
+      isContainerized: true,
+      equipment: { type: '40HC', quantity: 3 },
+      capacity: {
+        maxWeight: cap40HC.maxWeight * 3,
+        maxVolume: cap40HC.maxCbm * 3,
+      },
+    };
+  }
+
+  return {
+    suggestedModality: 'SEA_FCL',
+    isContainerized: true,
+    equipment: { type: '40HC', quantity: hqNeed },
+    capacity: {
+      maxWeight: cap40HC.maxWeight * hqNeed,
+      maxVolume: cap40HC.maxCbm * hqNeed,
+    },
+  };
+}
 
 export interface CartonDimensions {
   heightCm: number | string;
@@ -75,6 +204,24 @@ export function getVolumetricWeightAir(cbmM3: Decimal | number, divisor = 6000):
 export function getVolumetricWeightSeaLCL(cbmM3: Decimal | number): Decimal {
   const cbm = typeof cbmM3 === 'number' ? new Decimal(cbmM3) : cbmM3;
   return cbm.times(1000);
+}
+
+/**
+ * Chargeable weight por modalidade (para exibição dinâmica na UI).
+ * AIR/EXPRESS: max(gross, vol/6000); SEA_LCL: max(gross, CBM×1000); SEA_FCL: peso bruto.
+ */
+export function getChargeableWeightByModality(
+  totalCbm: number,
+  totalWeightKg: number,
+  modality: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS',
+): number {
+  const gross = new Decimal(totalWeightKg);
+  if (modality === 'SEA_FCL') return gross.toNumber();
+  const vol =
+    modality === 'AIR' || modality === 'EXPRESS'
+      ? getVolumetricWeightAir(totalCbm)
+      : getVolumetricWeightSeaLCL(totalCbm);
+  return getChargeableWeight(gross, vol).toNumber();
 }
 
 /**

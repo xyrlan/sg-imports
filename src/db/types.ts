@@ -49,3 +49,11 @@ export type StorageRuleAdditionalFee = {
   value: number;
   basis: 'PER_BOX' | 'PER_BL' | 'PER_WM' | 'PER_CONTAINER';
 };
+
+/** Tipagem estrita para quotes.metadata (JSONB) */
+export interface ShippingMetadata {
+  equipmentType?: '20GP' | '40NOR' | '40HC';
+  equipmentQuantity?: number;
+  totalChargeableWeight?: number;
+  isOverride?: boolean;
+}

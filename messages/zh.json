@@ -916,6 +916,36 @@
       "priceUsd": "价格 (USD)",
       "add": "添加"
     },
+    "FreightModalityCards": {
+      "title": "运输方式",
+      "SEA_LCL": "LCL（拼箱）",
+      "SEA_FCL": "FCL（整柜）",
+      "AIR": "空运",
+      "EXPRESS": "快递",
+      "suggested": "推荐",
+      "containerSize": "集装箱尺寸"
+    },
+    "FreightCapacityProgress": {
+      "fclTitle": "集装箱容量",
+      "fclTitlePlural": "集装箱容量",
+      "weight": "重量",
+      "volume": "体积",
+      "weightExceeded": "超出重量限制",
+      "volumeExceeded": "超出体积限制",
+      "softWarning": "注意：体积接近上限。需经供应商确认装柜。",
+      "lclTitle": "LCL 指标",
+      "totalCbm": "总 CBM",
+      "chargeableWeight": "计费重量",
+      "lclViabilityAlert": "体积接近 LCL 可行上限（15 m³）。建议考虑 FCL。",
+      "airTitle": "空运指标",
+      "expressTitle": "快递指标",
+      "volumetricNote": "计费重量 = 毛重与体积重量（空运 1:6）取大值。"
+    },
+    "ShippingSelection": {
+      "confirmModality": "确认运输方式",
+      "softWarning": "注意：体积接近上限。需经供应商确认装柜。",
+      "hardBlockToast": "货物超出允许限制。请调整体积或重量。"
+    },
     "SimulatedProduct": {
       "name": "产品名称",
       "namePlaceholder": "产品名称",

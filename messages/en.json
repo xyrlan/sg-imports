@@ -916,6 +916,36 @@
       "priceUsd": "Price (USD)",
       "add": "Add"
     },
+    "FreightModalityCards": {
+      "title": "Shipping modality",
+      "SEA_LCL": "LCL (Shared Cargo)",
+      "SEA_FCL": "FCL (Full Container)",
+      "AIR": "Air",
+      "EXPRESS": "Express",
+      "suggested": "Suggested",
+      "containerSize": "Container size"
+    },
+    "FreightCapacityProgress": {
+      "fclTitle": "Container capacity",
+      "fclTitlePlural": "Containers capacity",
+      "weight": "Weight",
+      "volume": "Volume",
+      "weightExceeded": "Weight limit exceeded",
+      "volumeExceeded": "Volume limit exceeded",
+      "softWarning": "Warning: Volume at limit. Subject to supplier approval for stuffing.",
+      "lclTitle": "LCL metrics",
+      "totalCbm": "Total CBM",
+      "chargeableWeight": "Chargeable weight",
+      "lclViabilityAlert": "Volume near LCL viability limit (15 m³). Consider FCL.",
+      "airTitle": "Air metrics",
+      "expressTitle": "Express metrics",
+      "volumetricNote": "Chargeable weight = max of gross weight and volumetric weight (1:6 factor for air)."
+    },
+    "ShippingSelection": {
+      "confirmModality": "Confirm Modality",
+      "softWarning": "Warning: Volume at limit. Subject to supplier approval for stuffing.",
+      "hardBlockToast": "Cargo exceeds allowed limit. Adjust volume or weight."
+    },
     "SimulatedProduct": {
       "name": "Product name",
       "namePlaceholder": "Product name",

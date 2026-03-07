@@ -13,7 +13,7 @@ import {
   removeSimulationItem,
   updateSimulationItem,
 } from '@/services/simulation.service';
-import type { ProductSnapshot } from '@/db/types';
+import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 
 const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS']);
 
@@ -140,12 +140,32 @@ export async function createSimulationAction(
   }
 }
 
+const shippingMetadataSchema = z.object({
+  equipmentType: z.enum(['20GP', '40NOR', '40HC']).optional(),
+  equipmentQuantity: z.number().int().min(1).optional(),
+  totalChargeableWeight: z.number().optional(),
+  isOverride: z.boolean().optional(),
+});
+
 const updateSimulationSchema = z.object({
   simulationId: z.string().uuid(),
   organizationId: z.string().uuid(),
   name: z.string().min(1).max(200).optional(),
   shippingModality: shippingModalitySchema.nullable().optional(),
   exchangeRateIof: z.string().nullable().optional(),
+  metadata: z
+    .string()
+    .optional()
+    .transform((s): ShippingMetadata | undefined => {
+      if (!s) return undefined;
+      try {
+        const parsed = JSON.parse(s) as unknown;
+        const result = shippingMetadataSchema.safeParse(parsed);
+        return result.success ? (result.data as ShippingMetadata) : undefined;
+      } catch {
+        return undefined;
+      }
+    }),
 });
 
 export interface UpdateSimulationState {
@@ -160,14 +180,19 @@ export async function updateSimulationAction(
   try {
     const user = await requireAuthOrRedirect();
 
-    const shippingModalityRaw = (formData.get('shippingModality') as string)?.trim();
-    const rawData = {
+    const rawData: Record<string, unknown> = {
       simulationId: formData.get('simulationId') as string,
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
-      shippingModality: shippingModalityRaw && shippingModalityRaw !== '__none__' ? shippingModalityRaw : null,
       exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim() || null,
     };
+    if (formData.has('shippingModality')) {
+      const v = (formData.get('shippingModality') as string)?.trim();
+      rawData.shippingModality = v && v !== '__none__' ? v : null;
+    }
+    if (formData.has('metadata')) {
+      rawData.metadata = formData.get('metadata') as string;
+    }
 
     const validated = updateSimulationSchema.safeParse(rawData);
     if (!validated.success) {
@@ -198,6 +223,7 @@ export async function updateSimulationAction(
         ...(validated.data.exchangeRateIof !== undefined && {
           exchangeRateIof: validated.data.exchangeRateIof,
         }),
+        ...(validated.data.metadata !== undefined && { metadata: validated.data.metadata }),
       }
     );
 

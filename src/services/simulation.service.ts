@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { quotes, quoteItems, memberships, productVariants, products, hsCodes } from '@/db/schema';
 import { eq, and, desc, asc, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
-import type { ProductSnapshot } from '@/db/types';
+import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 import { getOrganizationById } from '@/services/organization.service';
 import {
   computeTotalCbm,
@@ -163,6 +163,7 @@ export interface UpdateSimulationInput {
   name?: string;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
   exchangeRateIof?: string | null;
+  metadata?: ShippingMetadata | null;
 }
 
 /**
@@ -215,6 +216,7 @@ export async function updateSimulation(
       ...(input.name !== undefined && { name: input.name.trim() }),
       ...(input.shippingModality !== undefined && { shippingModality: input.shippingModality }),
       ...(input.exchangeRateIof !== undefined && { exchangeRateIof: input.exchangeRateIof }),
+      ...(input.metadata !== undefined && { metadata: input.metadata }),
       updatedAt: new Date(),
     })
     .where(eq(quotes.id, simulationId))
