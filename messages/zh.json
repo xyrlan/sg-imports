@@ -245,6 +245,17 @@
     "shipments": "货运",
     "products": "产品",
     "simulations": "模拟",
+    "Notifications": {
+      "title": "通知",
+      "empty": "暂无通知",
+      "markAllAsRead": "全部标为已读",
+      "ariaLabel": "通知",
+      "ariaLabelUnread": "{count} 条未读通知",
+      "timeNow": "刚刚",
+      "timeMinutes": "{count}分钟",
+      "timeHours": "{count}小时",
+      "timeDays": "{count}天"
+    },
     "Profile": {
       "noOrganization": "无组织",
       "myProfile": "我的资料",

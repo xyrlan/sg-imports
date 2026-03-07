@@ -245,6 +245,17 @@
     "shipments": "Shipments",
     "products": "Products",
     "simulations": "Simulations",
+    "Notifications": {
+      "title": "Notifications",
+      "empty": "No notifications",
+      "markAllAsRead": "Mark all as read",
+      "ariaLabel": "Notifications",
+      "ariaLabelUnread": "{count} unread notifications",
+      "timeNow": "Now",
+      "timeMinutes": "{count}min",
+      "timeHours": "{count}h",
+      "timeDays": "{count}d"
+    },
     "Profile": {
       "noOrganization": "No Organization",
       "myProfile": "My Profile",

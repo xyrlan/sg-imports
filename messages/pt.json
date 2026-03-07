@@ -245,6 +245,17 @@
     "shipments": "Embarques",
     "products": "Produtos",
     "simulations": "Simulações",
+    "Notifications": {
+      "title": "Notificações",
+      "empty": "Nenhuma notificação",
+      "markAllAsRead": "Marcar todas como lidas",
+      "ariaLabel": "Notificações",
+      "ariaLabelUnread": "{count} notificações não lidas",
+      "timeNow": "Agora",
+      "timeMinutes": "{count}min",
+      "timeHours": "{count}h",
+      "timeDays": "{count}d"
+    },
     "Profile": {
       "noOrganization": "Sem Organização",
       "myProfile": "Meu Perfil",

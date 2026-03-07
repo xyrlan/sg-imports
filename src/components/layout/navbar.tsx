@@ -16,6 +16,7 @@ import { useOrganizationState } from '@/contexts/organization-context';
 import { NavbarProfileDropdown } from './navbar-profile-dropdown';
 import { NavbarOrganizationSelect } from './navbar-organization-select';
 import { NavbarProformaQuoteSelect } from './navbar-proforma-quote-select';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface NavbarLink {
   href: string;
@@ -96,6 +97,12 @@ export function Navbar() {
 
           <NavbarProfileDropdown />
 
+          <Separator
+            className="h-8 hidden md:block"
+            orientation="vertical"
+          />
+
+          <NotificationBell />
 
           {canSelectOrganization && (
             <>
