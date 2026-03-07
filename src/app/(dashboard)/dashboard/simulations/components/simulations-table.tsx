@@ -5,9 +5,9 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { DataTable } from '@/components/ui/data-table';
 import { getSimulationColumns } from './simulation-columns';
+import type { Simulation } from '@/services/simulation.service';
 import { CreateSimulationModal } from './create-simulation-modal';
 import { DeleteSimulationDialog } from './delete-simulation-dialog';
-import type { Simulation } from '@/services/simulation.service';
 
 interface SimulationsTableProps {
   initialSimulations: Simulation[];
@@ -54,7 +54,7 @@ export function SimulationsTable({
       <DeleteSimulationDialog
         simulation={simulationToDelete}
         open={!!simulationToDelete}
-        onOpenChange={(open) => !open && setSimulationToDelete(null)}
+        onOpenChange={(open: boolean) => !open && setSimulationToDelete(null)}
         organizationId={organizationId}
         onSuccess={handleMutate}
       />

@@ -860,6 +860,7 @@
       "status": "Status",
       "emptyMessage": "No products in this simulation yet. Add products from your catalog or create a simulated product.",
       "addFirstProduct": "Add product",
+      "searchItems": "Search items...",
       "itemName": "Product",
       "itemSku": "SKU",
       "itemQuantity": "Qty",

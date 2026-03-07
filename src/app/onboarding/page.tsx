@@ -34,12 +34,13 @@ export default async function OnboardingPage() {
   }
 
   // Step 3: Get the organization to onboard
-  // Try to get from cookie, otherwise use the first organization
+  // Try to get from cookie, otherwise redirect to Route Handler to set it
   const cookieStore = await cookies();
-  let activeOrgId = cookieStore.get('active_organization_id')?.value;
+  const activeOrgId = cookieStore.get('active_organization_id')?.value;
 
   if (!activeOrgId || !userOrgs.find(org => org.organization.id === activeOrgId)) {
-    activeOrgId = userOrgs[0].organization.id;
+    // Redirect to Route Handler to set cookie (cookies can only be modified in Route Handlers or Server Actions)
+    redirect('/api/onboarding/ensure-org');
   }
 
   // Step 4: Fetch organization data with membership

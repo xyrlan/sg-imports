@@ -860,6 +860,7 @@
       "status": "状态",
       "emptyMessage": "此模拟中尚无产品。从目录添加产品或创建模拟产品。",
       "addFirstProduct": "添加产品",
+      "searchItems": "搜索项目...",
       "itemName": "产品",
       "itemSku": "SKU",
       "itemQuantity": "数量",
