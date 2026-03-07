@@ -17,12 +17,18 @@ function normalizeRow(row: Record<string, unknown>): ImportRow {
     return isNaN(n) ? 1 : n;
   };
 
+  const boxQuantity = getNum('boxQuantity');
+  const boxWeight = getStr('boxWeight') || '0';
+
   return {
     sku: getStr('sku'),
     name: getStr('name'),
     description: getStr('description') || undefined,
-    boxQuantity: getNum('boxQuantity'),
-    boxWeight: getStr('boxWeight') || '0',
+    unitsPerCarton: getNum('unitsPerCarton') || boxQuantity || 1,
+    cartonHeight: getStr('cartonHeight') || undefined,
+    cartonWidth: getStr('cartonWidth') || undefined,
+    cartonLength: getStr('cartonLength') || undefined,
+    cartonWeight: getStr('cartonWeight') || boxWeight || undefined,
     variantName: getStr('variantName'),
     priceUsd: getStr('priceUsd'),
     height: getStr('height') || undefined,

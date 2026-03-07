@@ -14,6 +14,11 @@ export const SHIPMENT_TYPE_LABELS: Record<string, string> = {
   FCL: 'FCL',
   FCL_PARTIAL: 'FCL parcial',
   LCL: 'LCL',
+  SEA_FCL: 'FCL',
+  SEA_FCL_PARTIAL: 'FCL parcial',
+  SEA_LCL: 'LCL',
+  AIR: 'Aéreo',
+  EXPRESS: 'Expresso',
 };
 
 export const FEE_BASIS_LABELS: Record<string, string> = {

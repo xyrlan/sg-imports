@@ -93,16 +93,16 @@ export function getProductColumns(
         );
       },
     }),
-    columnHelper.accessor((row) => row.variants?.[0]?.boxQuantity, {
-      id: 'boxQuantity',
-      header: t('boxQty'),
+    columnHelper.accessor((row) => row.variants?.[0]?.unitsPerCarton, {
+      id: 'unitsPerCarton',
+      header: t('unitsPerCarton'),
       cell: (info) => (
         <span className="text-sm text-muted">{info.getValue() ?? '—'}</span>
       ),
     }),
-    columnHelper.accessor((row) => row.variants?.[0]?.boxWeight, {
-      id: 'boxWeight',
-      header: t('boxWeight'),
+    columnHelper.accessor((row) => row.variants?.[0]?.cartonWeight, {
+      id: 'cartonWeight',
+      header: t('cartonWeight'),
       cell: (info) => (
         <span className="text-sm text-muted">{info.getValue() ?? '—'}</span>
       ),

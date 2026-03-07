@@ -38,9 +38,9 @@ export type ContainerType = 'GP_20' | 'GP_40' | 'HC_40' | 'RF_20' | 'RF_40';
 
 export interface UpsertStorageRuleData {
   terminalId: string;
-  /** Obrigatório somente quando shipmentType é FCL */
+  /** Obrigatório somente quando shipmentType é SEA_FCL */
   containerType?: ContainerType | null;
-  shipmentType?: 'FCL' | 'FCL_PARTIAL' | 'LCL';
+  shipmentType?: 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL';
   minValue?: string;
   /** Seguro CIF - somente para LCL */
   cifInsurance?: string;
@@ -140,7 +140,7 @@ export async function deleteTerminal(id: string): Promise<boolean> {
  */
 export async function findStorageRuleConflict(
   terminalId: string,
-  shipmentType: 'FCL' | 'FCL_PARTIAL' | 'LCL',
+  shipmentType: 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL',
   containerType: ContainerType | null,
   excludeRuleId?: string,
 ): Promise<StorageRule | null> {
@@ -152,7 +152,7 @@ export async function findStorageRuleConflict(
     baseConditions.push(ne(storageRules.id, excludeRuleId));
   }
 
-  if (shipmentType === 'FCL' && containerType) {
+  if (shipmentType === 'SEA_FCL' && containerType) {
     const [existing] = await db
       .select()
       .from(storageRules)
@@ -161,7 +161,7 @@ export async function findStorageRuleConflict(
     return existing ?? null;
   }
 
-  if (shipmentType === 'LCL' || shipmentType === 'FCL_PARTIAL') {
+  if (shipmentType === 'SEA_LCL' || shipmentType === 'SEA_FCL_PARTIAL') {
     const [existing] = await db
       .select()
       .from(storageRules)
@@ -181,7 +181,7 @@ export async function createStorageRule(
     .values({
       terminalId: data.terminalId,
       containerType: data.containerType ?? null,
-      shipmentType: data.shipmentType ?? 'FCL',
+      shipmentType: data.shipmentType ?? 'SEA_FCL',
       minValue: data.minValue ?? '0',
       cifInsurance: data.cifInsurance ?? '0',
       additionalFees: data.additionalFees ?? [],
@@ -222,7 +222,7 @@ export async function createStorageRuleWithPeriods(
       .values({
         terminalId: data.terminalId,
         containerType: data.containerType ?? null,
-        shipmentType: data.shipmentType ?? 'FCL',
+        shipmentType: data.shipmentType ?? 'SEA_FCL',
         minValue: data.minValue ?? '0',
         cifInsurance: data.cifInsurance ?? '0',
         additionalFees: data.additionalFees ?? [],
@@ -253,7 +253,7 @@ export async function updateStorageRuleWithPeriods(
       .update(storageRules)
       .set({
         containerType: data.containerType ?? null,
-        shipmentType: data.shipmentType ?? 'FCL',
+        shipmentType: data.shipmentType ?? 'SEA_FCL',
         minValue: data.minValue ?? '0',
         cifInsurance: data.cifInsurance ?? '0',
         additionalFees: data.additionalFees ?? [],
@@ -285,14 +285,14 @@ export async function duplicateStorageRule(ruleId: string): Promise<StorageRule 
 
   const conflict = await findStorageRuleConflict(
     sourceRule.terminalId,
-    sourceRule.shipmentType as 'FCL' | 'FCL_PARTIAL' | 'LCL',
+    sourceRule.shipmentType as 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL',
     sourceRule.containerType as ContainerType | null,
   );
   if (conflict) {
     throw new Error(
-      sourceRule.shipmentType === 'LCL'
+      sourceRule.shipmentType === 'SEA_LCL'
         ? 'Já existe uma regra LCL para este terminal.'
-        : sourceRule.shipmentType === 'FCL_PARTIAL'
+        : sourceRule.shipmentType === 'SEA_FCL_PARTIAL'
           ? 'Já existe uma regra FCL Parcial para este terminal.'
           : sourceRule.containerType
             ? `Já existe uma regra FCL para o container ${sourceRule.containerType} neste terminal.`
@@ -308,7 +308,7 @@ export async function duplicateStorageRule(ruleId: string): Promise<StorageRule 
   return createStorageRuleWithPeriods({
     terminalId: sourceRule.terminalId,
     containerType: sourceRule.containerType as ContainerType | null,
-    shipmentType: sourceRule.shipmentType as 'FCL' | 'FCL_PARTIAL' | 'LCL',
+    shipmentType: sourceRule.shipmentType as 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL',
     minValue: sourceRule.minValue ?? '0',
     cifInsurance: sourceRule.cifInsurance ?? '0',
     additionalFees: (sourceRule.additionalFees ?? []) as StorageRuleAdditionalFee[],

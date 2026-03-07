@@ -16,10 +16,10 @@ interface StorageRulesSectionProps {
   onRefresh?: () => void;
 }
 
-const SHIPMENT_GROUPS: Array<{ key: 'FCL' | 'FCL_PARTIAL' | 'LCL' }> = [
-  { key: 'FCL' },
-  { key: 'FCL_PARTIAL' },
-  { key: 'LCL' },
+const SHIPMENT_GROUPS: Array<{ key: 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL' }> = [
+  { key: 'SEA_FCL' },
+  { key: 'SEA_FCL_PARTIAL' },
+  { key: 'SEA_LCL' },
 ];
 
 export function StorageRulesSection({ terminal, onRefresh }: StorageRulesSectionProps) {
@@ -90,18 +90,18 @@ export function StorageRulesSection({ terminal, onRefresh }: StorageRulesSection
       {rulesByShipment.map(({ key, rules }) => (
         <div key={key}>
           <h4 className="text-md font-semibold text-default-700 mb-3 flex items-center gap-2">
-            {key === 'LCL' ? (
+            {key === 'SEA_LCL' ? (
               <Layers size={18} />
             ) : (
               <Package size={18} />
             )}
-            {t(key === 'FCL' ? 'StorageRules.fcl' : key === 'FCL_PARTIAL' ? 'StorageRules.fclPartial' : 'StorageRules.lcl')}
+            {t(key === 'SEA_FCL' ? 'StorageRules.fcl' : key === 'SEA_FCL_PARTIAL' ? 'StorageRules.fclPartial' : 'StorageRules.lcl')}
           </h4>
           {rules.length === 0 ? (
             <Card>
               <Card.Content className="text-center py-8">
                 <p className="text-default-600">
-                  {key === 'LCL' ? t('StorageRules.noRulesLCL') : t('StorageRules.noRulesFCL')}
+                  {key === 'SEA_LCL' ? t('StorageRules.noRulesLCL') : t('StorageRules.noRulesFCL')}
                 </p>
               </Card.Content>
             </Card>

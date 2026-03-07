@@ -85,13 +85,17 @@ export interface CreateProductVariantInput {
   sku: string;
   name: string;
   priceUsd: string;
-  boxQuantity?: number;
-  boxWeight?: string;
   height?: string;
   width?: string;
   length?: string;
   netWeight?: string;
   unitWeight?: string;
+  cartonHeight?: string;
+  cartonWidth?: string;
+  cartonLength?: string;
+  cartonWeight?: string;
+  unitsPerCarton?: number;
+  packagingType?: 'BOX' | 'PALLET' | 'BAG';
   attributes?: VariantAttributes;
   tieredPriceInfo?: TieredPriceInfo;
 }
@@ -146,7 +150,7 @@ export async function createProduct(
   const variantInputs =
     rawVariants.length > 0
       ? rawVariants
-      : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: 1, boxWeight: '0' }];
+      : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', unitsPerCarton: 1 }];
 
   const variantValues = variantInputs.map((v) => ({
     productId: product.id,
@@ -154,13 +158,17 @@ export async function createProduct(
     sku: v.sku,
     name: v.name,
     priceUsd: v.priceUsd,
-    boxQuantity: v.boxQuantity ?? 1,
-    boxWeight: v.boxWeight ?? '0',
     height: v.height ?? null,
     width: v.width ?? null,
     length: v.length ?? null,
     netWeight: v.netWeight ?? null,
     unitWeight: v.unitWeight ?? null,
+    cartonHeight: v.cartonHeight ?? '0',
+    cartonWidth: v.cartonWidth ?? '0',
+    cartonLength: v.cartonLength ?? '0',
+    cartonWeight: v.cartonWeight ?? '0',
+    unitsPerCarton: v.unitsPerCarton ?? 1,
+    packagingType: v.packagingType ?? null,
     attributes: v.attributes ?? null,
     tieredPriceInfo: v.tieredPriceInfo ?? null,
   }));
@@ -220,7 +228,7 @@ export async function updateProduct(
   const variantInputs =
     (data.variants ?? []).length > 0
       ? data.variants
-      : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: 1, boxWeight: '0' }];
+      : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', unitsPerCarton: 1 }];
 
   for (const v of variantInputs) {
     const input = v as UpdateProductVariantInput;
@@ -228,13 +236,17 @@ export async function updateProduct(
       sku: input.sku,
       name: input.name,
       priceUsd: input.priceUsd,
-      boxQuantity: input.boxQuantity ?? 1,
-      boxWeight: input.boxWeight ?? '0',
       height: input.height ?? null,
       width: input.width ?? null,
       length: input.length ?? null,
       netWeight: input.netWeight ?? null,
       unitWeight: input.unitWeight ?? null,
+      cartonHeight: input.cartonHeight ?? '0',
+      cartonWidth: input.cartonWidth ?? '0',
+      cartonLength: input.cartonLength ?? '0',
+      cartonWeight: input.cartonWeight ?? '0',
+      unitsPerCarton: input.unitsPerCarton ?? 1,
+      packagingType: input.packagingType ?? null,
       attributes: input.attributes ?? null,
       tieredPriceInfo: input.tieredPriceInfo ?? null,
     };
@@ -291,8 +303,11 @@ export interface ImportRow {
   sku: string;
   name: string;
   description?: string;
-  boxQuantity: number | string;
-  boxWeight: string;
+  unitsPerCarton?: number | string;
+  cartonHeight?: string;
+  cartonWidth?: string;
+  cartonLength?: string;
+  cartonWeight?: string;
   variantName: string;
   priceUsd: string;
   height?: string;
@@ -354,8 +369,11 @@ export async function importProductsFromRows(
         sku: row.sku.trim(),
         name: row.variantName.trim(),
         priceUsd: String(row.priceUsd).replace(',', '.'),
-        boxQuantity: Number(row.boxQuantity) || 1,
-        boxWeight: String(row.boxWeight || '0').replace(',', '.'),
+        unitsPerCarton: Number(row.unitsPerCarton) || 1,
+        cartonHeight: (row.cartonHeight?.trim() || '0').replace(',', '.'),
+        cartonWidth: (row.cartonWidth?.trim() || '0').replace(',', '.'),
+        cartonLength: (row.cartonLength?.trim() || '0').replace(',', '.'),
+        cartonWeight: (row.cartonWeight?.trim() || '0').replace(',', '.'),
         height: row.height?.trim() || undefined,
         width: row.width?.trim() || undefined,
         length: row.length?.trim() || undefined,
@@ -369,8 +387,11 @@ export async function importProductsFromRows(
           .set({
             name: variantData.name,
             priceUsd: variantData.priceUsd,
-            boxQuantity: variantData.boxQuantity,
-            boxWeight: variantData.boxWeight,
+            unitsPerCarton: variantData.unitsPerCarton,
+            cartonHeight: variantData.cartonHeight,
+            cartonWidth: variantData.cartonWidth,
+            cartonLength: variantData.cartonLength,
+            cartonWeight: variantData.cartonWeight,
             height: variantData.height,
             width: variantData.width,
             length: variantData.length,
@@ -415,8 +436,11 @@ export interface ExportRow {
   sku: string;
   name: string;
   description: string;
-  boxQuantity: number;
-  boxWeight: string;
+  unitsPerCarton: number;
+  cartonHeight: string;
+  cartonWidth: string;
+  cartonLength: string;
+  cartonWeight: string;
   variantName: string;
   priceUsd: string;
   height: string;
@@ -458,8 +482,11 @@ export async function exportProductsToRows(
         sku: v.sku,
         name: p.name,
         description: p.description ?? '',
-        boxQuantity: v.boxQuantity ?? 1,
-        boxWeight: String(v.boxWeight ?? ''),
+        unitsPerCarton: v.unitsPerCarton ?? 1,
+        cartonHeight: v.cartonHeight ? String(v.cartonHeight) : '',
+        cartonWidth: v.cartonWidth ? String(v.cartonWidth) : '',
+        cartonLength: v.cartonLength ? String(v.cartonLength) : '',
+        cartonWeight: v.cartonWeight ? String(v.cartonWeight) : '',
         variantName: v.name ?? 'Default',
         priceUsd: String(v.priceUsd ?? '0'),
         height: v.height ? String(v.height) : '',

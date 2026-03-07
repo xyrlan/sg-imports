@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Modal, Tabs, Input, TextField, Label } from '@heroui/react';
 import { Plus } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../actions';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductWithVariants } from '@/services/product.service';
-import { SimulatedProductForm } from './simulated-product-form';
+import { ProductForm } from '@/app/(dashboard)/dashboard/products/components/product-form';
 import { ProductSnapshot } from '@/db/types';
 
 interface AddProductToSimulationModalProps {
@@ -34,8 +34,10 @@ export function AddProductToSimulationModal({
   const [catalogPrice, setCatalogPrice] = useState('');
   const [isSubmittingCatalog, setIsSubmittingCatalog] = useState(false);
   const [isSubmittingSimulated, setIsSubmittingSimulated] = useState(false);
+  const formId = useId();
 
   const t = useTranslations('Simulations.AddProduct');
+  const tForm = useTranslations('Products.Form');
   const router = useRouter();
 
   function handleOpenChange(isOpen: boolean) {
@@ -112,7 +114,7 @@ export function AddProductToSimulationModal({
         </Button>
         <Modal.Backdrop isOpen={open} onOpenChange={handleOpenChange} isDismissable={false}>
           <Modal.Container>
-            <Modal.Dialog className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <Modal.Dialog className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
               <Modal.CloseTrigger />
               <Modal.Header>
                 <Modal.Heading>{t('heading')}</Modal.Heading>
@@ -198,14 +200,29 @@ export function AddProductToSimulationModal({
                     </div>
                   </Tabs.Panel>
                   <Tabs.Panel id="simulated" className="pt-4">
-                    <SimulatedProductForm
-                      onSubmit={handleAddSimulated}
+                    <ProductForm
+                      organizationId={organizationId}
+                      mode="simulated"
+                      onSimulatedSubmit={handleAddSimulated}
                       isSubmitting={isSubmittingSimulated}
                       submitLabel={t('add')}
+                      onClose={() => handleOpenChange(false)}
+                      hideFooter
+                      formId={formId}
                     />
                   </Tabs.Panel>
                 </Tabs>
               </Modal.Body>
+              {selectedTab === 'simulated' && (
+                <Modal.Footer>
+                  <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)}>
+                    {tForm('cancel')}
+                  </Button>
+                  <Button form={formId} type="submit" variant="primary" isPending={isSubmittingSimulated}>
+                    {t('add')}
+                  </Button>
+                </Modal.Footer>
+              )}
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>

@@ -1,11 +1,13 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireAuthOrRedirect } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import {
   createSimulation,
+  updateSimulation,
   deleteSimulation,
   addSimulationItem,
   removeSimulationItem,
@@ -13,9 +15,13 @@ import {
 } from '@/services/simulation.service';
 import type { ProductSnapshot } from '@/db/types';
 
+const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS']);
+
 const createSimulationSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required').max(200),
+  shippingModality: shippingModalitySchema.optional(),
+  exchangeRateIof: z.string().optional(),
 });
 
 const addCatalogItemSchema = z.object({
@@ -34,13 +40,17 @@ const productSnapshotSchema = z.object({
   description: z.string().optional(),
   photos: z.array(z.string()).optional(),
   priceUsd: z.string().min(1, 'Price is required'),
-  boxQuantity: z.coerce.number().min(0.001),
-  boxWeight: z.coerce.number().min(0),
+  unitsPerCarton: z.coerce.number().int().min(1).default(1),
   netWeight: z.coerce.number().optional(),
   unitWeight: z.coerce.number().optional(),
   height: z.coerce.number().optional(),
   width: z.coerce.number().optional(),
   length: z.coerce.number().optional(),
+  cartonHeight: z.coerce.number().optional(),
+  cartonWidth: z.coerce.number().optional(),
+  cartonLength: z.coerce.number().optional(),
+  cartonWeight: z.coerce.number().optional(),
+  packagingType: z.enum(['BOX', 'PALLET', 'BAG']).optional(),
   attributes: z.record(z.string(), z.string()).optional(),
   tieredPriceInfo: z.array(z.object({ beginAmount: z.number(), price: z.string() })).optional(),
   hsCode: z.string().min(1, 'HS Code is required'),
@@ -90,6 +100,8 @@ export async function createSimulationAction(
     const rawData = {
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
+      shippingModality: formData.get('shippingModality') as string | undefined,
+      exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim(),
     };
 
     const validated = createSimulationSchema.safeParse(rawData);
@@ -108,6 +120,8 @@ export async function createSimulationAction(
       organizationId: validated.data.organizationId,
       userId: user.id,
       name: validated.data.name,
+      shippingModality: validated.data.shippingModality ?? null,
+      exchangeRateIof: validated.data.exchangeRateIof?.trim() || null,
     });
 
     if (!created) {
@@ -121,6 +135,83 @@ export async function createSimulationAction(
     }
     return {
       error: err instanceof Error ? err.message : 'Failed to create simulation',
+    };
+  }
+}
+
+const updateSimulationSchema = z.object({
+  simulationId: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  name: z.string().min(1).max(200).optional(),
+  shippingModality: shippingModalitySchema.nullable().optional(),
+  exchangeRateIof: z.string().nullable().optional(),
+});
+
+export interface UpdateSimulationState {
+  error?: string;
+  fieldErrors?: Record<string, string>;
+}
+
+export async function updateSimulationAction(
+  _prevState: UpdateSimulationState | null,
+  formData: FormData
+): Promise<UpdateSimulationState> {
+  try {
+    const user = await requireAuthOrRedirect();
+
+    const shippingModalityRaw = (formData.get('shippingModality') as string)?.trim();
+    const rawData = {
+      simulationId: formData.get('simulationId') as string,
+      organizationId: formData.get('organizationId') as string,
+      name: (formData.get('name') as string)?.trim(),
+      shippingModality: shippingModalityRaw && shippingModalityRaw !== '__none__' ? shippingModalityRaw : null,
+      exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim() || null,
+    };
+
+    const validated = updateSimulationSchema.safeParse(rawData);
+    if (!validated.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validated.error.issues) {
+        const path = issue.path.map(String).join('.');
+        if (path && !fieldErrors[path]) {
+          fieldErrors[path] = issue.message;
+        }
+      }
+      return { fieldErrors, error: validated.error.issues[0]?.message };
+    }
+
+    const access = await getOrganizationById(validated.data.organizationId, user.id);
+    if (!access) {
+      return { error: 'Forbidden' };
+    }
+
+    const updated = await updateSimulation(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+      {
+        ...(validated.data.name !== undefined && { name: validated.data.name }),
+        ...(validated.data.shippingModality !== undefined && {
+          shippingModality: validated.data.shippingModality,
+        }),
+        ...(validated.data.exchangeRateIof !== undefined && {
+          exchangeRateIof: validated.data.exchangeRateIof,
+        }),
+      }
+    );
+
+    if (!updated) {
+      return { error: 'Simulation not found or could not be updated' };
+    }
+
+    revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
+    return {};
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) {
+      throw err;
+    }
+    return {
+      error: err instanceof Error ? err.message : 'Failed to update simulation',
     };
   }
 }

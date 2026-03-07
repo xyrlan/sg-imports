@@ -2,13 +2,19 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { startTransition, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button } from '@heroui/react';
+import { Button, Input, Label, Select, ListBox, TextField, FieldError } from '@heroui/react';
 import { ArrowLeft, PackageOpen } from 'lucide-react';
+import { useActionState } from 'react';
 import { SimulationItemsList } from './simulation-items-list';
 import type { Simulation, SimulationItem } from '@/services/simulation.service';
 import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
+import { updateSimulationAction } from '../../actions';
+import { getShipmentTypeLabel } from '@/lib/storage-utils';
+
+const SHIPPING_MODALITIES = ['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS'] as const;
 
 interface SimulationDetailContentProps {
   simulation: Simulation;
@@ -27,12 +33,47 @@ export function SimulationDetailContent({
   const tStatus = useTranslations('Simulations.Status');
   const router = useRouter();
 
+  const [updateState, updateAction, isUpdatePending] = useActionState(updateSimulationAction, null);
+  const [shippingModality, setShippingModality] = useState<string | null>(
+    simulation.shippingModality ?? null
+  );
+  const [exchangeRateIof, setExchangeRateIof] = useState(simulation.exchangeRateIof ?? '');
+  const didRefreshRef = useRef(false);
+
   const handleMutate = () => {
     router.refresh();
   };
 
+  const handleSettingsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    formData.set('simulationId', simulation.id);
+    formData.set('organizationId', organizationId);
+    formData.set('shippingModality', shippingModality && shippingModality !== '__none__' ? shippingModality : '');
+    startTransition(() => {
+      updateAction(formData);
+    });
+  };
+
+  useEffect(() => {
+    if (
+      !isUpdatePending &&
+      updateState &&
+      !updateState.error &&
+      Object.keys(updateState.fieldErrors ?? {}).length === 0 &&
+      !didRefreshRef.current
+    ) {
+      didRefreshRef.current = true;
+      router.refresh();
+    }
+    if (isUpdatePending) {
+      didRefreshRef.current = false;
+    }
+  }, [isUpdatePending, updateState, router]);
+
   return (
-    <div className="space-y-6">
+    <div key={simulation.id} className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/simulations">
@@ -55,6 +96,69 @@ export function SimulationDetailContent({
           onMutate={handleMutate}
         />
       </div>
+
+      <form onSubmit={handleSettingsSubmit} className="rounded-lg border p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-default-700">{t('settings')}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <Label>{t('shippingModality')}</Label>
+            <Select
+              variant="primary"
+              value={shippingModality ?? '__none__'}
+              onChange={(k) =>
+                setShippingModality(k === '__none__' ? null : (k as string))
+              }
+              isDisabled={isUpdatePending}
+            >
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item key="__none__" id="__none__" textValue={t('none')}>
+                    {t('none')}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                  {SHIPPING_MODALITIES.map((m) => (
+                    <ListBox.Item key={m} id={m} textValue={getShipmentTypeLabel(m)}>
+                      {getShipmentTypeLabel(m)}
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </Select.Popover>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <TextField
+              variant="primary"
+              name="exchangeRateIof"
+              value={exchangeRateIof}
+              onChange={setExchangeRateIof}
+              isInvalid={!!updateState?.fieldErrors?.exchangeRateIof}
+              isDisabled={isUpdatePending}
+              validate={() => updateState?.fieldErrors?.exchangeRateIof ?? null}
+            >
+              <Label>{t('exchangeRateIof')}</Label>
+              <Input
+                name="exchangeRateIof"
+                placeholder="e.g. 0.38"
+                value={exchangeRateIof}
+                type="text"
+                inputMode="decimal"
+              />
+              <FieldError />
+            </TextField>
+          </div>
+        </div>
+        {updateState?.error && (
+          <p className="text-sm text-danger">{updateState.error}</p>
+        )}
+        <Button type="submit" variant="primary" size="sm" isDisabled={isUpdatePending}>
+          {t('saveSettings')}
+        </Button>
+      </form>
 
       {items.length > 0 ? (
         <SimulationItemsList

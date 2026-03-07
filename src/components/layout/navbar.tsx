@@ -97,13 +97,6 @@ export function Navbar() {
 
           <NavbarProfileDropdown />
 
-          <Separator
-            className="h-8 hidden md:block"
-            orientation="vertical"
-          />
-
-          <NotificationBell />
-
           {canSelectOrganization && (
             <>
           <Separator
@@ -141,7 +134,14 @@ export function Navbar() {
               <span className="hidden xl:inline text-sm">{link.label}</span>
             </Link>
           ))}
+                    <Separator
+            className="h-8 hidden md:block"
+            orientation="vertical"
+          />
+
+          <NotificationBell />
         </div>
+        
       </nav>
     </header>
   );

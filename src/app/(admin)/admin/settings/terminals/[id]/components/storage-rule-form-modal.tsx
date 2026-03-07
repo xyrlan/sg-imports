@@ -32,7 +32,7 @@ import {
 } from '@/lib/storage-utils';
 
 const CONTAINER_TYPES = ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40'] as const;
-const SHIPMENT_TYPES = ['FCL', 'LCL', 'FCL_PARTIAL'] as const;
+const SHIPMENT_TYPES = ['SEA_FCL', 'SEA_LCL', 'SEA_FCL_PARTIAL'] as const;
 const FEE_BASIS = ['PER_BOX', 'PER_BL', 'PER_WM', 'PER_CONTAINER'] as const;
 
 interface PeriodRow {
@@ -71,7 +71,7 @@ export function StorageRuleFormModal({
   const isDuplicating = !!duplicatingFrom;
   const sourceRule = editingRule ?? duplicatingFrom;
 
-  const [shipmentType, setShipmentType] = useState<'FCL' | 'FCL_PARTIAL' | 'LCL'>('FCL');
+  const [shipmentType, setShipmentType] = useState<'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL'>('SEA_FCL');
   const [containerType, setContainerType] = useState<string>('GP_20');
   const [minValue, setMinValue] = useState<number>(0);
   const [cifInsurance, setCifInsurance] = useState<number>(0);
@@ -97,7 +97,7 @@ export function StorageRuleFormModal({
   useEffect(() => {
     if (sourceRule && isOpen) {
       queueMicrotask(() => {
-        setShipmentType((sourceRule.shipmentType as 'FCL' | 'FCL_PARTIAL' | 'LCL') ?? 'FCL');
+        setShipmentType((sourceRule.shipmentType as 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL') ?? 'SEA_FCL');
         setContainerType(sourceRule.containerType ?? 'GP_20');
         setMinValue(Number(sourceRule.minValue ?? 0));
         setCifInsurance(Number(sourceRule.cifInsurance ?? 0));
@@ -120,7 +120,7 @@ export function StorageRuleFormModal({
       });
     } else if (isOpen && !sourceRule) {
       queueMicrotask(() => {
-        setShipmentType('FCL');
+        setShipmentType('SEA_FCL');
         setContainerType('GP_20');
         setMinValue(0);
         setCifInsurance(0);
@@ -144,7 +144,7 @@ export function StorageRuleFormModal({
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set('terminalId', terminalId);
-    formData.set('containerType', shipmentType === 'FCL' ? containerType : '');
+    formData.set('containerType', shipmentType === 'SEA_FCL' ? containerType : '');
     formData.set('shipmentType', shipmentType);
     formData.set('minValue', String(minValue));
     formData.set('cifInsurance', String(cifInsurance));
@@ -224,7 +224,7 @@ export function StorageRuleFormModal({
                     <RadioGroup
                       orientation="horizontal"
                       value={shipmentType}
-                      onChange={(v) => setShipmentType(v as 'FCL' | 'LCL' | 'FCL_PARTIAL')}
+                      onChange={(v) => setShipmentType(v as 'SEA_FCL' | 'SEA_LCL' | 'SEA_FCL_PARTIAL')}
                     >
                       {SHIPMENT_TYPES.map((st) => (
                         <Radio key={st} value={st}>
@@ -233,9 +233,9 @@ export function StorageRuleFormModal({
                           </Radio.Control>
                           <Radio.Content>
                             <Label>
-                              {st === 'FCL'
+                              {st === 'SEA_FCL'
                                 ? t('StorageRules.fcl')
-                                : st === 'FCL_PARTIAL'
+                                : st === 'SEA_FCL_PARTIAL'
                                   ? t('StorageRules.fclPartial')
                                   : t('StorageRules.lcl')}
                             </Label>
@@ -245,7 +245,7 @@ export function StorageRuleFormModal({
                     </RadioGroup>
                   </div>
 
-                  {shipmentType === 'FCL' && (
+                  {shipmentType === 'SEA_FCL' && (
                     <div className="flex flex-col gap-2">
                       <Label>{t('StorageRuleForm.containerType')}</Label>
                       <Select
@@ -289,7 +289,7 @@ export function StorageRuleFormModal({
                         <NumberField.Input className="w-32" />
                       </NumberField.Group>
                     </NumberField>
-                    {shipmentType === 'LCL' && (
+                    {shipmentType === 'SEA_LCL' && (
                       <NumberField
                         variant="primary"
                         minValue={0}

@@ -20,17 +20,23 @@ const tieredPriceInfoSchema = z.array(
 );
 const variantAttributesSchema = z.record(z.string(), z.string());
 
+const packagingTypeSchema = z.enum(['BOX', 'PALLET', 'BAG']);
+
 const variantSchema = z.object({
   sku: z.string().min(1, 'SKU is required'),
   name: z.string().min(1, 'Variant name is required'),
   priceUsd: z.string().min(1, 'Price is required'),
-  boxQuantity: z.coerce.number().int().min(1, 'Quantity per box must be at least 1').default(1),
-  boxWeight: z.string().min(1, 'Box weight is required').default('0'),
   height: z.string().optional(),
   width: z.string().optional(),
   length: z.string().optional(),
   netWeight: z.string().optional(),
   unitWeight: z.string().optional(),
+  cartonHeight: z.string().optional().default('0'),
+  cartonWidth: z.string().optional().default('0'),
+  cartonLength: z.string().optional().default('0'),
+  cartonWeight: z.string().optional().default('0'),
+  unitsPerCarton: z.coerce.number().int().min(1, 'Units per carton must be at least 1').default(1),
+  packagingType: packagingTypeSchema.optional(),
   tieredPriceInfo: tieredPriceInfoSchema.optional(),
   attributes: variantAttributesSchema.optional(),
 });
@@ -59,13 +65,17 @@ export interface CreateProductSubmittedData {
     sku: string;
     name: string;
     priceUsd: string;
-    boxQuantity: string;
-    boxWeight: string;
     height: string;
     width: string;
     length: string;
     netWeight: string;
     unitWeight: string;
+    cartonHeight: string;
+    cartonWidth: string;
+    cartonLength: string;
+    cartonWeight: string;
+    unitsPerCarton: string;
+    packagingType: string;
   }>;
 }
 
@@ -86,13 +96,17 @@ export async function createProductAction(
     const variantSkus = formData.getAll('variantSku') as string[];
     const variantNames = formData.getAll('variantName') as string[];
     const priceUsds = formData.getAll('priceUsd') as string[];
-    const boxQuantities = (formData.getAll('variantBoxQuantity') as string[]) ?? [];
-    const boxWeights = (formData.getAll('variantBoxWeight') as string[]) ?? [];
     const heights = (formData.getAll('variantHeight') as string[]) ?? [];
     const widths = (formData.getAll('variantWidth') as string[]) ?? [];
     const lengths = (formData.getAll('variantLength') as string[]) ?? [];
     const netWeights = (formData.getAll('variantNetWeight') as string[]) ?? [];
     const unitWeights = (formData.getAll('variantUnitWeight') as string[]) ?? [];
+    const cartonHeights = (formData.getAll('variantCartonHeight') as string[]) ?? [];
+    const cartonWidths = (formData.getAll('variantCartonWidth') as string[]) ?? [];
+    const cartonLengths = (formData.getAll('variantCartonLength') as string[]) ?? [];
+    const cartonWeights = (formData.getAll('variantCartonWeight') as string[]) ?? [];
+    const unitsPerCartons = (formData.getAll('variantUnitsPerCarton') as string[]) ?? [];
+    const packagingTypes = (formData.getAll('variantPackagingType') as string[]) ?? [];
     const tieredPriceInfos = (formData.getAll('variantTieredPriceInfo') as string[]) ?? [];
     const attributesList = (formData.getAll('variantAttributes') as string[]) ?? [];
 
@@ -123,20 +137,24 @@ export async function createProductAction(
       sku: (variantSkus[i] ?? '').trim(),
       name: (name ?? '').trim(),
       priceUsd: (priceUsds[i] ?? '').trim(),
-      boxQuantity: (boxQuantities[i] ?? '').trim() || '1',
-      boxWeight: (boxWeights[i] ?? '').trim() || '0',
       height: (heights[i] ?? '').trim() || undefined,
       width: (widths[i] ?? '').trim() || undefined,
       length: (lengths[i] ?? '').trim() || undefined,
       netWeight: (netWeights[i] ?? '').trim() || undefined,
       unitWeight: (unitWeights[i] ?? '').trim() || undefined,
+      cartonHeight: (cartonHeights[i] ?? '').trim() || '0',
+      cartonWidth: (cartonWidths[i] ?? '').trim() || '0',
+      cartonLength: (cartonLengths[i] ?? '').trim() || '0',
+      cartonWeight: (cartonWeights[i] ?? '').trim() || '0',
+      unitsPerCarton: unitsPerCartons[i] ? parseInt(unitsPerCartons[i], 10) : 1,
+      packagingType: (packagingTypes[i] ?? '').trim() || undefined,
       tieredPriceInfo: parseTieredPriceInfo(tieredPriceInfos[i] ?? ''),
       attributes: parseAttributes(attributesList[i] ?? ''),
     }));
     const variants =
       rawVariants.filter((v) => v.sku || v.name || v.priceUsd).length > 0
         ? rawVariants.filter((v) => v.sku || v.name || v.priceUsd)
-        : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: '1', boxWeight: '0' }];
+        : [{ sku: 'DEFAULT', name: 'Default', priceUsd: '0', unitsPerCarton: 1 }];
 
     const photoEntries = formData.getAll('photos');
     const photoFiles = photoEntries
@@ -173,13 +191,17 @@ export async function createProductAction(
           sku: v.sku,
           name: v.name,
           priceUsd: v.priceUsd,
-          boxQuantity: String(v.boxQuantity),
-          boxWeight: v.boxWeight,
           height: v.height ?? '',
           width: v.width ?? '',
           length: v.length ?? '',
           netWeight: v.netWeight ?? '',
           unitWeight: v.unitWeight ?? '',
+          cartonHeight: v.cartonHeight ?? '0',
+          cartonWidth: v.cartonWidth ?? '0',
+          cartonLength: v.cartonLength ?? '0',
+          cartonWeight: v.cartonWeight ?? '0',
+          unitsPerCarton: v.unitsPerCarton ? String(v.unitsPerCarton) : '1',
+          packagingType: v.packagingType ?? '',
         })),
       };
       return { fieldErrors, submittedData, ...(error && { error }) };
@@ -221,8 +243,11 @@ export async function createProductAction(
         sku: v.sku,
         name: v.name,
         priceUsd: v.priceUsd.replace(',', '.'),
-        boxQuantity: Number(String(v.boxQuantity).replace(',', '.')) || 1,
-        boxWeight: String(v.boxWeight).replace(',', '.') || '0',
+        cartonHeight: (v.cartonHeight ?? '0').replace(',', '.'),
+        cartonWidth: (v.cartonWidth ?? '0').replace(',', '.'),
+        cartonLength: (v.cartonLength ?? '0').replace(',', '.'),
+        cartonWeight: (v.cartonWeight ?? '0').replace(',', '.'),
+        unitsPerCarton: v.unitsPerCarton ?? 1,
         height: v.height?.replace(',', '.') || undefined,
         width: v.width?.replace(',', '.') || undefined,
         length: v.length?.replace(',', '.') || undefined,
@@ -260,13 +285,17 @@ export async function updateProductAction(
     const variantSkus = formData.getAll('variantSku') as string[];
     const variantNames = formData.getAll('variantName') as string[];
     const priceUsds = formData.getAll('priceUsd') as string[];
-    const boxQuantities = (formData.getAll('variantBoxQuantity') as string[]) ?? [];
-    const boxWeights = (formData.getAll('variantBoxWeight') as string[]) ?? [];
     const heights = (formData.getAll('variantHeight') as string[]) ?? [];
     const widths = (formData.getAll('variantWidth') as string[]) ?? [];
     const lengths = (formData.getAll('variantLength') as string[]) ?? [];
     const netWeights = (formData.getAll('variantNetWeight') as string[]) ?? [];
     const unitWeights = (formData.getAll('variantUnitWeight') as string[]) ?? [];
+    const cartonHeights = (formData.getAll('variantCartonHeight') as string[]) ?? [];
+    const cartonWidths = (formData.getAll('variantCartonWidth') as string[]) ?? [];
+    const cartonLengths = (formData.getAll('variantCartonLength') as string[]) ?? [];
+    const cartonWeights = (formData.getAll('variantCartonWeight') as string[]) ?? [];
+    const unitsPerCartons = (formData.getAll('variantUnitsPerCarton') as string[]) ?? [];
+    const packagingTypes = (formData.getAll('variantPackagingType') as string[]) ?? [];
     const tieredPriceInfos = (formData.getAll('variantTieredPriceInfo') as string[]) ?? [];
     const attributesList = (formData.getAll('variantAttributes') as string[]) ?? [];
 
@@ -298,13 +327,17 @@ export async function updateProductAction(
       sku: string;
       name: string;
       priceUsd: string;
-      boxQuantity: string;
-      boxWeight: string;
       height?: string;
       width?: string;
       length?: string;
       netWeight?: string;
       unitWeight?: string;
+      cartonHeight?: string;
+      cartonWidth?: string;
+      cartonLength?: string;
+      cartonWeight?: string;
+      unitsPerCarton?: number;
+      packagingType?: string;
       tieredPriceInfo?: { beginAmount: number; price: string }[];
       attributes?: Record<string, string>;
     }> = variantNames.map((name, i) => ({
@@ -312,13 +345,17 @@ export async function updateProductAction(
       sku: (variantSkus[i] ?? '').trim(),
       name: (name ?? '').trim(),
       priceUsd: (priceUsds[i] ?? '').trim(),
-      boxQuantity: (boxQuantities[i] ?? '').trim() || '1',
-      boxWeight: (boxWeights[i] ?? '').trim() || '0',
       height: (heights[i] ?? '').trim() || undefined,
       width: (widths[i] ?? '').trim() || undefined,
       length: (lengths[i] ?? '').trim() || undefined,
       netWeight: (netWeights[i] ?? '').trim() || undefined,
       unitWeight: (unitWeights[i] ?? '').trim() || undefined,
+      cartonHeight: (cartonHeights[i] ?? '').trim() || '0',
+      cartonWidth: (cartonWidths[i] ?? '').trim() || '0',
+      cartonLength: (cartonLengths[i] ?? '').trim() || '0',
+      cartonWeight: (cartonWeights[i] ?? '').trim() || '0',
+      unitsPerCarton: unitsPerCartons[i] ? parseInt(unitsPerCartons[i], 10) : 1,
+      packagingType: (packagingTypes[i] ?? '').trim() || undefined,
       tieredPriceInfo: parseTieredPriceInfo(tieredPriceInfos[i] ?? ''),
       attributes: parseAttributes(attributesList[i] ?? ''),
     }));
@@ -326,7 +363,7 @@ export async function updateProductAction(
     const variants =
       rawVariants.filter((v) => v.sku || v.name || v.priceUsd).length > 0
         ? rawVariants.filter((v) => v.sku || v.name || v.priceUsd)
-        : [{ id: undefined, sku: 'DEFAULT', name: 'Default', priceUsd: '0', boxQuantity: '1', boxWeight: '0' }];
+        : [{ id: undefined, sku: 'DEFAULT', name: 'Default', priceUsd: '0', unitsPerCarton: 1 }];
 
     const existingPhotosRaw = formData.get('existingPhotos') as string | null;
     let existingPhotos: string[] = [];
@@ -361,13 +398,17 @@ export async function updateProductAction(
         sku: v.sku,
         name: v.name,
         priceUsd: v.priceUsd,
-        boxQuantity: v.boxQuantity,
-        boxWeight: v.boxWeight,
         height: v.height,
         width: v.width,
         length: v.length,
         netWeight: v.netWeight,
         unitWeight: v.unitWeight,
+        cartonHeight: v.cartonHeight ?? '0',
+        cartonWidth: v.cartonWidth ?? '0',
+        cartonLength: v.cartonLength ?? '0',
+        cartonWeight: v.cartonWeight ?? '0',
+        unitsPerCarton: v.unitsPerCarton ?? 1,
+        packagingType: v.packagingType as 'BOX' | 'PALLET' | 'BAG' | undefined,
         tieredPriceInfo: v.tieredPriceInfo,
         attributes: v.attributes,
       })),
@@ -387,20 +428,24 @@ export async function updateProductAction(
         description: rawData.description ?? '',
         hsCodeId: rawData.hsCodeId ?? '',
         supplierId: rawData.supplierId ?? '',
-        variants: rawVariants.map((v) => ({
-          sku: v.sku,
-          name: v.name,
-          priceUsd: v.priceUsd,
-          boxQuantity: String(v.boxQuantity),
-          boxWeight: v.boxWeight,
-          height: v.height ?? '',
-          width: v.width ?? '',
-          length: v.length ?? '',
-          netWeight: v.netWeight ?? '',
-          unitWeight: v.unitWeight ?? '',
-        })),
-      };
-      return { fieldErrors, submittedData };
+      variants: rawVariants.map((v) => ({
+        sku: v.sku,
+        name: v.name,
+        priceUsd: v.priceUsd,
+        height: v.height ?? '',
+        width: v.width ?? '',
+        length: v.length ?? '',
+        netWeight: v.netWeight ?? '',
+        unitWeight: v.unitWeight ?? '',
+        cartonHeight: v.cartonHeight ?? '0',
+        cartonWidth: v.cartonWidth ?? '0',
+        cartonLength: v.cartonLength ?? '0',
+        cartonWeight: v.cartonWeight ?? '0',
+        unitsPerCarton: v.unitsPerCarton ? String(v.unitsPerCarton) : '1',
+        packagingType: v.packagingType ?? '',
+      })),
+    };
+    return { fieldErrors, submittedData };
     }
 
     const access = await getOrganizationById(validated.data.organizationId, user.id);
@@ -434,8 +479,11 @@ export async function updateProductAction(
       sku: v.sku,
       name: v.name,
       priceUsd: v.priceUsd.replace(',', '.'),
-      boxQuantity: Number(String(v.boxQuantity).replace(',', '.')) || 1,
-      boxWeight: String(v.boxWeight).replace(',', '.') || '0',
+      cartonHeight: (v.cartonHeight ?? '0').replace(',', '.'),
+      cartonWidth: (v.cartonWidth ?? '0').replace(',', '.'),
+      cartonLength: (v.cartonLength ?? '0').replace(',', '.'),
+      cartonWeight: (v.cartonWeight ?? '0').replace(',', '.'),
+      unitsPerCarton: v.unitsPerCarton ?? 1,
       height: v.height?.replace(',', '.') || undefined,
       width: v.width?.replace(',', '.') || undefined,
       length: v.length?.replace(',', '.') || undefined,

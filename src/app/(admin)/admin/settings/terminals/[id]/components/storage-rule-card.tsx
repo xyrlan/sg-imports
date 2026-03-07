@@ -25,7 +25,7 @@ interface StorageRuleCardProps {
 
 export function StorageRuleCard({ rule, onEdit, onDelete, onDuplicate }: StorageRuleCardProps) {
   const t = useTranslations('Admin.Settings.Terminals');
-  const isLCL = rule.shipmentType === 'LCL';
+  const isLCL = rule.shipmentType === 'SEA_LCL';
 
   const additionalFees = (rule.additionalFees ?? []) as StorageRuleAdditionalFee[];
 
@@ -35,7 +35,7 @@ export function StorageRuleCard({ rule, onEdit, onDelete, onDuplicate }: Storage
         <div className="flex items-start gap-3 flex-1">
           <div className="flex-1">
             <h4 className="font-semibold text-default-800">
-              {rule.shipmentType === 'FCL' && rule.containerType
+              {rule.shipmentType === 'SEA_FCL' && rule.containerType
                 ? `${getContainerTypeLabel(rule.containerType)}`
                 : getShipmentTypeLabel(rule.shipmentType)}
             </h4>

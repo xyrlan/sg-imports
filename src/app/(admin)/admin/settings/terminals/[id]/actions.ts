@@ -34,7 +34,7 @@ const periodSchema = z.object({
 });
 
 const containerTypeSchema = z.enum(['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40']);
-const shipmentTypeSchema = z.enum(['FCL', 'FCL_PARTIAL', 'LCL']);
+const shipmentTypeSchema = z.enum(['SEA_FCL', 'SEA_FCL_PARTIAL', 'SEA_LCL']);
 
 const createStorageRuleSchema = z
   .object({
@@ -48,7 +48,7 @@ const createStorageRuleSchema = z
   })
   .refine(
     (data) => {
-      if (data.shipmentType === 'FCL') {
+      if (data.shipmentType === 'SEA_FCL') {
         return !!data.containerType && data.containerType !== '';
       }
       return true;
@@ -125,13 +125,13 @@ export async function createStorageRuleAction(
     const conflict = await findStorageRuleConflict(
       terminalId,
       shipmentType,
-      shipmentType === 'FCL' && containerType ? (containerType as z.infer<typeof containerTypeSchema>) : null,
+      shipmentType === 'SEA_FCL' && containerType ? (containerType as z.infer<typeof containerTypeSchema>) : null,
     );
     if (conflict) {
       const msg =
-        shipmentType === 'LCL'
+        shipmentType === 'SEA_LCL'
           ? 'Já existe uma regra LCL para este terminal.'
-          : shipmentType === 'FCL_PARTIAL'
+          : shipmentType === 'SEA_FCL_PARTIAL'
             ? 'Já existe uma regra FCL Parcial para este terminal.'
             : `Já existe uma regra FCL para o container ${containerType} neste terminal.`;
       return { error: msg, ok: false };
@@ -140,12 +140,12 @@ export async function createStorageRuleAction(
     await createStorageRuleWithPeriods({
       terminalId,
       containerType:
-        shipmentType === 'FCL' && containerType && containerTypeSchema.safeParse(containerType).success
+        shipmentType === 'SEA_FCL' && containerType && containerTypeSchema.safeParse(containerType).success
           ? (containerType as z.infer<typeof containerTypeSchema>)
           : null,
       shipmentType,
       minValue,
-      cifInsurance: shipmentType === 'LCL' ? cifInsurance : '0',
+      cifInsurance: shipmentType === 'SEA_LCL' ? cifInsurance : '0',
       additionalFees,
       periods: periods.map((p) => ({
         daysFrom: p.daysFrom,
@@ -187,14 +187,14 @@ export async function updateStorageRuleAction(
     const conflict = await findStorageRuleConflict(
       terminalId,
       shipmentType,
-      shipmentType === 'FCL' && containerType ? (containerType as z.infer<typeof containerTypeSchema>) : null,
+      shipmentType === 'SEA_FCL' && containerType ? (containerType as z.infer<typeof containerTypeSchema>) : null,
       ruleId,
     );
     if (conflict) {
       const msg =
-        shipmentType === 'LCL'
+        shipmentType === 'SEA_LCL'
           ? 'Já existe uma regra LCL para este terminal.'
-          : shipmentType === 'FCL_PARTIAL'
+          : shipmentType === 'SEA_FCL_PARTIAL'
             ? 'Já existe uma regra FCL Parcial para este terminal.'
             : `Já existe uma regra FCL para o container ${containerType} neste terminal.`;
       return { error: msg, ok: false };
@@ -202,12 +202,12 @@ export async function updateStorageRuleAction(
 
     const updated = await updateStorageRuleWithPeriods(ruleId, {
       containerType:
-        shipmentType === 'FCL' && containerType && containerTypeSchema.safeParse(containerType).success
+        shipmentType === 'SEA_FCL' && containerType && containerTypeSchema.safeParse(containerType).success
           ? (containerType as z.infer<typeof containerTypeSchema>)
           : null,
       shipmentType,
       minValue,
-      cifInsurance: shipmentType === 'LCL' ? cifInsurance : '0',
+      cifInsurance: shipmentType === 'SEA_LCL' ? cifInsurance : '0',
       additionalFees,
       periods: periods.map((p) => ({
         daysFrom: p.daysFrom,

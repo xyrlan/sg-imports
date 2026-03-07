@@ -52,7 +52,14 @@ export const shipmentStepEnum = pgEnum('shipment_step', [
   'DELIVERY',
   'COMPLETION'
 ]);
-export const shipmentTypeEnum = pgEnum('shipment_type', ['FCL', 'FCL_PARTIAL', 'LCL']);
+export const shippingModalityEnum = pgEnum('shipping_modality', [
+  'AIR',
+  'SEA_LCL',
+  'SEA_FCL',
+  'SEA_FCL_PARTIAL',
+  'EXPRESS',
+]);
+export const packagingTypeEnum = pgEnum('packaging_type', ['BOX', 'PALLET', 'BAG']);
 export const expenseTypeEnum = pgEnum('expense_type', ['TAX_II', 'TAX_IPI', 'TAX_PIS', 'TAX_COFINS', 'TAX_ICMS', 'FREIGHT_INTL', 'FREIGHT_LOCAL', 'STORAGE', 'HANDLING', 'CUSTOMS_BROKER', 'OTHER']);
 export const currencyEnum = pgEnum('currency', ['BRL', 'USD', 'CNY', 'EUR']);
 export const paymentStatusEnum = pgEnum('payment_status', ['PENDING', 'PAID', 'OVERDUE', 'WAITING_EXCHANGE', 'EXCHANGED']);
@@ -210,7 +217,7 @@ export const suppliersWalletTransactions = pgTable(
     id: uuid('id').defaultRandom(),
     walletId: uuid('wallet_id').references(() => suppliersWallets.id, { onDelete: 'cascade' }).notNull(),
   exchangeContractId: uuid('exchange_contract_id').references(() => exchangeContracts.id, { onDelete: 'cascade' }),
-  orderId: uuid('order_id').references(() => shipments.id, { onDelete: 'cascade' }),
+  orderId: uuid('order_id').references(() => shipments.id, { onDelete: 'cascade' }).notNull(),
   transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   type: walletTransactionTypeEnum('type').notNull(),
@@ -249,9 +256,12 @@ export const productVariants = pgTable(
     name: text('name').notNull(), // Ex: "Azul - G" or "Default" for simple products
     priceUsd: decimal('price_usd', { precision: 10, scale: 2 }).notNull(), // Base price / first tier
 
-    // Alibaba/1688: logistics at SKU level (consistency for freight calculation)
-    boxQuantity: integer('box_quantity').notNull().default(1),
-    boxWeight: decimal('box_weight', { precision: 10, scale: 3 }).notNull().default('0'),
+    // Minimum sale unit: 1 carton. All freight/CBM calculations use carton_* fields.
+    unitsPerCarton: integer('units_per_carton').default(1).notNull(),
+    cartonHeight: decimal('carton_height', { precision: 10, scale: 2 }).notNull().default('0'),
+    cartonWidth: decimal('carton_width', { precision: 10, scale: 2 }).notNull().default('0'),
+    cartonLength: decimal('carton_length', { precision: 10, scale: 2 }).notNull().default('0'),
+    cartonWeight: decimal('carton_weight', { precision: 10, scale: 3 }).notNull().default('0'),
 
     // Alibaba/1688: property_id:value_id mapping for i18n
     attributes: jsonb('attributes').$type<VariantAttributes>(),
@@ -266,6 +276,8 @@ export const productVariants = pgTable(
     netWeight: decimal('net_weight', { precision: 10, scale: 3 }),
     // Unit weight with packaging (kg) — for chargeable/volumetric weight
     unitWeight: decimal('unit_weight', { precision: 10, scale: 3 }),
+
+    packagingType: packagingTypeEnum('packaging_type'),
   },
   (t) => [unique('product_variants_org_sku').on(t.organizationId, t.sku)]
 );
@@ -293,6 +305,13 @@ export const quotes = pgTable('quotes', {
 
   simulatedProduct: jsonb('simulated_product').$type<ProductSnapshot>(),
 
+  // Landed Cost: shipping & totals
+  shippingModality: shippingModalityEnum('shipping_modality'),
+  exchangeRateIof: decimal('exchange_rate_iof', { precision: 10, scale: 4 }),
+  totalCbm: decimal('total_cbm', { precision: 12, scale: 6 }),
+  totalWeight: decimal('total_weight', { precision: 12, scale: 3 }),
+  totalChargeableWeight: decimal('total_chargeable_weight', { precision: 12, scale: 3 }).default('0').notNull(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -306,6 +325,19 @@ export const quoteItems = pgTable(
     simulatedProductSnapshot: jsonb('simulated_product_snapshot').$type<ProductSnapshot>(), // Preenchido quando item é simulado (não cadastrado)
     quantity: integer('quantity').notNull(),
     priceUsd: decimal('price_usd', { precision: 10, scale: 2 }).notNull(), // Snapshot do preço
+
+    // Landed Cost snapshots (audit & freight calc)
+    weightSnapshot: decimal('weight_snapshot', { precision: 12, scale: 3 }).default('0').notNull(),
+    cbmSnapshot: decimal('cbm_snapshot', { precision: 12, scale: 6 }).default('0').notNull(),
+    unitPriceUsdSnapshot: decimal('unit_price_usd_snapshot', { precision: 10, scale: 4 }).default('0').notNull(),
+    iiRateSnapshot: decimal('ii_rate_snapshot', { precision: 5, scale: 2 }).default('0').notNull(),
+    ipiRateSnapshot: decimal('ipi_rate_snapshot', { precision: 5, scale: 2 }).default('0').notNull(),
+    pisRateSnapshot: decimal('pis_rate_snapshot', { precision: 5, scale: 2 }).default('0').notNull(),
+    cofinsRateSnapshot: decimal('cofins_rate_snapshot', { precision: 5, scale: 2 }).default('0').notNull(),
+    iiValueSnapshot: decimal('ii_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    ipiValueSnapshot: decimal('ipi_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    pisValueSnapshot: decimal('pis_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    cofinsValueSnapshot: decimal('cofins_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
   },
   (t) => [
     check(
@@ -325,7 +357,7 @@ export const shipments = pgTable('shipments', {
   bookingNumber: text('booking_number'),
   masterBl: text('master_bl'),
   carrierId: uuid('carrier_id'), // Relacionado abaixo  
-  shipmentType: shipmentTypeEnum('shipment_type').default('FCL').notNull(),
+  shipmentType: shippingModalityEnum('shipment_type').default('SEA_FCL').notNull(),
 
   // Financeiro Macro
   totalProductsUsd: decimal('total_products_usd', { precision: 12, scale: 2 }).default('0'),
@@ -411,7 +443,7 @@ export const terminals = pgTable('terminals', {
 export const storageRules = pgTable('storage_rules', {
   id: uuid('id').defaultRandom().primaryKey(),
   terminalId: uuid('terminal_id').references(() => terminals.id, { onDelete: 'cascade' }).notNull(),
-  shipmentType: shipmentTypeEnum('shipment_type').default('FCL').notNull(),
+  shipmentType: shippingModalityEnum('shipment_type').default('SEA_FCL').notNull(),
   containerType: containerTypeEnum('container_type'),
   currency: currencyEnum('currency').default('BRL').notNull(),
   minValue: decimal('min_value', { precision: 10, scale: 2 }).default('0'),

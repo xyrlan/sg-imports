@@ -1,9 +1,19 @@
+import Decimal from 'decimal.js';
 import { db } from '@/db';
-import { quotes, quoteItems, memberships, productVariants, products } from '@/db/schema';
+import { quotes, quoteItems, memberships, productVariants, products, hsCodes } from '@/db/schema';
 import { eq, and, desc, asc, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { ProductSnapshot } from '@/db/types';
 import { getOrganizationById } from '@/services/organization.service';
+import {
+  computeTotalCbm,
+  computeWeight,
+  getDimensionsForCbm,
+  getChargeableWeight,
+  getVolumetricWeightAir,
+  getVolumetricWeightSeaLCL,
+} from '@/lib/logistics';
+import { computeImportTaxes } from '@/lib/import-taxes';
 
 type Quote = InferSelectModel<typeof quotes>;
 type QuoteItem = InferSelectModel<typeof quoteItems>;
@@ -145,6 +155,14 @@ export interface CreateSimulationInput {
   organizationId: string;
   userId: string;
   name: string;
+  shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
+  exchangeRateIof?: string | null;
+}
+
+export interface UpdateSimulationInput {
+  name?: string;
+  shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
+  exchangeRateIof?: string | null;
 }
 
 /**
@@ -171,10 +189,38 @@ export async function createSimulation(
       name: input.name.trim(),
       targetDolar: '0',
       incoterm: 'FOB',
+      shippingModality: input.shippingModality ?? null,
+      exchangeRateIof: input.exchangeRateIof ?? null,
     })
     .returning();
 
   return created ?? null;
+}
+
+/**
+ * Update simulation (quote) settings.
+ */
+export async function updateSimulation(
+  simulationId: string,
+  organizationId: string,
+  userId: string,
+  input: UpdateSimulationInput
+): Promise<Simulation | null> {
+  const data = await getSimulationById(simulationId, organizationId, userId);
+  if (!data) return null;
+
+  const [updated] = await db
+    .update(quotes)
+    .set({
+      ...(input.name !== undefined && { name: input.name.trim() }),
+      ...(input.shippingModality !== undefined && { shippingModality: input.shippingModality }),
+      ...(input.exchangeRateIof !== undefined && { exchangeRateIof: input.exchangeRateIof }),
+      updatedAt: new Date(),
+    })
+    .where(eq(quotes.id, simulationId))
+    .returning();
+
+  return updated ?? null;
 }
 
 /**
@@ -210,9 +256,46 @@ export interface AddSimulationItemInput {
   priceUsd: string;
 }
 
+async function recalculateQuoteTotals(quoteId: string): Promise<void> {
+  const items = await db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+  const quote = await db.query.quotes.findFirst({ where: eq(quotes.id, quoteId) });
+  if (!quote) return;
+
+  const totalCbm = items.reduce(
+    (sum, i) => sum.plus(i.cbmSnapshot ?? '0'),
+    new Decimal(0),
+  );
+  const totalWeight = items.reduce(
+    (sum, i) => sum.plus(i.weightSnapshot ?? '0'),
+    new Decimal(0),
+  );
+
+  const modality = quote.shippingModality;
+  const useVolumetric =
+    modality === 'AIR' || modality === 'SEA_LCL' || modality === 'EXPRESS';
+  const volumetricWeight = useVolumetric
+    ? modality === 'AIR'
+      ? getVolumetricWeightAir(totalCbm)
+      : getVolumetricWeightSeaLCL(totalCbm)
+    : new Decimal(0);
+  const totalChargeableWeight = useVolumetric
+    ? getChargeableWeight(totalWeight, volumetricWeight)
+    : totalWeight;
+
+  await db
+    .update(quotes)
+    .set({
+      totalCbm: totalCbm.toFixed(6),
+      totalWeight: totalWeight.toFixed(3),
+      totalChargeableWeight: totalChargeableWeight.toFixed(3),
+    })
+    .where(eq(quotes.id, quoteId));
+}
+
 /**
  * Add an item to a simulation.
  * Either variantId (catalog product) or simulatedProductSnapshot (non-catalog) must be provided.
+ * Computes weight_snapshot, cbm_snapshot, tax snapshots, and updates quote totals.
  *
  * @param simulationId - Quote UUID
  * @param organizationId - Organization UUID
@@ -240,17 +323,128 @@ export async function addSimulationItem(
     return null;
   }
 
+  const quantity = item.quantity;
+  const unitPriceUsd = item.priceUsd;
+  const lineTotalUsd = new Decimal(unitPriceUsd).times(quantity);
+
+  let cbmSnapshot: Decimal;
+  let weightSnapshot: Decimal;
+  let taxRates: { ii: string; ipi: string; pis: string; cofins: string };
+
+  if (hasVariant && item.variantId) {
+    const variant = await db.query.productVariants.findFirst({
+      where: eq(productVariants.id, item.variantId),
+      with: { product: true },
+    });
+    if (!variant?.product) return null;
+
+    const carton = variant.cartonHeight || variant.cartonWidth || variant.cartonLength
+      ? {
+          heightCm: variant.cartonHeight ?? variant.height ?? 0,
+          widthCm: variant.cartonWidth ?? variant.width ?? 0,
+          lengthCm: variant.cartonLength ?? variant.length ?? 0,
+          weightKg: variant.cartonWeight ?? 0,
+          unitsPerCarton: variant.unitsPerCarton ?? 1,
+        }
+      : null;
+    const unit = {
+      heightCm: variant.height ?? undefined,
+      widthCm: variant.width ?? undefined,
+      lengthCm: variant.length ?? undefined,
+    };
+    const dims = getDimensionsForCbm(carton, unit);
+    cbmSnapshot = computeTotalCbm(quantity, dims);
+    weightSnapshot = computeWeight(quantity, dims);
+
+    const hsCodeId = variant.product.hsCodeId;
+    if (!hsCodeId) {
+      taxRates = { ii: '0', ipi: '0', pis: '0', cofins: '0' };
+    } else {
+      const [hc] = await db.select().from(hsCodes).where(eq(hsCodes.id, hsCodeId));
+      taxRates = hc
+        ? {
+            ii: String(hc.ii ?? 0),
+            ipi: String(hc.ipi ?? 0),
+            pis: String(hc.pis ?? 0),
+            cofins: String(hc.cofins ?? 0),
+          }
+        : { ii: '0', ipi: '0', pis: '0', cofins: '0' };
+    }
+  } else if (hasSimulated && item.simulatedProductSnapshot) {
+    const snap = item.simulatedProductSnapshot;
+    const carton =
+      snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
+        ? {
+            heightCm: snap.cartonHeight ?? snap.height ?? 0,
+            widthCm: snap.cartonWidth ?? snap.width ?? 0,
+            lengthCm: snap.cartonLength ?? snap.length ?? 0,
+            weightKg: snap.cartonWeight ?? 0,
+            unitsPerCarton: snap.unitsPerCarton ?? 1,
+          }
+        : null;
+    const unit = {
+      heightCm: snap.height ?? undefined,
+      widthCm: snap.width ?? undefined,
+      lengthCm: snap.length ?? undefined,
+    };
+    const dims = getDimensionsForCbm(carton, unit);
+    cbmSnapshot = computeTotalCbm(quantity, dims);
+    weightSnapshot = computeWeight(quantity, dims);
+
+    if (snap.taxSnapshot) {
+      taxRates = {
+        ii: String(snap.taxSnapshot.ii ?? 0),
+        ipi: String(snap.taxSnapshot.ipi ?? 0),
+        pis: String(snap.taxSnapshot.pis ?? 0),
+        cofins: String(snap.taxSnapshot.cofins ?? 0),
+      };
+    } else if (snap.hsCode) {
+      const [hc] = await db.select().from(hsCodes).where(eq(hsCodes.code, snap.hsCode));
+      taxRates = hc
+        ? {
+            ii: String(hc.ii ?? 0),
+            ipi: String(hc.ipi ?? 0),
+            pis: String(hc.pis ?? 0),
+            cofins: String(hc.cofins ?? 0),
+          }
+        : { ii: '0', ipi: '0', pis: '0', cofins: '0' };
+    } else {
+      taxRates = { ii: '0', ipi: '0', pis: '0', cofins: '0' };
+    }
+  } else {
+    return null;
+  }
+
+  const taxValues = computeImportTaxes(
+    lineTotalUsd,
+    quantity,
+    unitPriceUsd,
+    taxRates,
+  );
+
   const [created] = await db
     .insert(quoteItems)
     .values({
       quoteId: simulationId,
       variantId: item.variantId ?? null,
       simulatedProductSnapshot: item.simulatedProductSnapshot ?? null,
-      quantity: item.quantity,
+      quantity,
       priceUsd: item.priceUsd,
+      unitPriceUsdSnapshot: unitPriceUsd,
+      weightSnapshot: weightSnapshot.toFixed(3),
+      cbmSnapshot: cbmSnapshot.toFixed(6),
+      iiRateSnapshot: taxRates.ii,
+      ipiRateSnapshot: taxRates.ipi,
+      pisRateSnapshot: taxRates.pis,
+      cofinsRateSnapshot: taxRates.cofins,
+      iiValueSnapshot: taxValues.ii.toFixed(4),
+      ipiValueSnapshot: taxValues.ipi.toFixed(4),
+      pisValueSnapshot: taxValues.pis.toFixed(4),
+      cofinsValueSnapshot: taxValues.cofins.toFixed(4),
     })
     .returning();
 
+  await recalculateQuoteTotals(simulationId);
   return created ?? null;
 }
 
@@ -281,11 +475,15 @@ export async function removeSimulationItem(
     return false;
   }
 
+  const quoteId = item.quote.id;
   const deleted = await db
     .delete(quoteItems)
     .where(eq(quoteItems.id, itemId))
     .returning();
 
+  if (deleted.length > 0) {
+    await recalculateQuoteTotals(quoteId);
+  }
   return deleted.length > 0;
 }
 
@@ -323,7 +521,7 @@ export async function updateSimulationItem(
     return null;
   }
 
-  const values: Partial<{ quantity: number; priceUsd: string }> = {};
+  const values: Partial<Record<string, unknown>> = {};
   if (updates.quantity !== undefined) values.quantity = updates.quantity;
   if (updates.priceUsd !== undefined) values.priceUsd = updates.priceUsd;
 
@@ -331,11 +529,95 @@ export async function updateSimulationItem(
     return item;
   }
 
+  const newQuantity = updates.quantity ?? item.quantity;
+  const newPriceUsd = updates.priceUsd ?? item.priceUsd;
+
+  if (updates.quantity !== undefined) {
+    const quantity = newQuantity;
+    let cbmSnapshot: Decimal;
+    let weightSnapshot: Decimal;
+
+    if (item.variantId) {
+      const variant = await db.query.productVariants.findFirst({
+        where: eq(productVariants.id, item.variantId),
+        with: { product: true },
+      });
+      if (variant?.product) {
+        const carton =
+          variant.cartonHeight || variant.cartonWidth || variant.cartonLength
+            ? {
+                heightCm: variant.cartonHeight ?? variant.height ?? 0,
+                widthCm: variant.cartonWidth ?? variant.width ?? 0,
+                lengthCm: variant.cartonLength ?? variant.length ?? 0,
+                weightKg: variant.cartonWeight ?? 0,
+                unitsPerCarton: variant.unitsPerCarton ?? 1,
+              }
+            : null;
+        const unit = {
+          heightCm: variant.height ?? undefined,
+          widthCm: variant.width ?? undefined,
+          lengthCm: variant.length ?? undefined,
+        };
+        const dims = getDimensionsForCbm(carton, unit);
+        cbmSnapshot = computeTotalCbm(quantity, dims);
+        weightSnapshot = computeWeight(quantity, dims);
+        values.weightSnapshot = weightSnapshot.toFixed(3);
+        values.cbmSnapshot = cbmSnapshot.toFixed(6);
+      }
+    } else if (item.simulatedProductSnapshot) {
+      const snap = item.simulatedProductSnapshot as ProductSnapshot;
+      const carton =
+        snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
+          ? {
+              heightCm: snap.cartonHeight ?? snap.height ?? 0,
+              widthCm: snap.cartonWidth ?? snap.width ?? 0,
+              lengthCm: snap.cartonLength ?? snap.length ?? 0,
+              weightKg: snap.cartonWeight ?? 0,
+              unitsPerCarton: snap.unitsPerCarton ?? 1,
+            }
+          : null;
+      const unit = {
+        heightCm: snap.height ?? undefined,
+        widthCm: snap.width ?? undefined,
+        lengthCm: snap.length ?? undefined,
+      };
+      const dims = getDimensionsForCbm(carton, unit);
+      cbmSnapshot = computeTotalCbm(quantity, dims);
+      weightSnapshot = computeWeight(quantity, dims);
+      values.weightSnapshot = weightSnapshot.toFixed(3);
+      values.cbmSnapshot = cbmSnapshot.toFixed(6);
+    }
+  }
+
+  if (updates.priceUsd !== undefined) {
+    values.unitPriceUsdSnapshot = newPriceUsd;
+  }
+
+  if (updates.quantity !== undefined || updates.priceUsd !== undefined) {
+    const quantity = newQuantity;
+    const unitPriceUsd = newPriceUsd;
+    const lineTotal = new Decimal(unitPriceUsd).times(quantity);
+    const rates = {
+      ii: String(item.iiRateSnapshot ?? 0),
+      ipi: String(item.ipiRateSnapshot ?? 0),
+      pis: String(item.pisRateSnapshot ?? 0),
+      cofins: String(item.cofinsRateSnapshot ?? 0),
+    };
+    const taxValues = computeImportTaxes(lineTotal, quantity, unitPriceUsd, rates);
+    values.iiValueSnapshot = taxValues.ii.toFixed(4);
+    values.ipiValueSnapshot = taxValues.ipi.toFixed(4);
+    values.pisValueSnapshot = taxValues.pis.toFixed(4);
+    values.cofinsValueSnapshot = taxValues.cofins.toFixed(4);
+  }
+
   const [updated] = await db
     .update(quoteItems)
-    .set(values)
+    .set(values as Record<string, unknown>)
     .where(eq(quoteItems.id, itemId))
     .returning();
 
+  if (updated) {
+    await recalculateQuoteTotals(item.quote.id);
+  }
   return updated ?? null;
 }

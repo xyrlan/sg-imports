@@ -130,8 +130,8 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
                 <li><code>name</code> — {t('templateColumns.name')}</li>
                 <li><code>variantName</code> — {t('templateColumns.variantName')}</li>
                 <li><code>priceUsd</code> — {t('templateColumns.priceUsd')}</li>
-                <li><code>boxQuantity</code> — {t('templateColumns.boxQuantity')}</li>
-                <li><code>boxWeight</code> — {t('templateColumns.boxWeight')}</li>
+                <li><code>unitsPerCarton</code> — {t('templateColumns.unitsPerCarton')}</li>
+                <li><code>cartonHeight</code>, <code>cartonWidth</code>, <code>cartonLength</code>, <code>cartonWeight</code> — {t('templateColumns.cartonDimensions')}</li>
               </ul>
               <p className="text-xs text-warning mb-3">
                 {t('csvDelimiter')}

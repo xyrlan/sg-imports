@@ -23,8 +23,6 @@ export type ProductSnapshot = {
   description?: string;
   photos?: string[];
   priceUsd: string;
-  boxQuantity: number;
-  boxWeight: number;
   netWeight?: number;
   unitWeight?: number;
   height?: number;
@@ -35,6 +33,14 @@ export type ProductSnapshot = {
   hsCode: string;
   taxSnapshot?: TaxSnapshot;
   supplierName?: string;
+
+  // Carton dimensions for CBM calculation (Landed Cost) — required for freight
+  unitsPerCarton: number;
+  cartonHeight?: number;
+  cartonWidth?: number;
+  cartonLength?: number;
+  cartonWeight?: number;
+  packagingType?: 'BOX' | 'PALLET' | 'BAG';
 };
 
 // Adicional: Regras de Armazenagem

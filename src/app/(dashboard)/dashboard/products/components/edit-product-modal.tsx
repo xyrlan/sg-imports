@@ -1,7 +1,8 @@
 'use client';
 
+import { useId, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Modal } from '@heroui/react';
+import { Button, Modal } from '@heroui/react';
 import { Box } from 'lucide-react';
 import { ProductForm } from './product-form';
 import type { ProductWithVariants } from '@/services/product.service';
@@ -21,7 +22,10 @@ export function EditProductModal({
   organizationId,
   onMutate,
 }: EditProductModalProps) {
+  const [isPending, setIsPending] = useState(false);
+  const formId = useId();
   const t = useTranslations('Products.CreateProduct');
+  const tForm = useTranslations('Products.Form');
 
   return (
     <Modal>
@@ -43,9 +47,22 @@ export function EditProductModal({
                   initialProduct={product}
                   onMutate={onMutate}
                   onClose={() => onOpenChange(false)}
+                  hideFooter
+                  formId={formId}
+                  onPendingChange={setIsPending}
                 />
               )}
             </Modal.Body>
+            {product && (
+              <Modal.Footer>
+                <Button type="button" variant="ghost" onPress={() => onOpenChange(false)}>
+                  {tForm('cancel')}
+                </Button>
+                <Button form={formId} type="submit" variant="primary" isPending={isPending}>
+                  {tForm('updateProduct')}
+                </Button>
+              </Modal.Footer>
+            )}
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>

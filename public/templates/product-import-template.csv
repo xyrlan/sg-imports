@@ -1,3 +1,3 @@
-sku;name;description;boxQuantity;boxWeight;variantName;priceUsd;height;width;length;netWeight;unitWeight
-PRD-001;Sample Product;Product description;10;5.5;Default;10.00;20;30;40;0.5;
-PRD-002;Another Product;;20;8.0;Blue - M;15.50;25;35;45;0.6;
+sku;name;description;unitsPerCarton;cartonHeight;cartonWidth;cartonLength;cartonWeight;variantName;priceUsd;height;width;length;netWeight;unitWeight
+PRD-001;Sample Product;Product description;10;20;30;40;5.5;Default;10.00;20;30;40;0.5;
+PRD-002;Another Product;;20;25;35;45;8.0;Blue - M;15.50;25;35;45;0.6;

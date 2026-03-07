@@ -100,8 +100,11 @@ async function main() {
     sku: 'IPHONE-15-CLONE-BLK',
     name: 'Black 256GB',
     priceUsd: '450.00',
-    boxQuantity: 10,
-    boxWeight: '3.200',
+    unitsPerCarton: 10,
+    cartonHeight: '30',
+    cartonWidth: '20',
+    cartonLength: '15',
+    cartonWeight: '3.200',
   });
 
   console.log('📦 Catálogo de teste populado!');

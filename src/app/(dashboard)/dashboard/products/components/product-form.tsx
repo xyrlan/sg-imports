@@ -23,6 +23,7 @@ import {
   getProductFormOptions,
 } from '../actions';
 import type { ProductWithVariants } from '@/services/product.service';
+import type { ProductSnapshot } from '@/db/types';
 
 type TieredPriceRow = { beginAmount: number; price: string };
 type AttributePair = { key: string; value: string };
@@ -33,13 +34,17 @@ const defaultVariant = (): FormVariant => ({
   sku: '',
   name: '',
   priceUsd: '',
-  boxQuantity: '1',
-  boxWeight: '',
   height: '',
   width: '',
   length: '',
   netWeight: '',
   unitWeight: '',
+  cartonHeight: '0',
+  cartonWidth: '0',
+  cartonLength: '0',
+  cartonWeight: '0',
+  unitsPerCarton: '1',
+  packagingType: '',
 });
 
 const defaultFormData: CreateProductSubmittedData = {
@@ -56,6 +61,17 @@ interface ProductFormProps {
   initialProduct?: ProductWithVariants | null;
   onMutate?: () => void;
   onClose?: () => void;
+  mode?: 'catalog' | 'simulated';
+  onSimulatedSubmit?: (
+    snapshot: ProductSnapshot,
+    quantity: number,
+    priceUsd: string
+  ) => Promise<void>;
+  isSubmitting?: boolean;
+  submitLabel?: string;
+  hideFooter?: boolean;
+  formId?: string;
+  onPendingChange?: (isPending: boolean) => void;
 }
 
 function productToFormData(p: ProductWithVariants): CreateProductSubmittedData & { variants: FormVariant[] } {
@@ -64,13 +80,17 @@ function productToFormData(p: ProductWithVariants): CreateProductSubmittedData &
     sku: v.sku ?? '',
     name: v.name ?? '',
     priceUsd: String(v.priceUsd ?? ''),
-    boxQuantity: String(v.boxQuantity ?? 1),
-    boxWeight: String(v.boxWeight ?? '0'),
     height: v.height ? String(v.height) : '',
     width: v.width ? String(v.width) : '',
     length: v.length ? String(v.length) : '',
     netWeight: v.netWeight ? String(v.netWeight) : '',
     unitWeight: v.unitWeight ? String(v.unitWeight) : '',
+    cartonHeight: v.cartonHeight ? String(v.cartonHeight) : '0',
+    cartonWidth: v.cartonWidth ? String(v.cartonWidth) : '0',
+    cartonLength: v.cartonLength ? String(v.cartonLength) : '0',
+    cartonWeight: v.cartonWeight ? String(v.cartonWeight) : '0',
+    unitsPerCarton: v.unitsPerCarton ? String(v.unitsPerCarton) : '1',
+    packagingType: v.packagingType ?? '',
   }));
   return {
     name: p.name ?? '',
@@ -113,18 +133,39 @@ function getInitialState(initialProduct: ProductWithVariants | null | undefined)
   };
 }
 
-export function ProductForm({ organizationId, initialProduct, onMutate, onClose }: ProductFormProps) {
+export function ProductForm({
+  organizationId,
+  initialProduct,
+  onMutate,
+  onClose,
+  mode = 'catalog',
+  onSimulatedSubmit,
+  isSubmitting = false,
+  submitLabel,
+  hideFooter = false,
+  formId,
+  onPendingChange,
+}: ProductFormProps) {
   const t = useTranslations('Products.Form');
-  const isEdit = !!initialProduct;
-  const [state, formAction, isPending] = useActionState(
+  const isSimulated = mode === 'simulated';
+  const isEdit = !!initialProduct && !isSimulated;
+  const [state, formAction, isCatalogPending] = useActionState(
     isEdit ? updateProductAction : createProductAction,
     null
   );
+  const isPending = isSimulated ? isSubmitting : isCatalogPending;
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
   const initialState = getInitialState(initialProduct);
   const [formData, setFormData] = useState<CreateProductSubmittedData & { variants: FormVariant[] }>(
     initialState.formData
   );
-  const [variantKeys, setVariantKeys] = useState<number[]>(initialState.variantKeys);
+  const [variantKeys, setVariantKeys] = useState<number[]>(
+    isSimulated ? [1] : initialState.variantKeys
+  );
   const [tieredPriceRows, setTieredPriceRows] = useState<Record<number, TieredPriceRow[]>>(
     initialState.tieredPriceRows
   );
@@ -135,6 +176,10 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
     hsCodes: { id: string; code: string }[];
     suppliers: { id: string; name: string }[];
   } | null>(null);
+
+  const [simulatedQuantity, setSimulatedQuantity] = useState(1);
+  const [simulatedHsCode, setSimulatedHsCode] = useState('');
+  const [simulatedSupplierName, setSimulatedSupplierName] = useState('');
 
   useEffect(() => {
     if (state?.success) {
@@ -161,8 +206,10 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
   }, [state?.fieldErrors, state?.submittedData]);
 
   useEffect(() => {
-    getProductFormOptions(organizationId).then(setOptions);
-  }, [organizationId]);
+    if (!isSimulated) {
+      getProductFormOptions(organizationId).then(setOptions);
+    }
+  }, [organizationId, isSimulated]);
 
   const getError = (path: string) => state?.fieldErrors?.[path];
 
@@ -174,16 +221,39 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
       )
     : undefined;
 
-    function handleSubmit(e: { preventDefault: () => void; target: EventTarget | null }) {
+    async function handleSubmit(e: { preventDefault: () => void; target: EventTarget | null }) {
       e.preventDefault();
-      const formData = new FormData(e.target as HTMLFormElement);
+      if (isSimulated && onSimulatedSubmit) {
+        if (!formData.name?.trim() || !formData.variants[0]?.priceUsd?.trim() || !simulatedHsCode.trim()) {
+          return;
+        }
+        const v = formData.variants[0];
+        const snapshot: ProductSnapshot = {
+          name: formData.name.trim(),
+          priceUsd: (v?.priceUsd ?? '').trim(),
+          unitsPerCarton: Math.max(1, Number(v?.unitsPerCarton) || 1),
+          hsCode: simulatedHsCode.trim(),
+        };
+        if (v?.sku?.trim()) snapshot.sku = v.sku.trim();
+        if (formData.description?.trim()) snapshot.description = formData.description.trim();
+        if (simulatedSupplierName.trim()) snapshot.supplierName = simulatedSupplierName.trim();
+        if (v?.cartonHeight?.trim()) snapshot.cartonHeight = Number(v.cartonHeight);
+        if (v?.cartonWidth?.trim()) snapshot.cartonWidth = Number(v.cartonWidth);
+        if (v?.cartonLength?.trim()) snapshot.cartonLength = Number(v.cartonLength);
+        if (v?.cartonWeight?.trim()) snapshot.cartonWeight = Number(v.cartonWeight);
+        if (v?.packagingType) snapshot.packagingType = v.packagingType as 'BOX' | 'PALLET' | 'BAG';
+        await onSimulatedSubmit(snapshot, simulatedQuantity, v?.priceUsd ?? '');
+        return;
+      }
+      const fd = new FormData(e.target as HTMLFormElement);
       startTransition(() => {
-        formAction(formData);
+        formAction(fd);
       });
     }
 
   return (
     <Form
+      {...(formId && { id: formId })}
       // action={formAction}
       onSubmit={handleSubmit}
       validationErrors={validationErrors}
@@ -214,17 +284,19 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
         <FieldError />
       </TextField>
 
-      <TextField
-        variant="primary"
-        isDisabled={isPending}
-        name="styleCode"
-        value={formData.styleCode}
-        onChange={(v) => setFormData((prev) => ({ ...prev, styleCode: v }))}
-      >
-        <Label>{t('spu')}</Label>
-        <Input placeholder={t('spuPlaceholder')} />
-        <FieldError />
-      </TextField>
+      {!isSimulated && (
+        <TextField
+          variant="primary"
+          isDisabled={isPending}
+          name="styleCode"
+          value={formData.styleCode}
+          onChange={(v) => setFormData((prev) => ({ ...prev, styleCode: v }))}
+        >
+          <Label>{t('spu')}</Label>
+          <Input placeholder={t('spuPlaceholder')} />
+          <FieldError />
+        </TextField>
+      )}
 
       <TextField
         variant="primary"
@@ -238,14 +310,49 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
         <FieldError />
       </TextField>
 
-      <ProductPhotosUpload
-        name="photos"
-        label={t('productPhotos')}
-        helpText={t('photosHelp')}
-        disabled={isPending}
-        initialPhotos={isEdit ? initialProduct?.photos ?? undefined : undefined}
-      />
+      {!isSimulated && (
+        <ProductPhotosUpload
+          name="photos"
+          label={t('productPhotos')}
+          helpText={t('photosHelp')}
+          disabled={isPending}
+          initialPhotos={isEdit ? initialProduct?.photos ?? undefined : undefined}
+        />
+      )}
 
+      {isSimulated ? (
+        <div className="grid grid-cols-2 gap-4">
+          <TextField
+            variant="primary"
+            isDisabled={isPending}
+            isRequired
+            value={simulatedHsCode}
+            onChange={(v) => setSimulatedHsCode(v)}
+          >
+            <Label>{t('hsCodeLabel')}</Label>
+            <Input placeholder="8504.40.10" />
+          </TextField>
+          <TextField
+            variant="primary"
+            isDisabled={isPending}
+            value={simulatedSupplierName}
+            onChange={(v) => setSimulatedSupplierName(v)}
+          >
+            <Label>{t('supplierNameLabel')}</Label>
+            <Input placeholder={t('supplierNamePlaceholder')} />
+          </TextField>
+          <TextField
+            variant="primary"
+            isDisabled={isPending}
+            isRequired
+            value={String(simulatedQuantity)}
+            onChange={(v) => setSimulatedQuantity(Math.max(1, Number(v) || 1))}
+          >
+            <Label>{t('quantity')}</Label>
+            <Input type="number" min={1} />
+          </TextField>
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-4">
         {options && (
           <>
@@ -312,27 +419,30 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
           </>
         )}
       </div>
+      )}
 
       <div className="border-t border-divider pt-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-medium text-muted">{t('variantsLabel')}</p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onPress={() => {
-              const newKey = Math.max(0, ...variantKeys) + 1;
-              setVariantKeys((k) => [...k, newKey]);
-              setFormData((prev) => ({ ...prev, variants: [...prev.variants, defaultVariant()] }));
-              setTieredPriceRows((prev) => ({ ...prev, [newKey]: [{ beginAmount: 1, price: '' }] }));
-              setAttributePairs((prev) => ({ ...prev, [newKey]: [] }));
-            }}
-            isDisabled={isPending}
-            className="inline-flex items-center gap-2"
-          >
-            <PlusIcon size={16} />
-            {t('addVariant')}
-          </Button>
+          {!isSimulated && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onPress={() => {
+                const newKey = Math.max(0, ...variantKeys) + 1;
+                setVariantKeys((k) => [...k, newKey]);
+                setFormData((prev) => ({ ...prev, variants: [...prev.variants, defaultVariant()] }));
+                setTieredPriceRows((prev) => ({ ...prev, [newKey]: [{ beginAmount: 1, price: '' }] }));
+                setAttributePairs((prev) => ({ ...prev, [newKey]: [] }));
+              }}
+              isDisabled={isPending}
+              className="inline-flex items-center gap-2"
+            >
+              <PlusIcon size={16} />
+              {t('addVariant')}
+            </Button>
+          )}
         </div>
         <div className="space-y-4">
           {variantKeys.map((key, i) => (
@@ -407,7 +517,7 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
                     <FieldError>{getError(`variants.${i}.priceUsd`)}</FieldError>
                   </TextField>
                 </div>
-                {variantKeys.length > 1 && (
+                {!isSimulated && variantKeys.length > 1 && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -426,48 +536,7 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
                 )}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <TextField
-                  variant="primary"
-                  isDisabled={isPending}
-                  isRequired
-                  isInvalid={!!getError(`variants.${i}.boxQuantity`)}
-                  value={formData.variants[i]?.boxQuantity ?? '1'}
-                  onChange={(v) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      variants: prev.variants.map((vr, idx) =>
-                        idx === i ? { ...vr, boxQuantity: v} : vr
-                      ),
-                    }))
-                  }
-                  validate={(v) =>
-                    !v || Number(v) < 1 ? t('boxQuantityRequired') : null
-                  }
-                >
-                  <Label>{t('boxQuantity')}</Label>
-                  <Input name="variantBoxQuantity" type="number" placeholder={t('boxQuantityPlaceholder')} />
-                  <FieldError>{getError(`variants.${i}.boxQuantity`)}</FieldError>
-                </TextField>
-                <TextField
-                  variant="primary"
-                  isDisabled={isPending}
-                  isRequired
-                  isInvalid={!!getError(`variants.${i}.boxWeight`)}
-                  value={formData.variants[i]?.boxWeight ?? ''}
-                  onChange={(v) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      variants: prev.variants.map((vr, idx) =>
-                        idx === i ? { ...vr, boxWeight: v } : vr
-                      ),
-                    }))
-                  }
-                  validate={(v) => (!v?.trim() ? t('boxWeightRequired') : null)}
-                >
-                  <Label>{t('boxWeight')}</Label>
-                  <Input name="variantBoxWeight" placeholder={t('boxWeightPlaceholder')} />
-                  <FieldError>{getError(`variants.${i}.boxWeight`)}</FieldError>
-                </TextField>
+                <p className="col-span-full text-sm font-medium text-muted">{t('unitSpecs')}</p>
                 <TextField
                   variant="primary"
                   isDisabled={isPending}
@@ -559,7 +628,121 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
                   <FieldError>{getError(`variants.${i}.unitWeight`)}</FieldError>
                 </TextField>
               </div>
-              {(() => {
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <p className="col-span-full text-sm font-medium text-muted">{t('cartonDimensions')}</p>
+                <TextField
+                  variant="primary"
+                  isDisabled={isPending}
+                  value={formData.variants[i]?.cartonHeight ?? ''}
+                  onChange={(v) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      variants: prev.variants.map((vr, idx) =>
+                        idx === i ? { ...vr, cartonHeight: v } : vr
+                      ),
+                    }))
+                  }
+                >
+                  <Label>{t('cartonHeight')}</Label>
+                  <Input name="variantCartonHeight" placeholder={t('cartonHeightPlaceholder')} />
+                </TextField>
+                <TextField
+                  variant="primary"
+                  isDisabled={isPending}
+                  value={formData.variants[i]?.cartonWidth ?? ''}
+                  onChange={(v) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      variants: prev.variants.map((vr, idx) =>
+                        idx === i ? { ...vr, cartonWidth: v } : vr
+                      ),
+                    }))
+                  }
+                >
+                  <Label>{t('cartonWidth')}</Label>
+                  <Input name="variantCartonWidth" placeholder={t('cartonWidthPlaceholder')} />
+                </TextField>
+                <TextField
+                  variant="primary"
+                  isDisabled={isPending}
+                  value={formData.variants[i]?.cartonLength ?? ''}
+                  onChange={(v) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      variants: prev.variants.map((vr, idx) =>
+                        idx === i ? { ...vr, cartonLength: v } : vr
+                      ),
+                    }))
+                  }
+                >
+                  <Label>{t('cartonLength')}</Label>
+                  <Input name="variantCartonLength" placeholder={t('cartonLengthPlaceholder')} />
+                </TextField>
+                <TextField
+                  variant="primary"
+                  isDisabled={isPending}
+                  value={formData.variants[i]?.cartonWeight ?? ''}
+                  onChange={(v) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      variants: prev.variants.map((vr, idx) =>
+                        idx === i ? { ...vr, cartonWeight: v } : vr
+                      ),
+                    }))
+                  }
+                >
+                  <Label>{t('cartonWeight')}</Label>
+                  <Input name="variantCartonWeight" placeholder={t('cartonWeightPlaceholder')} />
+                </TextField>
+                <TextField
+                  variant="primary"
+                  isDisabled={isPending}
+                  value={formData.variants[i]?.unitsPerCarton ?? '1'}
+                  onChange={(v) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      variants: prev.variants.map((vr, idx) =>
+                        idx === i ? { ...vr, unitsPerCarton: v } : vr
+                      ),
+                    }))
+                  }
+                >
+                  <Label>{t('unitsPerCarton')}</Label>
+                  <Input name="variantUnitsPerCarton" type="number" min={1} placeholder="1" />
+                </TextField>
+                <Select
+                  name="variantPackagingType"
+                  variant="primary"
+                  isDisabled={isPending}
+                  placeholder={t('packagingTypePlaceholder')}
+                  value={formData.variants[i]?.packagingType || null}
+                  onChange={(k) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      variants: prev.variants.map((vr, idx) =>
+                        idx === i
+                          ? { ...vr, packagingType: k === '__none__' || !k ? '' : (k as string) }
+                          : vr
+                      ),
+                    }))
+                  }
+                >
+                  <Label>{t('packagingType')}</Label>
+                  <Select.Trigger>
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      <ListBox.Item key="__none__" id="__none__" textValue={t('none')} />
+                      <ListBox.Item key="BOX" id="BOX" textValue={t('packagingBox')} />
+                      <ListBox.Item key="PALLET" id="PALLET" textValue={t('packagingPallet')} />
+                      <ListBox.Item key="BAG" id="BAG" textValue={t('packagingBag')} />
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
+              </div>
+              {!isSimulated && (() => {
                 const tpRows = tieredPriceRows[key] ?? [{ beginAmount: 1, price: '' }];
                 const attrRows = attributePairs[key] ?? [];
                 const buildTieredPrice = () => {
@@ -740,21 +923,29 @@ export function ProductForm({ organizationId, initialProduct, onMutate, onClose 
                   </>
                 );
               })()}
+              {isSimulated && (
+                <>
+                  <input type="hidden" name="variantTieredPriceInfo" value="[]" />
+                  <input type="hidden" name="variantAttributes" value="{}" />
+                </>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        {onClose && (
-          <Button type="button" variant="ghost" onPress={onClose}>
-            {t('cancel')}
+      {!hideFooter && (
+        <div className="flex justify-end gap-2 pt-4">
+          {onClose && (
+            <Button type="button" variant="ghost" onPress={onClose}>
+              {t('cancel')}
+            </Button>
+          )}
+          <Button type="submit" variant="primary" isPending={isPending}>
+            {isSimulated ? (submitLabel ?? t('createProduct')) : isEdit ? t('updateProduct') : t('createProduct')}
           </Button>
-        )}
-        <Button type="submit" variant="primary" isPending={isPending}>
-          {isEdit ? t('updateProduct') : t('createProduct')}
-        </Button>
-      </div>
+        </div>
+      )}
     </Form>
   );
 }

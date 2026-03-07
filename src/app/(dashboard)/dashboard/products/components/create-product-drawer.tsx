@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Modal } from '@heroui/react';
 import { Box, PlusIcon } from 'lucide-react';
@@ -13,7 +13,10 @@ interface CreateProductDrawerProps {
 
 export function CreateProductDrawer({ organizationId, onMutate }: CreateProductDrawerProps) {
   const [open, setOpen] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const formId = useId();
   const t = useTranslations('Products.CreateProduct');
+  const tForm = useTranslations('Products.Form');
 
   return (
     <>
@@ -42,8 +45,19 @@ export function CreateProductDrawer({ organizationId, onMutate }: CreateProductD
                   organizationId={organizationId}
                   onMutate={onMutate}
                   onClose={() => setOpen(false)}
+                  hideFooter
+                  formId={formId}
+                  onPendingChange={setIsPending}
                 />
               </Modal.Body>
+              <Modal.Footer>
+                <Button type="button" variant="ghost" onPress={() => setOpen(false)}>
+                  {tForm('cancel')}
+                </Button>
+                <Button form={formId} type="submit" variant="primary" isPending={isPending}>
+                  {tForm('createProduct')}
+                </Button>
+              </Modal.Footer>
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>
