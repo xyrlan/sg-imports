@@ -92,18 +92,22 @@ export async function updateStateIcmsAction(prev: unknown, formData: FormData) {
 
 const siscomexSchema = z.object({
   registrationValue: z.string().min(1),
-  additions: z.string().optional(),
   additions11To20: z.string().optional(),
   additions21To50: z.string().optional(),
   additions51AndAbove: z.string().optional(),
 });
+
+function parseAdditions(arr: string[]): string[] {
+  return arr
+    .map((x) => x.trim().replace(',', '.'))
+    .filter((x) => x !== '' && !Number.isNaN(parseFloat(x)));
+}
 
 export async function updateSiscomexFeeAction(prev: unknown, formData: FormData) {
   try {
     await requireSuperAdmin();
     const parsed = siscomexSchema.safeParse({
       registrationValue: formData.get('registrationValue'),
-      additions: formData.get('additions'),
       additions11To20: formData.get('additions11To20'),
       additions21To50: formData.get('additions21To50'),
       additions51AndAbove: formData.get('additions51AndAbove'),
@@ -111,14 +115,13 @@ export async function updateSiscomexFeeAction(prev: unknown, formData: FormData)
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    const parseArray = (s: string | undefined) =>
-      s ? s.split(',').map((x) => x.trim()).filter(Boolean) : [];
+    const additionsRaw = formData.getAll('additions') as string[];
     // Normalize decimal: pt-BR uses comma, DB expects dot
     const parseDecimal = (s: string | undefined) =>
       s ? s.trim().replace(',', '.') : undefined;
     await upsertSiscomexFeeConfig({
       registrationValue: parsed.data.registrationValue.replace(',', '.'),
-      additions: parseArray(parsed.data.additions),
+      additions: parseAdditions(additionsRaw),
       additions11To20: parseDecimal(parsed.data.additions11To20),
       additions21To50: parseDecimal(parsed.data.additions21To50),
       additions51AndAbove: parseDecimal(parsed.data.additions51AndAbove),

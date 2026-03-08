@@ -1,16 +1,13 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Tabs, Card, Button } from '@heroui/react';
+import { Tabs } from '@heroui/react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
-import { RATE_TYPES, TAX_TAB_KEYS } from '../constants';
+import { TAX_TAB_KEYS } from '../constants';
 import type { StateIcmsRate, SiscomexFeeConfig, GlobalPlatformRate } from '@/services/admin';
-import { updateAllPlatformRatesAction } from '../actions';
 import { StateIcmsForm } from './state-icms-form';
 import { SiscomexForm } from './siscomex-form';
-import { PlatformRateFormRow } from './platform-rate-form';
-import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
+import { PlatformRatesForm } from './platform-rates-form';
 
 interface ImpostosTaxasSectionProps {
   stateIcmsRates: StateIcmsRate[];
@@ -29,11 +26,6 @@ export function ImpostosTaxasSection({
   const [taxTab, setTaxTab] = useQueryState(
     'taxTab',
     parseAsStringLiteral(TAX_TAB_KEYS).withDefault('icms'),
-  );
-
-  const [platformState, platformAction, isPlatformPending] = useActionState(
-    updateAllPlatformRatesAction,
-    null,
   );
 
   return (
@@ -68,34 +60,7 @@ export function ImpostosTaxasSection({
       </Tabs.Panel>
 
       <Tabs.Panel id="platform" className="pt-6">
-        <Card className="p-6">
-          <h3 className="font-semibold mb-2">{t('Taxes.platformRates')}</h3>
-          <form action={platformAction} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-            {RATE_TYPES.map((rateType) => {
-              const rate = platformRates.find((r) => r.rateType === rateType);
-              return (
-                <PlatformRateFormRow
-                  key={rateType}
-                  rateType={rateType}
-                  rate={rate}
-                  t={translate}
-                />
-              );
-            })}
-            </div>
-            {platformState?.error && (
-              <FormError message={platformState.error} />
-            )}
-            <Button
-              type="submit"
-              variant="primary"
-              isPending={isPlatformPending}
-            >
-              {isPlatformPending ? t('Taxes.saving') : t('Taxes.save')}
-            </Button>
-          </form>
-        </Card>
+        <PlatformRatesForm platformRates={platformRates} t={translate} />
       </Tabs.Panel>
     </Tabs>
   );

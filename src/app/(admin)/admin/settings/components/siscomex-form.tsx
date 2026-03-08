@@ -1,17 +1,14 @@
 'use client';
 
-import { useActionState } from 'react';
-import { TextField, Input, Label, Button, Card, NumberField } from '@heroui/react';
+import { useActionState, useState } from 'react';
+import { Label, Button, Card, NumberField } from '@heroui/react';
+import { Plus, Trash2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { updateSiscomexFeeAction } from '../actions';
 import type { SiscomexFeeConfig } from '@/services/admin';
 import type { TranslateFn } from '../constants';
 
 const CURRENCY_BRL = { currency: 'BRL', style: 'currency' as const };
-
-function arrToStr(arr: string[] | null | undefined) {
-  return arr && arr.length ? arr.join(', ') : '';
-}
 
 function parseDecimal(value: string | null | undefined): number {
   const n = parseFloat(value ?? '0');
@@ -25,6 +22,13 @@ interface SiscomexFormProps {
 
 export function SiscomexForm({ siscomexFee, t }: SiscomexFormProps) {
   const [state, formAction, isPending] = useActionState(updateSiscomexFeeAction, null);
+  const [additions, setAdditions] = useState<string[]>(
+    siscomexFee?.additions?.length ? [...siscomexFee.additions] : [],
+  );
+
+  const addAddition = () => setAdditions((prev) => [...prev, '0']);
+  const removeAddition = (index: number) =>
+    setAdditions((prev) => prev.filter((_, i) => i !== index));
 
   return (
     <Card className="p-6">
@@ -44,14 +48,49 @@ export function SiscomexForm({ siscomexFee, t }: SiscomexFormProps) {
               <NumberField.Input className="w-40" />
             </NumberField.Group>
           </NumberField>
-          <TextField
-            variant="primary"
-            name="additions"
-            defaultValue={arrToStr(siscomexFee?.additions ?? [])}
-          >
-            <Label>{t('Taxes.additions')} (separados por vírgula)</Label>
-            <Input placeholder="valor1, valor2, ..." />
-          </TextField>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label>{t('Taxes.additions')}</Label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onPress={addAddition}
+                isDisabled={additions.length >= 10}
+              >
+                <Plus className="size-4" />
+                {t('Taxes.additionsAdd')}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {additions.map((value, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <NumberField
+                    variant="primary"
+                    minValue={0}
+                    step={0.01}
+                    formatOptions={CURRENCY_BRL}
+                    name="additions"
+                    defaultValue={parseDecimal(value)}
+                  >
+                    <NumberField.Group>
+                      <NumberField.Input />
+                    </NumberField.Group>
+                  </NumberField>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    isIconOnly
+                    aria-label={t('Taxes.additionsRemove')}
+                    onPress={() => removeAddition(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
           <NumberField
             variant="primary"
             minValue={0}
