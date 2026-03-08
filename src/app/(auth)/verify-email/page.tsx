@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CircleCheck, CircleX, Mail, Clock, RefreshCw, LogOut, User } from 'lucide-react';
-import { Card, Button, Spinner } from '@heroui/react';
+import { Card, Button, Spinner, Skeleton } from '@heroui/react';
 import { createClient } from '@/lib/supabase/client';
 
 // Types for better state management
@@ -51,6 +51,7 @@ export default function VerifyEmailPage() {
   // Refs for preventing duplicate operations
   const verificationAttemptedRef = useRef(false);
   const resendTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showLoadingUI, setShowLoadingUI] = useState(false);
 
   // Start cooldown timer for resend button
   const startResendCooldown = useCallback(() => {
@@ -77,6 +78,16 @@ export default function VerifyEmailPage() {
       }
     };
   }, []);
+
+  // Delay showing loading UI to avoid flash when init is fast (<200ms)
+  useEffect(() => {
+    if (state !== 'loading') {
+      setShowLoadingUI(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowLoadingUI(true), 200);
+    return () => clearTimeout(timer);
+  }, [state]);
 
   // Load user info from Supabase or localStorage
   const loadUserInfo = useCallback(async () => {
@@ -228,7 +239,7 @@ export default function VerifyEmailPage() {
   const renderContent = () => {
     switch (state) {
       case 'loading':
-        return <LoadingState />;
+        return showLoadingUI ? <LoadingState t={t} /> : <LoadingStateSkeleton />;
 
       case 'verifying':
         return <VerifyingState t={t} />;
@@ -351,11 +362,27 @@ const UserHeader = ({ t, user, onLogout }: UserHeaderProps) => (
   </Card>
 );
 
-const LoadingState = () => (
+// Lightweight placeholder shown during fast loads (<200ms) to avoid spinner flash
+const LoadingStateSkeleton = () => (
   <Card variant="default" className="w-full">
     <Card.Content>
-      <div className="text-center py-8">
-        <Spinner size="sm" color="accent" />
+      <div className="flex flex-col items-center gap-4 py-8">
+        <Skeleton className="h-12 w-12 rounded-full" />
+        <div className="space-y-2 w-3/4">
+          <Skeleton className="h-4 w-full rounded" />
+          <Skeleton className="h-3 w-4/5 rounded" />
+        </div>
+      </div>
+    </Card.Content>
+  </Card>
+);
+
+const LoadingState = ({ t }: { t: TranslationFunction }) => (
+  <Card variant="default" className="w-full">
+    <Card.Content>
+      <div className="flex flex-col items-center justify-center gap-4 py-8">
+        <Spinner size="sm" color="accent" className="w-6 h-6" />
+        <p className="text-sm text-default-500">{t('states.verifying.title')}</p>
       </div>
     </Card.Content>
   </Card>

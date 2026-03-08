@@ -17,6 +17,7 @@ import { NavbarProfileDropdown } from './navbar-profile-dropdown';
 import { NavbarOrganizationSelect } from './navbar-organization-select';
 import { NavbarProformaQuoteSelect } from './navbar-proforma-quote-select';
 import { NotificationBell } from '@/components/notifications/notification-bell';
+import { Logo } from '../logo';
 
 interface NavbarLink {
   href: string;
@@ -85,9 +86,7 @@ export function Navbar() {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             href="/dashboard"
           >
-            <h1 className="font-bold text-lg max-md:hidden">
-              SG Imports
-            </h1>
+            <Logo />
           </NextLink>
 
           <Separator
@@ -110,7 +109,7 @@ export function Navbar() {
 
           )}
 
-<Separator
+          <Separator
             className="h-8 hidden md:block"
             orientation="vertical"
           />
