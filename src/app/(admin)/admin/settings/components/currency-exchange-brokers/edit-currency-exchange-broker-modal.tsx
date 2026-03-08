@@ -1,29 +1,39 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Landmark } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionState } from 'react';
-import { createCurrencyExchangeBrokerAction } from '../actions';
+import { updateCurrencyExchangeBrokerAction } from '../../actions';
+import type { CurrencyExchangeBroker } from '@/services/admin';
 
-interface AddCurrencyExchangeBrokerModalProps {
+interface EditCurrencyExchangeBrokerModalProps {
+  broker: CurrencyExchangeBroker;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   trigger: React.ReactNode;
 }
 
-export function AddCurrencyExchangeBrokerModal({
+export function EditCurrencyExchangeBrokerModal({
+  broker,
   isOpen,
   onOpenChange,
   trigger,
-}: AddCurrencyExchangeBrokerModalProps) {
+}: EditCurrencyExchangeBrokerModalProps) {
   const t = useTranslations('Admin.Settings');
+  const [name, setName] = useState(broker.name);
   const [state, formAction, isPending] = useActionState(
-    createCurrencyExchangeBrokerAction,
+    updateCurrencyExchangeBrokerAction.bind(null, broker.id),
     null,
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      queueMicrotask(() => setName(broker.name));
+    }
+  }, [isOpen, broker.name]);
 
   useEffect(() => {
     if (state?.ok && !isPending) {
@@ -39,10 +49,12 @@ export function AddCurrencyExchangeBrokerModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
+              <Modal.Header>
                 <Modal.Icon className="bg-default text-foreground">
-                <Landmark className="size-5" />
-              </Modal.Icon>
-              <Modal.Heading>{t('CurrencyExchangeBrokers.addBroker')}</Modal.Heading>
+                  <Landmark className="size-5" />
+                </Modal.Icon>
+                <Modal.Heading>{t('CurrencyExchangeBrokers.edit')} - {broker.name}</Modal.Heading>
+              </Modal.Header>
             </Modal.Header>
             <form action={formAction}>
               <Modal.Body className="p-2">
@@ -51,6 +63,8 @@ export function AddCurrencyExchangeBrokerModal({
                     <Label>{t('CurrencyExchangeBrokers.name')}</Label>
                     <Input
                       name="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                       placeholder={t('CurrencyExchangeBrokers.namePlaceholder')}
                     />
                   </TextField>

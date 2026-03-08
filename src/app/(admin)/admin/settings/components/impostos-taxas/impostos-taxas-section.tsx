@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Tabs } from '@heroui/react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
-import { TAX_TAB_KEYS } from '../constants';
+import { TAX_TAB_KEYS } from '../../constants';
 import type { StateIcmsRate, SiscomexFeeConfig, GlobalPlatformRate } from '@/services/admin';
 import { StateIcmsForm } from './state-icms-form';
 import { SiscomexForm } from './siscomex-form';

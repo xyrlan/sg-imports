@@ -6,7 +6,7 @@ import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Anchor } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionState } from 'react';
-import { updatePortAction } from '../actions';
+import { updatePortAction } from '../../actions';
 import { getCountryFromCode } from '@/lib/country-codes';
 import type { Port } from '@/services/admin';
 

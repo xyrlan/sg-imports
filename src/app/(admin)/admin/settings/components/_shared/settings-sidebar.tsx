@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { SectionKey } from '../constants';
+import type { SectionKey } from '../../constants';
 
 export interface SettingsSection {
   key: SectionKey;

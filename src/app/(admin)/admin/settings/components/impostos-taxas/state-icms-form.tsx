@@ -4,10 +4,10 @@ import { useActionState, useState, useMemo } from 'react';
 import { Button, Card, Label, NumberField, Radio, RadioGroup } from '@heroui/react';
 import { Search } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { updateStateIcmsAction } from '../actions';
-import { STATE_REGIONS } from '../constants';
+import { updateStateIcmsAction } from '../../actions';
+import { STATE_REGIONS } from '../../constants';
 import type { StateIcmsRate } from '@/services/admin';
-import type { TranslateFn } from '../constants';
+import type { TranslateFn } from '../../constants';
 
 interface StateIcmsFormProps {
   stateIcmsRates: StateIcmsRate[];

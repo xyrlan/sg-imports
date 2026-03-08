@@ -6,7 +6,7 @@ import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Building2, Terminal as TerminalIcon } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionState } from 'react';
-import { createTerminalAction } from '../actions';
+import { createTerminalAction } from '../../actions';
 
 interface AddTerminalModalProps {
   isOpen: boolean;

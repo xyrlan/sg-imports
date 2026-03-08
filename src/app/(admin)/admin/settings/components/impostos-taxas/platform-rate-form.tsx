@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Select, ListBox, NumberField } from '@heroui/react';
 import type { GlobalPlatformRate } from '@/services/admin';
-import type { TranslateFn } from '../constants';
+import type { TranslateFn } from '../../constants';
 
 type UnitType = 'PERCENT' | 'FIXED_BRL' | 'FIXED_USD';
 

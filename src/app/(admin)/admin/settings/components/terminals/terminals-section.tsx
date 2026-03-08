@@ -9,8 +9,8 @@ import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { AddTerminalModal } from './add-terminal-modal';
 import { EditTerminalModal } from './edit-terminal-modal';
-import { TerminalEditForm } from '../terminals/[id]/terminal-edit-form';
-import { getTerminalWithRulesAction } from '../terminals/[id]/actions';
+import { TerminalEditForm } from '../../terminals/[id]/terminal-edit-form';
+import { getTerminalWithRulesAction } from '../../terminals/[id]/actions';
 import type { Terminal, TerminalWithRules } from '@/services/admin';
 
 const terminalColumnHelper = createColumnHelper<Terminal>();

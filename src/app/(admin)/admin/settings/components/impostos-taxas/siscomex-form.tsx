@@ -4,9 +4,9 @@ import { useActionState, useState } from 'react';
 import { Label, Button, Card, NumberField } from '@heroui/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { updateSiscomexFeeAction } from '../actions';
+import { updateSiscomexFeeAction } from '../../actions';
 import type { SiscomexFeeConfig } from '@/services/admin';
-import type { TranslateFn } from '../constants';
+import type { TranslateFn } from '../../constants';
 
 const CURRENCY_BRL = { currency: 'BRL', style: 'currency' as const };
 

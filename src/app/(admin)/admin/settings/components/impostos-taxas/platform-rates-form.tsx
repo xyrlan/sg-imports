@@ -2,12 +2,12 @@
 
 import { useActionState } from 'react';
 import { Card, Button } from '@heroui/react';
-import { RATE_TYPES } from '../constants';
-import { updateAllPlatformRatesAction } from '../actions';
+import { RATE_TYPES } from '../../constants';
+import { updateAllPlatformRatesAction } from '../../actions';
 import { PlatformRateFormRow } from './platform-rate-form';
 import { FormError } from '@/components/ui/form-error';
 import type { GlobalPlatformRate } from '@/services/admin';
-import type { TranslateFn } from '../constants';
+import type { TranslateFn } from '../../constants';
 
 interface PlatformRatesFormProps {
   platformRates: GlobalPlatformRate[];

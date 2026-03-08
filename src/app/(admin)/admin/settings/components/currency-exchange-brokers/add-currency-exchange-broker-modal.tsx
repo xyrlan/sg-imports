@@ -1,43 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
-import { Building2 } from 'lucide-react';
+import { Landmark } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionState } from 'react';
-import { updateTerminalAction } from '../actions';
-import type { Terminal } from '@/services/admin';
+import { createCurrencyExchangeBrokerAction } from '../../actions';
 
-interface EditTerminalModalProps {
-  terminal: Terminal;
+interface AddCurrencyExchangeBrokerModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   trigger: React.ReactNode;
 }
 
-export function EditTerminalModal({
-  terminal,
+export function AddCurrencyExchangeBrokerModal({
   isOpen,
   onOpenChange,
   trigger,
-}: EditTerminalModalProps) {
+}: AddCurrencyExchangeBrokerModalProps) {
   const t = useTranslations('Admin.Settings');
-  const [name, setName] = useState(terminal.name);
-  const [code, setCode] = useState(terminal.code ?? '');
   const [state, formAction, isPending] = useActionState(
-    updateTerminalAction.bind(null, terminal.id),
+    createCurrencyExchangeBrokerAction,
     null,
   );
-
-  useEffect(() => {
-    if (isOpen) {
-      queueMicrotask(() => {
-        setName(terminal.name);
-        setCode(terminal.code ?? '');
-      });
-    }
-  }, [isOpen, terminal.name, terminal.code]);
 
   useEffect(() => {
     if (state?.ok && !isPending) {
@@ -53,30 +39,19 @@ export function EditTerminalModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
-                <Building2 className="size-5" />
+                <Modal.Icon className="bg-default text-foreground">
+                <Landmark className="size-5" />
               </Modal.Icon>
-              <Modal.Heading>{t('Terminals.edit')} - {terminal.name}</Modal.Heading>
+              <Modal.Heading>{t('CurrencyExchangeBrokers.addBroker')}</Modal.Heading>
             </Modal.Header>
             <form action={formAction}>
               <Modal.Body className="p-2">
                 <div className="space-y-4">
                   <TextField variant="primary" isRequired>
-                    <Label>{t('Terminals.name')}</Label>
+                    <Label>{t('CurrencyExchangeBrokers.name')}</Label>
                     <Input
                       name="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={t('Terminals.namePlaceholder')}
-                    />
-                  </TextField>
-                  <TextField variant="primary">
-                    <Label>{t('Terminals.code')}</Label>
-                    <Input
-                      name="code"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      placeholder={t('Terminals.codePlaceholder')}
+                      placeholder={t('CurrencyExchangeBrokers.namePlaceholder')}
                     />
                   </TextField>
                   {state?.error && <FormError message={state.error} />}
@@ -84,10 +59,12 @@ export function EditTerminalModal({
               </Modal.Body>
               <Modal.Footer>
                 <Button type="button" variant="outline" slot="close">
-                  {t('Terminals.cancel')}
+                  {t('CurrencyExchangeBrokers.cancel')}
                 </Button>
                 <Button type="submit" variant="primary" isPending={isPending}>
-                  {isPending ? t('Terminals.saving') : t('Terminals.save')}
+                  {isPending
+                    ? t('CurrencyExchangeBrokers.saving')
+                    : t('CurrencyExchangeBrokers.save')}
                 </Button>
               </Modal.Footer>
             </form>
