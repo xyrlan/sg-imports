@@ -3,6 +3,14 @@ export const BRAZILIAN_STATES = [
   'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
 ] as const;
 
+export const STATE_REGIONS = {
+  Norte: ['AC', 'AM', 'AP', 'PA', 'RO', 'RR', 'TO'],
+  Nordeste: ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
+  CentroOeste: ['DF', 'GO', 'MS', 'MT'],
+  Sudeste: ['ES', 'MG', 'RJ', 'SP'],
+  Sul: ['PR', 'RS', 'SC'],
+} as const;
+
 export const RATE_TYPES = [
   'AFRMM',
   'PIS_DEFAULT',
@@ -15,11 +23,11 @@ export const RATE_TYPES = [
 
 export const SECTION_KEYS = [
   'honorarios',
-  'impostos-taxas',
+  'impostos_taxas',
   'terminals',
   'ports',
   'carriers',
-  'currency-exchange-brokers',
+  'currency_exchange_brokers',
 ] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];

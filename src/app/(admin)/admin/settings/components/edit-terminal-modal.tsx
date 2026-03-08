@@ -53,12 +53,10 @@ export function EditTerminalModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Heading>
-                <div className="flex items-center gap-2">
-                  <Building2 className="size-5" />
-                  {t('Terminals.edit')} - {terminal.name}
-                </div>
-              </Modal.Heading>
+              <Modal.Icon className="bg-default text-foreground">
+                <Building2 className="size-5" />
+              </Modal.Icon>
+              <Modal.Heading>{t('Terminals.edit')} - {terminal.name}</Modal.Heading>
             </Modal.Header>
             <form action={formAction}>
               <Modal.Body className="p-2">

@@ -571,6 +571,15 @@
         "aliquota": "Rate (%)",
         "inside": "Internal",
         "outside": "External",
+        "searchByState": "Search by state...",
+        "saveSuccess": "Rates saved successfully.",
+        "region": {
+          "Norte": "North",
+          "Nordeste": "Northeast",
+          "CentroOeste": "Central-West",
+          "Sudeste": "Southeast",
+          "Sul": "South"
+        },
         "icmsRate": "ICMS Rate (%)",
         "registrationValue": "Registration Value",
         "additions": "Additions 1–10",
@@ -611,6 +620,11 @@
         "cancel": "Cancel",
         "configure": "Configure Storage",
         "noTerminals": "No terminals registered.",
+        "searchPlaceholder": "Search terminals...",
+        "columns": {
+          "name": "Name",
+          "code": "Code"
+        },
         "storageRules": "Storage Rules",
         "storageRulesComingSoon": "Storage rules and additional fees can be configured soon.",
         "additionalFees": "Additional Fees",
@@ -679,7 +693,13 @@
         "cancel": "Cancel",
         "noPorts": "No ports registered.",
         "deleteConfirmTitle": "Delete port?",
-        "deleteConfirm": "Do you really want to delete \"{name}\"? This action cannot be undone."
+        "deleteConfirm": "Do you really want to delete \"{name}\"? This action cannot be undone.",
+        "searchPlaceholder": "Search ports...",
+        "columns": {
+          "name": "Name",
+          "code": "Code",
+          "country": "Country"
+        }
       },
       "Carriers": {
         "title": "Carriers",
@@ -687,7 +707,15 @@
         "syncWithShipsGo": "Sync with ShipsGo",
         "noCarriers": "No carriers. Click Sync to fetch from ShipsGo.",
         "syncSuccess": "Synced: {inserted} inserted, {updated} updated.",
-        "syncError": "Sync error"
+        "syncError": "Sync error",
+        "searchPlaceholder": "Search carriers...",
+        "columns": {
+          "name": "Name",
+          "scacCode": "SCAC",
+          "status": "Status",
+          "statusActive": "Active",
+          "statusPassive": "Passive"
+        }
       },
       "CurrencyExchangeBrokers": {
         "title": "Currency Exchange Brokers",
@@ -702,7 +730,11 @@
         "cancel": "Cancel",
         "noBrokers": "No brokers registered.",
         "deleteConfirmTitle": "Delete broker?",
-        "deleteConfirm": "Do you really want to delete \"{name}\"? This action cannot be undone."
+        "deleteConfirm": "Do you really want to delete \"{name}\"? This action cannot be undone.",
+        "searchPlaceholder": "Search brokers...",
+        "columns": {
+          "name": "Name"
+        }
       }
     }
   },

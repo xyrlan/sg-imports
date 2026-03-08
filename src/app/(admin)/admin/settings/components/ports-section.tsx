@@ -1,14 +1,105 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertDialog, Button, Card } from '@heroui/react';
-import { Plus, Pencil, Trash2, Anchor } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import { AddPortModal } from './add-port-modal';
 import { EditPortModal } from './edit-port-modal';
 import { deletePortAction } from '../actions';
 import type { Port } from '@/services/admin';
+
+const portColumnHelper = createColumnHelper<Port>();
+
+function usePortColumns(
+  editingPort: Port | null,
+  setEditingPort: (port: Port | null) => void,
+  setDeletingPort: (port: Port | null) => void
+) {
+  const t = useTranslations('Admin.Settings');
+
+  return useMemo(
+    () => [
+      portColumnHelper.accessor('name', {
+        header: t('Ports.columns.name'),
+        cell: (info) => (
+          <span className="font-medium">{info.getValue()}</span>
+        ),
+      }),
+      portColumnHelper.accessor('code', {
+        header: t('Ports.columns.code'),
+        cell: (info) => (
+          <span className="font-mono text-sm text-muted">{info.getValue()}</span>
+        ),
+      }),
+      portColumnHelper.accessor('country', {
+        header: t('Ports.columns.country'),
+        filterFn: facetedFilterFn,
+        cell: (info) => (
+          <span className="text-sm text-muted">{info.getValue()}</span>
+        ),
+      }),
+      portColumnHelper.display({
+        id: 'actions',
+        header: '',
+        enableSorting: false,
+        cell: (info) => {
+          const port = info.row.original;
+          return (
+            <div className="flex gap-2">
+              <EditPortModal
+                key={`${port.id}-${editingPort?.id === port.id}`}
+                port={port}
+                isOpen={editingPort?.id === port.id}
+                onOpenChange={(open) => setEditingPort(open ? port : null)}
+                trigger={
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onPress={() => setEditingPort(port)}
+                  >
+                    <Pencil className="size-4" />
+                    {t('Ports.edit')}
+                  </Button>
+                }
+              />
+              <Button
+                size="sm"
+                variant="danger"
+                onPress={() => setDeletingPort(port)}
+              >
+                <Trash2 className="size-4" />
+                {t('Ports.delete')}
+              </Button>
+            </div>
+          );
+        },
+        size: 180,
+      }),
+    ],
+    [t, editingPort?.id, setEditingPort, setDeletingPort]
+  );
+}
+
+function usePortFilters(ports: Port[]): FacetedFilterDef[] {
+  const t = useTranslations('Admin.Settings');
+
+  return useMemo(() => {
+    const countries = [...new Set(ports.map((p) => p.country))].sort();
+    if (countries.length === 0) return [];
+    return [
+      {
+        columnId: 'country',
+        title: t('Ports.columns.country'),
+        options: countries.map((c) => ({ label: c, value: c })),
+      },
+    ];
+  }, [ports, t]);
+}
 
 interface PortsSectionProps {
   ports: Port[];
@@ -16,16 +107,21 @@ interface PortsSectionProps {
 
 export function PortsSection({ ports }: PortsSectionProps) {
   const t = useTranslations('Admin.Settings');
+  const router = useRouter();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingPort, setEditingPort] = useState<Port | null>(null);
   const [deletingPort, setDeletingPort] = useState<Port | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const columns = usePortColumns(editingPort, setEditingPort, setDeletingPort);
+  const facetedFilters = usePortFilters(ports);
 
   const handleDeleteConfirm = () => {
     if (!deletingPort) return;
     startTransition(async () => {
       await deletePortAction(deletingPort.id);
       setDeletingPort(null);
+      router.refresh();
     });
   };
 
@@ -50,47 +146,12 @@ export function PortsSection({ ports }: PortsSectionProps) {
       {ports.length === 0 ? (
         <p className="text-muted">{t('Ports.noPorts')}</p>
       ) : (
-        <ul className="space-y-2">
-          {ports.map((port) => (
-            <li
-              key={port.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-default-100 hover:bg-accent-soft-hover duration-200"
-            >
-              <div className="flex items-center gap-2">
-                <Anchor className="size-4" />
-                <span className="font-medium">{port.name}</span>
-                <span className="text-sm text-muted">({port.code})</span>
-                <span className="text-sm text-muted">— {port.country}</span>
-              </div>
-              <div className="flex gap-2">
-                <EditPortModal
-                  key={`${port.id}-${editingPort?.id === port.id}`}
-                  port={port}
-                  isOpen={editingPort?.id === port.id}
-                  onOpenChange={(open) => setEditingPort(open ? port : null)}
-                  trigger={
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onPress={() => setEditingPort(port)}
-                    >
-                      <Pencil className="size-4" />
-                      {t('Ports.edit')}
-                    </Button>
-                  }
-                />
-                <Button
-                  size="sm"
-                  variant="danger"
-                  onPress={() => setDeletingPort(port)}
-                >
-                  <Trash2 className="size-4" />
-                  {t('Ports.delete')}
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DataTable<Port>
+          columns={columns}
+          data={ports}
+          searchPlaceholder={t('Ports.searchPlaceholder')}
+          facetedFilters={facetedFilters}
+        />
       )}
       <AlertDialog>
         <AlertDialog.Backdrop

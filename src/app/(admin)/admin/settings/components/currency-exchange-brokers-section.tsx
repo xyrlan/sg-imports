@@ -1,14 +1,78 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertDialog, Button, Card } from '@heroui/react';
-import { Plus, Pencil, Trash2, Landmark } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import { AddCurrencyExchangeBrokerModal } from './add-currency-exchange-broker-modal';
 import { EditCurrencyExchangeBrokerModal } from './edit-currency-exchange-broker-modal';
 import { deleteCurrencyExchangeBrokerAction } from '../actions';
 import type { CurrencyExchangeBroker } from '@/services/admin';
+
+const brokerColumnHelper = createColumnHelper<CurrencyExchangeBroker>();
+
+function useBrokerColumns(
+  editingBroker: CurrencyExchangeBroker | null,
+  setEditingBroker: (broker: CurrencyExchangeBroker | null) => void,
+  setDeletingBroker: (broker: CurrencyExchangeBroker | null) => void
+) {
+  const t = useTranslations('Admin.Settings');
+
+  return useMemo(
+    () => [
+      brokerColumnHelper.accessor('name', {
+        header: t('CurrencyExchangeBrokers.columns.name'),
+        cell: (info) => (
+          <span className="font-medium">{info.getValue()}</span>
+        ),
+      }),
+      brokerColumnHelper.display({
+        id: 'actions',
+        header: '',
+        enableSorting: false,
+        cell: (info) => {
+          const broker = info.row.original;
+          return (
+            <div className="flex gap-2">
+              <EditCurrencyExchangeBrokerModal
+                key={`${broker.id}-${editingBroker?.id === broker.id}`}
+                broker={broker}
+                isOpen={editingBroker?.id === broker.id}
+                onOpenChange={(open) =>
+                  setEditingBroker(open ? broker : null)
+                }
+                trigger={
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onPress={() => setEditingBroker(broker)}
+                  >
+                    <Pencil className="size-4" />
+                    {t('CurrencyExchangeBrokers.edit')}
+                  </Button>
+                }
+              />
+              <Button
+                size="sm"
+                variant="danger"
+                onPress={() => setDeletingBroker(broker)}
+              >
+                <Trash2 className="size-4" />
+                {t('CurrencyExchangeBrokers.delete')}
+              </Button>
+            </div>
+          );
+        },
+        size: 180,
+      }),
+    ],
+    [t, editingBroker?.id, setEditingBroker, setDeletingBroker]
+  );
+}
 
 interface CurrencyExchangeBrokersSectionProps {
   brokers: CurrencyExchangeBroker[];
@@ -18,6 +82,7 @@ export function CurrencyExchangeBrokersSection({
   brokers,
 }: CurrencyExchangeBrokersSectionProps) {
   const t = useTranslations('Admin.Settings');
+  const router = useRouter();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingBroker, setEditingBroker] =
     useState<CurrencyExchangeBroker | null>(null);
@@ -25,11 +90,18 @@ export function CurrencyExchangeBrokersSection({
     useState<CurrencyExchangeBroker | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const columns = useBrokerColumns(
+    editingBroker,
+    setEditingBroker,
+    setDeletingBroker
+  );
+
   const handleDeleteConfirm = () => {
     if (!deletingBroker) return;
     startTransition(async () => {
       await deleteCurrencyExchangeBrokerAction(deletingBroker.id);
       setDeletingBroker(null);
+      router.refresh();
     });
   };
 
@@ -60,47 +132,11 @@ export function CurrencyExchangeBrokersSection({
           {t('CurrencyExchangeBrokers.noBrokers')}
         </p>
       ) : (
-        <ul className="space-y-2">
-          {brokers.map((broker) => (
-            <li
-              key={broker.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-default-100 hover:bg-accent-soft-hover duration-200"
-            >
-              <div className="flex items-center gap-2">
-                <Landmark className="size-4" />
-                <span className="font-medium">{broker.name}</span>
-              </div>
-              <div className="flex gap-2">
-                <EditCurrencyExchangeBrokerModal
-                  key={`${broker.id}-${editingBroker?.id === broker.id}`}
-                  broker={broker}
-                  isOpen={editingBroker?.id === broker.id}
-                  onOpenChange={(open) =>
-                    setEditingBroker(open ? broker : null)
-                  }
-                  trigger={
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onPress={() => setEditingBroker(broker)}
-                    >
-                      <Pencil className="size-4" />
-                      {t('CurrencyExchangeBrokers.edit')}
-                    </Button>
-                  }
-                />
-                <Button
-                  size="sm"
-                  variant="danger"
-                  onPress={() => setDeletingBroker(broker)}
-                >
-                  <Trash2 className="size-4" />
-                  {t('CurrencyExchangeBrokers.delete')}
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DataTable<CurrencyExchangeBroker>
+          columns={columns}
+          data={brokers}
+          searchPlaceholder={t('CurrencyExchangeBrokers.searchPlaceholder')}
+        />
       )}
       <AlertDialog>
         <AlertDialog.Backdrop

@@ -66,7 +66,7 @@ export function SettingsContent({
       description: t('honorariosDescription'),
     },
     {
-      key: 'impostos-taxas' as const,
+      key: 'impostos_taxas' as const,
       label: t('taxes'),
       icon: <Receipt size={16} />,
       description: t('taxesDescription'),
@@ -90,7 +90,7 @@ export function SettingsContent({
       description: t('carriersDescription'),
     },
     {
-      key: 'currency-exchange-brokers' as const,
+      key: 'currency_exchange_brokers' as const,
       label: t('currencyExchangeBrokers'),
       icon: <Landmark size={16} />,
       description: t('currencyExchangeBrokersDescription'),
@@ -99,19 +99,17 @@ export function SettingsContent({
 
   const sectionContent: Record<SectionKey, React.ReactNode> = {
     honorarios: <HonorariosSection honorarios={honorarios} />,
-    'impostos-taxas': (
+    impostos_taxas:
       <ImpostosTaxasSection
         stateIcmsRates={stateIcmsRates}
         siscomexFee={siscomexFee}
         platformRates={platformRates}
-      />
-    ),
+      />,
     terminals: <TerminalsSection terminals={terminals} />,
     ports: <PortsSection ports={ports} />,
     carriers: <CarriersSection carriers={carriers} />,
-    'currency-exchange-brokers': (
-      <CurrencyExchangeBrokersSection brokers={currencyExchangeBrokers} />
-    ),
+    currency_exchange_brokers:
+      <CurrencyExchangeBrokersSection brokers={currencyExchangeBrokers} />,
   };
 
   return (

@@ -39,12 +39,10 @@ export function AddCurrencyExchangeBrokerModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Heading>
-                <div className="flex items-center gap-2">
-                  <Landmark className="size-5" />
-                  {t('CurrencyExchangeBrokers.addBroker')}
-                </div>
-              </Modal.Heading>
+                <Modal.Icon className="bg-default text-foreground">
+                <Landmark className="size-5" />
+              </Modal.Icon>
+              <Modal.Heading>{t('CurrencyExchangeBrokers.addBroker')}</Modal.Heading>
             </Modal.Header>
             <form action={formAction}>
               <Modal.Body className="p-2">

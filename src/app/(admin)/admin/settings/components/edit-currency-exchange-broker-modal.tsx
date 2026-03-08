@@ -49,12 +49,12 @@ export function EditCurrencyExchangeBrokerModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Heading>
-                <div className="flex items-center gap-2">
+              <Modal.Header>
+                <Modal.Icon className="bg-default text-foreground">
                   <Landmark className="size-5" />
-                  {t('CurrencyExchangeBrokers.edit')} - {broker.name}
-                </div>
-              </Modal.Heading>
+                </Modal.Icon>
+                <Modal.Heading>{t('CurrencyExchangeBrokers.edit')} - {broker.name}</Modal.Heading>
+              </Modal.Header>
             </Modal.Header>
             <form action={formAction}>
               <Modal.Body className="p-2">

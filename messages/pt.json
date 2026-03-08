@@ -571,6 +571,15 @@
         "aliquota": "Alíquota (%)",
         "inside": "Por dentro",
         "outside": "Por fora",
+        "searchByState": "Buscar por UF...",
+        "saveSuccess": "Alíquotas salvas com sucesso.",
+        "region": {
+          "Norte": "Norte",
+          "Nordeste": "Nordeste",
+          "CentroOeste": "Centro-Oeste",
+          "Sudeste": "Sudeste",
+          "Sul": "Sul"
+        },
         "icmsRate": "Alíquota ICMS (%)",
         "registrationValue": "Valor de Registro",
         "additions": "Adições 1–10",
@@ -611,6 +620,11 @@
         "cancel": "Cancelar",
         "configure": "Configurar Armazenagem",
         "noTerminals": "Nenhum terminal cadastrado.",
+        "searchPlaceholder": "Buscar terminais...",
+        "columns": {
+          "name": "Nome",
+          "code": "Código"
+        },
         "storageRules": "Regras de Armazenagem",
         "storageRulesComingSoon": "Regras de armazenagem e taxas adicionais podem ser configuradas em breve.",
         "additionalFees": "Taxas Adicionais",
@@ -679,7 +693,13 @@
         "cancel": "Cancelar",
         "noPorts": "Nenhum porto cadastrado.",
         "deleteConfirmTitle": "Excluir porto?",
-        "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita."
+        "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita.",
+        "searchPlaceholder": "Buscar portos...",
+        "columns": {
+          "name": "Nome",
+          "code": "Código",
+          "country": "País"
+        }
       },
       "Carriers": {
         "title": "Transportadoras",
@@ -687,7 +707,15 @@
         "syncWithShipsGo": "Sincronizar com ShipsGo",
         "noCarriers": "Nenhuma transportadora. Clique em Sincronizar para buscar da ShipsGo.",
         "syncSuccess": "Sincronizado: {inserted} inseridos, {updated} atualizados.",
-        "syncError": "Erro na sincronização"
+        "syncError": "Erro na sincronização",
+        "searchPlaceholder": "Buscar transportadoras...",
+        "columns": {
+          "name": "Nome",
+          "scacCode": "SCAC",
+          "status": "Status",
+          "statusActive": "Ativo",
+          "statusPassive": "Passivo"
+        }
       },
       "CurrencyExchangeBrokers": {
         "title": "Corretoras de Câmbio",
@@ -702,7 +730,11 @@
         "cancel": "Cancelar",
         "noBrokers": "Nenhuma corretora cadastrada.",
         "deleteConfirmTitle": "Excluir corretora?",
-        "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita."
+        "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita.",
+        "searchPlaceholder": "Buscar corretoras...",
+        "columns": {
+          "name": "Nome"
+        }
       }
     }
   },

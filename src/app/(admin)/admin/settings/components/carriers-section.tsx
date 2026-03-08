@@ -1,13 +1,78 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card } from '@heroui/react';
-import { Ship, RefreshCw } from 'lucide-react';
+import { Button, Card, Chip } from '@heroui/react';
+import { RefreshCw } from 'lucide-react';
+import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import { syncCarriersFromShipsGoAction } from '../actions';
 import type { Carrier } from '@/services/admin';
+
+const carrierColumnHelper = createColumnHelper<Carrier>();
+
+function useCarrierColumns() {
+  const t = useTranslations('Admin.Settings');
+
+  return useMemo(
+    () => [
+      carrierColumnHelper.accessor('name', {
+        header: t('Carriers.columns.name'),
+        cell: (info) => (
+          <span className="font-medium">{info.getValue()}</span>
+        ),
+      }),
+      carrierColumnHelper.accessor('scacCode', {
+        header: t('Carriers.columns.scacCode'),
+        cell: (info) => (
+          <span className="text-sm text-muted">
+            {info.getValue() ?? '—'}
+          </span>
+        ),
+      }),
+      carrierColumnHelper.accessor('status', {
+        header: t('Carriers.columns.status'),
+        filterFn: facetedFilterFn,
+        cell: (info) => {
+          const status = info.getValue();
+          if (!status) return <span className="text-muted">—</span>;
+          return (
+            <Chip
+              size="sm"
+              color={status === 'ACTIVE' ? 'success' : 'default'}
+              variant={status === 'ACTIVE' ? 'soft' : 'secondary'}
+            >
+              {status === 'ACTIVE'
+                ? t('Carriers.columns.statusActive')
+                : t('Carriers.columns.statusPassive')}
+            </Chip>
+          );
+        },
+      }),
+    ],
+    [t]
+  );
+}
+
+function useCarrierFilters(): FacetedFilterDef[] {
+  const t = useTranslations('Admin.Settings');
+
+  return useMemo(
+    () => [
+      {
+        columnId: 'status',
+        title: t('Carriers.columns.status'),
+        options: [
+          { label: t('Carriers.columns.statusActive'), value: 'ACTIVE' },
+          { label: t('Carriers.columns.statusPassive'), value: 'PASSIVE' },
+        ],
+      },
+    ],
+    [t]
+  );
+}
 
 interface CarriersSectionProps {
   carriers: Carrier[];
@@ -16,6 +81,8 @@ interface CarriersSectionProps {
 export function CarriersSection({ carriers }: CarriersSectionProps) {
   const t = useTranslations('Admin.Settings');
   const router = useRouter();
+  const columns = useCarrierColumns();
+  const facetedFilters = useCarrierFilters();
   const [syncResult, setSyncResult] = useState<{
     inserted: number;
     updated: number;
@@ -81,35 +148,12 @@ export function CarriersSection({ carriers }: CarriersSectionProps) {
       {carriers.length === 0 ? (
         <p className="text-muted">{t('Carriers.noCarriers')}</p>
       ) : (
-        <ul className="space-y-2">
-          {carriers.map((carrier) => (
-            <li
-              key={carrier.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-default-100 hover:bg-accent-soft-hover duration-200"
-            >
-              <div className="flex items-center gap-2">
-                <Ship className="size-4" />
-                <span className="font-medium">{carrier.name}</span>
-                {carrier.scacCode && (
-                  <span className="text-sm text-muted">
-                    ({carrier.scacCode})
-                  </span>
-                )}
-                {carrier.status && (
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded ${
-                      carrier.status === 'ACTIVE'
-                        ? 'bg-success/20 text-success'
-                        : 'bg-default-200 text-default-600'
-                    }`}
-                  >
-                    {carrier.status}
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DataTable<Carrier>
+          columns={columns}
+          data={carriers}
+          searchPlaceholder={t('Carriers.searchPlaceholder')}
+          facetedFilters={facetedFilters}
+        />
       )}
     </Card>
   );
