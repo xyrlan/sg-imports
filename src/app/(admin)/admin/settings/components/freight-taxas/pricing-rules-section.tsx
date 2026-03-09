@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Accordion, Button, Card } from '@heroui/react';
 import { DollarSign, Plus } from 'lucide-react';
@@ -27,6 +27,48 @@ export function FreightTaxasSection({
   const [duplicatingFrom, setDuplicatingFrom] = useState<PricingRuleWithRelations | null>(null);
   const [deletingRule, setDeletingRule] = useState<PricingRuleWithRelations | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [optimisticallyDeletedIds, setOptimisticallyDeletedIds] = useState<Set<string>>(new Set());
+  const pendingRefreshRef = useRef(false);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Refresh only after modal/dialog has fully unmounted to avoid RSC stream conflict.
+  // Defer refresh to let revalidatePath propagate and dialog animation complete.
+  useEffect(() => {
+    if (!isModalOpen && !deletingRule && pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      // Clear any pending refresh from a previous run
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      refreshTimeoutRef.current = setTimeout(() => {
+        refreshTimeoutRef.current = null;
+        router.refresh();
+      }, 250);
+    }
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, [isModalOpen, deletingRule, router]);
+
+  // Filter out optimistically deleted rules so UI updates immediately
+  const visibleRules = useMemo(
+    () => pricingRules.filter((r) => !optimisticallyDeletedIds.has(r.id)),
+    [pricingRules, optimisticallyDeletedIds]
+  );
+
+  // Clear optimistic deletes when server data no longer includes those IDs (after refresh)
+  useEffect(() => {
+    setOptimisticallyDeletedIds((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Set(prev);
+      for (const id of prev) {
+        if (!pricingRules.some((r) => r.id === id)) next.delete(id);
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [pricingRules]);
 
   const groupedByCarrier = useMemo(() => {
     const groups: Record<
@@ -39,7 +81,7 @@ export function FreightTaxasSection({
       }
     > = {};
 
-    for (const rule of pricingRules) {
+    for (const rule of visibleRules) {
       const cid = rule.carrierId;
       if (!groups[cid]) {
         groups[cid] = {
@@ -64,13 +106,13 @@ export function FreightTaxasSection({
     }
 
     return Object.values(groups).sort((a, b) => a.carrier.name.localeCompare(b.carrier.name));
-  }, [pricingRules]);
+  }, [visibleRules]);
 
   const handleSave = () => {
+    pendingRefreshRef.current = true;
     setIsModalOpen(false);
     setEditingRule(null);
     setDuplicatingFrom(null);
-    router.refresh();
   };
 
   const openCreate = () => {
@@ -101,8 +143,9 @@ export function FreightTaxasSection({
     try {
       const result = await deletePricingRuleAction(deletingRule.id);
       if (result.ok) {
+        setOptimisticallyDeletedIds((prev) => new Set([...prev, deletingRule.id]));
+        pendingRefreshRef.current = true;
         setDeletingRule(null);
-        router.refresh();
       }
     } finally {
       setIsDeleting(false);
@@ -134,7 +177,7 @@ export function FreightTaxasSection({
         </Card>
       )}
 
-      {pricingRules.length === 0 ? (
+      {visibleRules.length === 0 ? (
         <Card>
           <div className="py-12 text-center">
             <DollarSign className="mx-auto mb-4 text-default-400" size={48} />

@@ -717,7 +717,7 @@ export async function deletePricingRuleAction(id: string) {
     if (!deleted) {
       return { ok: false, error: 'Regra de preço não encontrada.' };
     }
-    revalidatePath('/admin/settings');
+    revalidatePath('/admin/settings', 'layout');
     return { ok: true };
   } catch (err) {
     return {

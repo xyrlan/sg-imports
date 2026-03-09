@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import {
   Button,
   Input,
@@ -34,6 +34,44 @@ interface PricingItemRow {
   basis: (typeof BASIS_OPTIONS)[number];
 }
 
+function getInitialFormState(source: PricingRuleWithRelations | null) {
+  if (!source) {
+    return {
+      scope: 'SPECIFIC' as const,
+      carrierId: '',
+      portId: '',
+      containerType: '',
+      portDirection: 'BOTH' as const,
+      validFrom: new Date().toISOString().split('T')[0],
+      validTo: '',
+      items: [{ id: crypto.randomUUID(), name: '', amount: '', currency: 'BRL' as const, basis: 'PER_CONTAINER' as const }],
+    };
+  }
+  return {
+    scope: source.scope as 'CARRIER' | 'PORT' | 'SPECIFIC',
+    carrierId: source.carrierId,
+    portId: source.portId ?? '',
+    containerType: source.containerType ?? '',
+    portDirection: (source.portDirection as 'ORIGIN' | 'DESTINATION' | 'BOTH') ?? 'BOTH',
+    validFrom: source.validFrom
+      ? new Date(source.validFrom).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
+    validTo: source.validTo ? new Date(source.validTo).toISOString().split('T')[0] : '',
+    items:
+      source.items.length > 0
+        ? source.items.map((item) => ({
+            id: crypto.randomUUID(),
+            name: item.name,
+            amount: String(Number(item.amount)),
+            currency: (item.currency as (typeof CURRENCIES)[number]) ?? 'BRL',
+            basis: (item.basis === 'PER_BL' || item.basis === 'PER_CONTAINER'
+              ? item.basis
+              : 'PER_CONTAINER') as (typeof BASIS_OPTIONS)[number],
+          }))
+        : [{ id: crypto.randomUUID(), name: '', amount: '', currency: 'BRL' as const, basis: 'PER_CONTAINER' as const }],
+  };
+}
+
 interface PricingRuleFormModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,70 +81,32 @@ interface PricingRuleFormModalProps {
   ports: Port[];
 }
 
-export function PricingRuleFormModal({
-  isOpen,
-  onOpenChange,
-  onSave,
+function PricingRuleFormContent({
+  initialSource,
   editingRule,
   duplicatingFrom,
   ports,
-}: PricingRuleFormModalProps) {
+  onSave,
+  onOpenChange,
+}: {
+  initialSource: PricingRuleWithRelations | null;
+  editingRule: PricingRuleWithRelations | null;
+  duplicatingFrom: PricingRuleWithRelations | null;
+  ports: Port[];
+  onSave: () => void;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [isPending, startTransition] = useTransition();
-  const [scope, setScope] = useState<'CARRIER' | 'PORT' | 'SPECIFIC'>('SPECIFIC');
-  const [carrierId, setCarrierId] = useState('');
-  const [portId, setPortId] = useState('');
-  const [containerType, setContainerType] = useState('');
-  const [portDirection, setPortDirection] = useState<'ORIGIN' | 'DESTINATION' | 'BOTH'>('BOTH');
-  const [validFrom, setValidFrom] = useState('');
-  const [validTo, setValidTo] = useState('');
-  const [items, setItems] = useState<PricingItemRow[]>([
-    { id: crypto.randomUUID(), name: '', amount: '', currency: 'BRL', basis: 'PER_CONTAINER' },
-  ]);
+  const initialState = getInitialFormState(initialSource);
+  const [scope, setScope] = useState<'CARRIER' | 'PORT' | 'SPECIFIC'>(initialState.scope);
+  const [carrierId, setCarrierId] = useState(initialState.carrierId);
+  const [portId, setPortId] = useState(initialState.portId);
+  const [containerType, setContainerType] = useState(initialState.containerType);
+  const [portDirection, setPortDirection] = useState<'ORIGIN' | 'DESTINATION' | 'BOTH'>(initialState.portDirection);
+  const [validFrom, setValidFrom] = useState(initialState.validFrom);
+  const [validTo, setValidTo] = useState(initialState.validTo);
+  const [items, setItems] = useState<PricingItemRow[]>(initialState.items);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      const source = editingRule ?? duplicatingFrom;
-      if (source) {
-        setScope(source.scope as 'CARRIER' | 'PORT' | 'SPECIFIC');
-        setCarrierId(source.carrierId);
-        setPortId(source.portId ?? '');
-        setContainerType(source.containerType ?? '');
-        setPortDirection((source.portDirection as 'ORIGIN' | 'DESTINATION' | 'BOTH') ?? 'BOTH');
-        setValidFrom(
-          source.validFrom
-            ? new Date(source.validFrom).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0]
-        );
-        setValidTo(
-          source.validTo ? new Date(source.validTo).toISOString().split('T')[0] : ''
-        );
-        setItems(
-          source.items.length > 0
-            ? source.items.map((item) => ({
-                id: crypto.randomUUID(),
-                name: item.name,
-                amount: String(Number(item.amount)),
-                currency: (item.currency as (typeof CURRENCIES)[number]) ?? 'BRL',
-                basis: (item.basis === 'PER_BL' || item.basis === 'PER_CONTAINER'
-                  ? item.basis
-                  : 'PER_CONTAINER') as (typeof BASIS_OPTIONS)[number],
-              }))
-            : [{ id: crypto.randomUUID(), name: '', amount: '', currency: 'BRL', basis: 'PER_CONTAINER' }]
-        );
-      } else {
-        setScope('SPECIFIC');
-        setCarrierId('');
-        setPortId('');
-        setContainerType('');
-        setPortDirection('BOTH');
-        setValidFrom(new Date().toISOString().split('T')[0]);
-        setValidTo('');
-        setItems([{ id: crypto.randomUUID(), name: '', amount: '', currency: 'BRL', basis: 'PER_CONTAINER' }]);
-      }
-      setError(null);
-    }
-  }, [isOpen, editingRule, duplicatingFrom]);
 
   const addItem = () => {
     setItems((prev) => [
@@ -198,24 +198,7 @@ export function PricingRuleFormModal({
   };
 
   return (
-    <Modal>
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable={false}>
-        <Modal.Container>
-          <Modal.Dialog className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <Modal.CloseTrigger />
-            <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
-                <DollarSign className="size-5" />
-              </Modal.Icon>
-              <Modal.Heading>
-                {editingRule
-                  ? 'Editar Regra de Preço'
-                  : duplicatingFrom
-                    ? 'Criar Regra a Partir de Existente'
-                    : 'Nova Regra de Preço'}
-              </Modal.Heading>
-            </Modal.Header>
-            <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4 p-2">
                 {duplicatingFrom && (
                   <div className="rounded-lg border border-primary-200 bg-primary-50 p-2 text-primary-800 text-xs">
@@ -402,12 +385,13 @@ export function PricingRuleFormModal({
                   <div className="space-y-2">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-2 items-start">
-                        <div className="flex-1 grid gap-2 grid-cols-12">
+                        <div className="flex-1 grid gap-1 grid-cols-12">
                           <div className="col-span-4">
                             <Input
                               placeholder="Ex: Frete Básico"
                               value={item.name}
                               onChange={(e) => updateItem(item.id, 'name', e.target.value)}
+                              className="max-w-full"
                             />
                           </div>
                           <div className="col-span-3">
@@ -417,9 +401,10 @@ export function PricingRuleFormModal({
                               placeholder="0.00"
                               value={item.amount}
                               onChange={(e) => updateItem(item.id, 'amount', e.target.value)}
+                              className="max-w-full"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="col-span-2 ">
                             <Select
                               value={item.currency}
                               onChange={(k) => updateItem(item.id, 'currency', k ? String(k) : 'BRL')}
@@ -496,6 +481,49 @@ export function PricingRuleFormModal({
                 </Button>
               </Modal.Footer>
             </form>
+  );
+}
+
+export function PricingRuleFormModal({
+  isOpen,
+  onOpenChange,
+  onSave,
+  editingRule,
+  duplicatingFrom,
+  ports,
+}: PricingRuleFormModalProps) {
+  const source = editingRule ?? duplicatingFrom;
+  const formKey = isOpen ? `${source?.id ?? 'new'}` : 'closed';
+
+  return (
+    <Modal>
+      <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable={false}>
+        <Modal.Container>
+          <Modal.Dialog className="max-w-3xl overflow-y-auto">
+            <Modal.CloseTrigger />
+            <Modal.Header className="mb-6">
+              <Modal.Icon className="bg-default text-foreground">
+                <DollarSign className="size-5" />
+              </Modal.Icon>
+              <Modal.Heading>
+                {editingRule
+                  ? 'Editar Regra de Preço'
+                  : duplicatingFrom
+                    ? 'Criar Regra a Partir de Existente'
+                    : 'Nova Regra de Preço'}
+              </Modal.Heading>
+            </Modal.Header>
+            {isOpen && (
+              <PricingRuleFormContent
+                key={formKey}
+                initialSource={source}
+                editingRule={editingRule}
+                duplicatingFrom={duplicatingFrom}
+                ports={ports}
+                onSave={onSave}
+                onOpenChange={onOpenChange}
+              />
+            )}
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
