@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Card, TextField, Input, Label, Button } from '@heroui/react';
 import { loginAction } from '@/app/(auth)/login/actions';
+import { Logo } from '@/components/logo';
 
 /**
  * Login Page
@@ -19,12 +20,7 @@ export default function LoginPage() {
       <Card variant="default" className="w-full max-w-md">
         <Card.Content className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-2">
-              SG-Imports
-            </h1>
-            <p className="text-sm text-muted">
-              Sistema de Gerenciamento de Importações
-            </p>
+            <Logo />
           </div>
 
           <form action={formAction} className="space-y-4">

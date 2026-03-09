@@ -111,7 +111,7 @@ export function NavbarProformaQuoteSelect() {
         <Select.Popover>
           <ListBox>
             <ListBox.Section>
-              <Header>{t('proformaQuotes')}</Header>
+              <Header hidden={availableQuotes.length === 1}>{t('proformaQuotes')}</Header>
               {availableQuotes.map((quote) => (
                 <ListBox.Item
                   key={quote.id}
@@ -126,9 +126,9 @@ export function NavbarProformaQuoteSelect() {
                         <span className="truncate text-sm font-medium">
                           {quote.name}
                         </span>
-                        <span className="text-xs text-muted">
+                        {/* <span className="text-xs text-muted">
                           {t(`quoteStatus.${quote.status}`)}
-                        </span>
+                        </span> */}
                       </div>
                     </div>
                     {quote.id !== currentQuote?.id && (
@@ -158,7 +158,7 @@ export function NavbarProformaQuoteSelect() {
                 </ListBox.Item>
               ))}
             </ListBox.Section>
-            <Separator />
+            <Separator hidden={availableQuotes.length === 1} />
             <ListBox.Section>
               <ListBox.Item
                 id="createNew"

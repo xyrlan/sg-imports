@@ -58,7 +58,7 @@ export function NavbarOrganizationSelect() {
         <Select.Popover>
           <ListBox>
             <ListBox.Section>
-              <Header>{t('myOrganizations')}</Header>
+              <Header hidden={availableOrganizations.length === 1}>{t('myOrganizations')}</Header>
               {availableOrganizations.map((org) => (
                 <ListBox.Item
                   key={org.organization.id}
@@ -70,15 +70,15 @@ export function NavbarOrganizationSelect() {
                     <Building2 className="w-4 h-4 text-muted" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{org.organization.name}</span>
-                      <span className="text-xs text-muted">
+                      {/* <span className="text-xs text-muted">
                         {t(`role.${org.role}`)}
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </ListBox.Item>
               ))}
             </ListBox.Section>
-            <Separator />
+            <Separator hidden={availableOrganizations.length === 1} />
             <ListBox.Section>
               <ListBox.Item
                 id={CREATE_NEW_KEY}

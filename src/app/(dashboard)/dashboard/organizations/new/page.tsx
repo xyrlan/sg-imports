@@ -95,7 +95,7 @@ export default function CreateOrganizationPage() {
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="w-full mt-4"
               isDisabled={isPending}
               size="lg"
             >

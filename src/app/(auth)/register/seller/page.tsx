@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Card, TextField, Input, Label, Button } from '@heroui/react';
 import { registerSeller } from '@/app/(auth)/register/seller/actions';
+import { Logo } from '@/components/logo';
 
 /**
  * Seller Registration Page
@@ -20,12 +21,7 @@ export default function SellerRegisterPage() {
       <Card variant="default" className="w-full max-w-md">
         <Card.Content className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {t('title')}
-            </h1>
-            <p className="text-sm text-muted">
-              SG-Imports - Sistema de Gerenciamento de Importações
-            </p>
+            <Logo />
           </div>
 
           <form action={formAction} className="space-y-4">
