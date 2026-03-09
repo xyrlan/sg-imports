@@ -298,7 +298,6 @@ export function AuditLogSection() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Spinner size="lg" />
-          <span className="ml-2">{tAudit('loading')}</span>
         </div>
       ) : items.length === 0 ? (
         <p className="text-muted py-8">{tAudit('noLogs')}</p>
