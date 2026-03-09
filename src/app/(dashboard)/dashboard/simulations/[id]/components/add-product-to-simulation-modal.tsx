@@ -8,13 +8,15 @@ import { useRouter } from 'next/navigation';
 import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../actions';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductWithVariants } from '@/services/product.service';
-import { ProductForm } from '@/app/(dashboard)/dashboard/products/components/product-form';
+import type { HsCodeOption } from '@/services/simulation.service';
+import { SimulatedProductQuickForm } from './simulated-product-quick-form';
 import { ProductSnapshot } from '@/db/types';
 
 interface AddProductToSimulationModalProps {
   simulationId: string;
   organizationId: string;
   products: ProductWithVariants[];
+  hsCodes: HsCodeOption[];
   onMutate?: () => void;
   triggerLabel?: string;
 }
@@ -23,6 +25,7 @@ export function AddProductToSimulationModal({
   simulationId,
   organizationId,
   products,
+  hsCodes,
   onMutate,
   triggerLabel,
 }: AddProductToSimulationModalProps) {
@@ -200,14 +203,10 @@ export function AddProductToSimulationModal({
                     </div>
                   </Tabs.Panel>
                   <Tabs.Panel id="simulated" className="pt-4">
-                    <ProductForm
-                      organizationId={organizationId}
-                      mode="simulated"
-                      onSimulatedSubmit={handleAddSimulated}
+                    <SimulatedProductQuickForm
+                      hsCodes={hsCodes}
+                      onSubmit={handleAddSimulated}
                       isSubmitting={isSubmittingSimulated}
-                      submitLabel={t('add')}
-                      onClose={() => handleOpenChange(false)}
-                      hideFooter
                       formId={formId}
                     />
                   </Tabs.Panel>
@@ -217,9 +216,6 @@ export function AddProductToSimulationModal({
                 <Modal.Footer>
                   <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)}>
                     {tForm('cancel')}
-                  </Button>
-                  <Button form={formId} type="submit" variant="primary" isPending={isSubmittingSimulated}>
-                    {t('add')}
                   </Button>
                 </Modal.Footer>
               )}

@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireAuthOrRedirect } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { quoteItems } from '@/db/schema';
 import {
   createSimulation,
   updateSimulation,
@@ -12,8 +15,8 @@ import {
   addSimulationItem,
   removeSimulationItem,
   updateSimulationItem,
-  calculateAndSaveQuoteTaxes,
 } from '@/services/simulation.service';
+import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 
 const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS']);
@@ -21,6 +24,7 @@ const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PAR
 const createSimulationSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required').max(200),
+  targetDolar: z.string().optional(),
   shippingModality: shippingModalitySchema.optional(),
   exchangeRateIof: z.string().optional(),
 });
@@ -51,6 +55,8 @@ const productSnapshotSchema = z.object({
   cartonWidth: z.coerce.number().optional(),
   cartonLength: z.coerce.number().optional(),
   cartonWeight: z.coerce.number().optional(),
+  totalCbm: z.coerce.number().optional(),
+  totalWeight: z.coerce.number().optional(),
   packagingType: z.enum(['BOX', 'PALLET', 'BAG']).optional(),
   attributes: z.record(z.string(), z.string()).optional(),
   tieredPriceInfo: z.array(z.object({ beginAmount: z.number(), price: z.string() })).optional(),
@@ -102,6 +108,7 @@ export async function createSimulationAction(
     const rawData = {
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
+      targetDolar: (formData.get('targetDolar') as string)?.trim(),
       shippingModality: formData.get('shippingModality') as string | undefined,
       exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim(),
     };
@@ -122,6 +129,7 @@ export async function createSimulationAction(
       organizationId: validated.data.organizationId,
       userId: user.id,
       name: validated.data.name,
+      targetDolar: validated.data.targetDolar?.trim() || null,
       shippingModality: validated.data.shippingModality ?? null,
       exchangeRateIof: validated.data.exchangeRateIof?.trim() || null,
     });
@@ -148,12 +156,15 @@ const shippingMetadataSchema = z.object({
   isOverride: z.boolean().optional(),
   totalFreightUsd: z.number().min(0).optional(),
   totalInsuranceUsd: z.number().min(0).optional(),
+  capataziaUsd: z.number().min(0).optional(),
+  destinationState: z.string().max(2).optional(),
 });
 
 const updateSimulationSchema = z.object({
   simulationId: z.string().uuid(),
   organizationId: z.string().uuid(),
   name: z.string().min(1).max(200).optional(),
+  targetDolar: z.string().nullable().optional(),
   shippingModality: shippingModalitySchema.nullable().optional(),
   exchangeRateIof: z.string().nullable().optional(),
   metadata: z
@@ -187,6 +198,7 @@ export async function updateSimulationAction(
       simulationId: formData.get('simulationId') as string,
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
+      targetDolar: (formData.get('targetDolar') as string)?.trim() || null,
       exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim() || null,
     };
     if (formData.has('shippingModality')) {
@@ -220,6 +232,9 @@ export async function updateSimulationAction(
       user.id,
       {
         ...(validated.data.name !== undefined && { name: validated.data.name }),
+        ...(validated.data.targetDolar !== undefined && {
+          targetDolar: validated.data.targetDolar?.trim() || '0',
+        }),
         ...(validated.data.shippingModality !== undefined && {
           shippingModality: validated.data.shippingModality,
         }),
@@ -234,19 +249,17 @@ export async function updateSimulationAction(
       return { error: 'Simulation not found or could not be updated' };
     }
 
-    const metadata = validated.data.metadata as { totalFreightUsd?: number; totalInsuranceUsd?: number } | undefined;
-    const totalFreightUsd = metadata?.totalFreightUsd ?? 0;
-    const totalInsuranceUsd = metadata?.totalInsuranceUsd ?? 0;
     if (validated.data.metadata !== undefined) {
-      const taxResult = await calculateAndSaveQuoteTaxes(
+      const taxResult = await calculateAndPersistLandedCost(
         validated.data.simulationId,
         validated.data.organizationId,
         user.id,
-        totalFreightUsd,
-        totalInsuranceUsd,
       );
       if (!taxResult.success) {
-        return { error: taxResult.error ?? 'Failed to calculate taxes' };
+        return {
+          error: taxResult.errors?.[0] ?? 'Falha ao calcular impostos',
+          fieldErrors: taxResult.errors ? { _tax: taxResult.errors.join('; ') } : undefined,
+        };
       }
     }
 
@@ -258,67 +271,6 @@ export async function updateSimulationAction(
     }
     return {
       error: err instanceof Error ? err.message : 'Failed to update simulation',
-    };
-  }
-}
-
-const calculateQuoteTaxesSchema = z.object({
-  simulationId: z.string().uuid(),
-  organizationId: z.string().uuid(),
-  totalFreightUsd: z.coerce.number().min(0),
-  totalInsuranceUsd: z.coerce.number().min(0),
-});
-
-export interface CalculateQuoteTaxesResult {
-  success?: boolean;
-  error?: string;
-}
-
-export async function calculateQuoteTaxesAction(
-  simulationId: string,
-  organizationId: string,
-  totalFreightUsd: number,
-  totalInsuranceUsd: number,
-): Promise<CalculateQuoteTaxesResult> {
-  try {
-    const user = await requireAuthOrRedirect();
-
-    const validated = calculateQuoteTaxesSchema.safeParse({
-      simulationId,
-      organizationId,
-      totalFreightUsd,
-      totalInsuranceUsd,
-    });
-
-    if (!validated.success) {
-      return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
-    }
-
-    const access = await getOrganizationById(validated.data.organizationId, user.id);
-    if (!access) {
-      return { error: 'Forbidden' };
-    }
-
-    const result = await calculateAndSaveQuoteTaxes(
-      validated.data.simulationId,
-      validated.data.organizationId,
-      user.id,
-      validated.data.totalFreightUsd,
-      validated.data.totalInsuranceUsd,
-    );
-
-    if (!result.success) {
-      return { error: result.error ?? 'Failed to calculate taxes' };
-    }
-
-    revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
-    return { success: true };
-  } catch (err) {
-    if (err && typeof err === 'object' && 'digest' in err) {
-      throw err;
-    }
-    return {
-      error: err instanceof Error ? err.message : 'Failed to calculate taxes',
     };
   }
 }
@@ -390,7 +342,15 @@ export async function addSimulationItemFromCatalogAction(
       }
     );
 
-    return added ? { success: true } : { error: 'Failed to add item' };
+    if (!added) return { error: 'Failed to add item' };
+
+    await calculateAndPersistLandedCost(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+    );
+    revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
+    return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
@@ -434,7 +394,15 @@ export async function addSimulatedProductAction(
       }
     );
 
-    return added ? { success: true } : { error: 'Failed to add item' };
+    if (!added) return { error: 'Failed to add item' };
+
+    await calculateAndPersistLandedCost(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+    );
+    revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
+    return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
@@ -462,13 +430,28 @@ export async function removeSimulationItemAction(
       return { error: 'Invalid input' };
     }
 
+    const [item] = await db
+      .select({ quoteId: quoteItems.quoteId })
+      .from(quoteItems)
+      .where(eq(quoteItems.id, validated.data.itemId));
+
     const ok = await removeSimulationItem(
       validated.data.itemId,
       validated.data.organizationId,
       user.id
     );
 
-    return ok ? { success: true } : { error: 'Failed to remove item' };
+    if (!ok) return { error: 'Failed to remove item' };
+
+    if (item?.quoteId) {
+      await calculateAndPersistLandedCost(
+        item.quoteId,
+        validated.data.organizationId,
+        user.id,
+      );
+      revalidatePath(`/dashboard/simulations/${item.quoteId}`);
+    }
+    return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
@@ -520,11 +503,15 @@ export async function updateSimulationItemAction(
       updatePayload
     );
 
-    if (updated) {
-      revalidatePath(`/dashboard/simulations/${updated.quoteId}`);
-      return { success: true };
-    }
-    return { error: 'Failed to update item' };
+    if (!updated) return { error: 'Failed to update item' };
+
+    await calculateAndPersistLandedCost(
+      updated.quoteId,
+      validated.data.organizationId,
+      user.id,
+    );
+    revalidatePath(`/dashboard/simulations/${updated.quoteId}`);
+    return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;

@@ -51,11 +51,11 @@ function ProgressBar({
           <Icon className="size-4" />
           {label}
         </span>
-        <span className={isOver ? 'text-danger' : 'text-default-600'}>
+        <span className={isOver ? 'text-danger' : 'text-muted-foreground'}>
           {formatVal(value)} / {formatVal(max)}
         </span>
       </div>
-      <div className="h-2 w-full rounded-full bg-default-200 overflow-hidden">
+      <div className="h-2 w-full rounded-full bg-muted-foreground/20 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
@@ -111,7 +111,7 @@ export function FreightCapacityProgress({
           <Ship className="size-5" />
           {containerQuantity > 1 ? t('fclTitlePlural') : t('fclTitle')}
           {containerType && (
-            <span className="text-sm font-normal text-default-500">
+            <span className="text-sm font-normal">
               {containerType} {containerQuantity > 1 && `× ${containerQuantity}`}
             </span>
           )}
@@ -202,7 +202,7 @@ export function FreightCapacityProgress({
             icon={Weight}
           />
         </div>
-        <p className="text-xs text-default-500 flex items-center gap-2">
+        <p className="text-xs flex items-center gap-2">
           <Info className="size-4 shrink-0" />
           {t('volumetricNote')}
         </p>

@@ -1,11 +1,10 @@
 'use client';
 
-import { useActionState } from 'react';
-import { Card, Button } from '@heroui/react';
+import { useActionState, useEffect } from 'react';
+import { Card, Button, toast } from '@heroui/react';
 import { RATE_TYPES } from '../../constants';
 import { updateAllPlatformRatesAction } from '../../actions';
 import { PlatformRateFormRow } from './platform-rate-form';
-import { FormError } from '@/components/ui/form-error';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import type { GlobalPlatformRate } from '@/services/admin';
 import type { TranslateFn } from '../../constants';
@@ -21,6 +20,11 @@ export function PlatformRatesForm({ platformRates, t }: PlatformRatesFormProps) 
     null,
   );
 
+  useEffect(() => {
+    if (state?.ok) toast.success(t('Taxes.platformSaveSuccess'));
+    if (state?.error) toast.danger(state.error);
+  }, [state, t]);
+
   return (
     <Card className="space-y-6">
       <SettingsSectionHeader
@@ -28,9 +32,6 @@ export function PlatformRatesForm({ platformRates, t }: PlatformRatesFormProps) 
         description={t('Taxes.platformRatesDescription')}
       />
       <form action={formAction} className="space-y-4">
-        {state?.ok && (
-          <p className="text-sm text-success">{t('Taxes.platformSaveSuccess')}</p>
-        )}
         <div className="rounded-xl border border-default-200 overflow-hidden">
           <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 px-4 py-3 bg-default-100 border-b border-default-200 text-xs font-semibold tracking-wider text-muted">
             <span>{t('Taxes.rateTypeLabel')}</span>
@@ -51,7 +52,6 @@ export function PlatformRatesForm({ platformRates, t }: PlatformRatesFormProps) 
             })}
           </div>
         </div>
-        {state?.error && <FormError message={state.error} />}
         <Button type="submit" variant="primary" isPending={isPending}>
           {isPending ? t('Taxes.saving') : t('Taxes.save')}
         </Button>

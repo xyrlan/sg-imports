@@ -339,6 +339,12 @@ export const quoteItems = pgTable(
     ipiValueSnapshot: decimal('ipi_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
     pisValueSnapshot: decimal('pis_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
     cofinsValueSnapshot: decimal('cofins_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    siscomexValueSnapshot: decimal('siscomex_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    afrmmValueSnapshot: decimal('afrmm_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    icmsRateSnapshot: decimal('icms_rate_snapshot', { precision: 5, scale: 2 }).default('0').notNull(),
+    icmsValueSnapshot: decimal('icms_value_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    landedCostTotalSnapshot: decimal('landed_cost_total_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
+    landedCostUnitSnapshot: decimal('landed_cost_unit_snapshot', { precision: 12, scale: 4 }).default('0').notNull(),
   },
   (t) => [
     check(

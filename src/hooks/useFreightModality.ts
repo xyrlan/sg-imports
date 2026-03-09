@@ -96,6 +96,7 @@ export function useFreightModality(quote: QuoteForFreight): UseFreightModalityRe
   } | null>(getInitialEquipment);
 
   useEffect(() => {
+    queueMicrotask(() => {
     if (hasPersistedModality) {
       setSelectedModality(savedModality as 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS');
       const eq = getInitialEquipment();
@@ -104,6 +105,7 @@ export function useFreightModality(quote: QuoteForFreight): UseFreightModalityRe
       setSelectedModality(optimalProfile.suggestedModality);
       setSelectedEquipment(optimalProfile.equipment ?? null);
     }
+  });
   }, [
     savedModality,
     savedMeta?.equipmentType,
@@ -113,12 +115,14 @@ export function useFreightModality(quote: QuoteForFreight): UseFreightModalityRe
   ]);
 
   useEffect(() => {
+    queueMicrotask(() => {
     if (selectedModality === 'SEA_FCL' && !selectedEquipment && optimalProfile.equipment) {
       setSelectedEquipment(optimalProfile.equipment);
     }
     if (selectedModality !== 'SEA_FCL') {
       setSelectedEquipment(null);
     }
+    });
   }, [selectedModality]);
 
   const effectiveCapacity = useMemo((): { maxWeight: number; maxVolume: number } | null => {

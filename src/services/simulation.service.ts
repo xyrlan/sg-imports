@@ -14,11 +14,6 @@ import {
   getVolumetricWeightSeaLCL,
 } from '@/lib/logistics';
 import { computeImportTaxes } from '@/lib/import-taxes';
-import {
-  calculateLandedCost,
-  type LandedCostItemInput,
-  type LandedCostItemResult,
-} from '@/lib/landed-cost';
 
 type Quote = InferSelectModel<typeof quotes>;
 type QuoteItem = InferSelectModel<typeof quoteItems>;
@@ -28,6 +23,19 @@ export type SimulationItem = QuoteItem & {
   variant?: InferSelectModel<typeof productVariants> & { product?: InferSelectModel<typeof products> };
   simulatedProductSnapshot?: ProductSnapshot | null;
 };
+
+export interface HsCodeOption {
+  id: string;
+  code: string;
+}
+
+export async function getHsCodesForSimulation(): Promise<HsCodeOption[]> {
+  const rows = await db
+    .select({ id: hsCodes.id, code: hsCodes.code })
+    .from(hsCodes)
+    .orderBy(hsCodes.code);
+  return rows;
+}
 
 export interface GetSimulationsOptions {
   page?: number;
@@ -160,12 +168,14 @@ export interface CreateSimulationInput {
   organizationId: string;
   userId: string;
   name: string;
+  targetDolar?: string | null;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
   exchangeRateIof?: string | null;
 }
 
 export interface UpdateSimulationInput {
   name?: string;
+  targetDolar?: string | null;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
   exchangeRateIof?: string | null;
   metadata?: ShippingMetadata | null;
@@ -193,10 +203,12 @@ export async function createSimulation(
       type: 'SIMULATION',
       status: 'DRAFT',
       name: input.name.trim(),
-      targetDolar: '0',
+      targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
       incoterm: 'FOB',
       shippingModality: input.shippingModality ?? null,
-      exchangeRateIof: input.exchangeRateIof ?? null,
+      exchangeRateIof: input.exchangeRateIof
+        ? input.exchangeRateIof.trim().replace(',', '.')
+        : null,
     })
     .returning();
 
@@ -219,8 +231,13 @@ export async function updateSimulation(
     .update(quotes)
     .set({
       ...(input.name !== undefined && { name: input.name.trim() }),
+      ...(input.targetDolar !== undefined && {
+        targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
+      }),
       ...(input.shippingModality !== undefined && { shippingModality: input.shippingModality }),
-      ...(input.exchangeRateIof !== undefined && { exchangeRateIof: input.exchangeRateIof }),
+      ...(input.exchangeRateIof !== undefined && {
+        exchangeRateIof: (input.exchangeRateIof?.trim() || '0').replace(',', '.'),
+      }),
       ...(input.metadata !== undefined && { metadata: input.metadata }),
       updatedAt: new Date(),
     })
@@ -379,24 +396,44 @@ export async function addSimulationItem(
     }
   } else if (hasSimulated && item.simulatedProductSnapshot) {
     const snap = item.simulatedProductSnapshot;
-    const carton =
-      snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
-        ? {
-            heightCm: snap.cartonHeight ?? snap.height ?? 0,
-            widthCm: snap.cartonWidth ?? snap.width ?? 0,
-            lengthCm: snap.cartonLength ?? snap.length ?? 0,
-            weightKg: snap.cartonWeight ?? 0,
-            unitsPerCarton: snap.unitsPerCarton ?? 1,
-          }
-        : null;
-    const unit = {
-      heightCm: snap.height ?? undefined,
-      widthCm: snap.width ?? undefined,
-      lengthCm: snap.length ?? undefined,
-    };
-    const dims = getDimensionsForCbm(carton, unit);
-    cbmSnapshot = computeTotalCbm(quantity, dims);
-    weightSnapshot = computeWeight(quantity, dims);
+    const hasDirectCbmWeight =
+      (snap.totalCbm != null && snap.totalCbm > 0) ||
+      (snap.totalWeight != null && snap.totalWeight > 0);
+
+    if (hasDirectCbmWeight) {
+      // totalCbm/totalWeight no snapshot são por unidade; multiplicar por quantity para total da linha
+      const perUnitCbm = new Decimal(snap.totalCbm ?? 0);
+      const perUnitWeight = new Decimal(snap.totalWeight ?? 0);
+      if (perUnitCbm.isZero() && perUnitWeight.gt(0)) {
+        cbmSnapshot = perUnitWeight.div(200).times(quantity);
+        weightSnapshot = perUnitWeight.times(quantity);
+      } else if (perUnitWeight.isZero() && perUnitCbm.gt(0)) {
+        cbmSnapshot = perUnitCbm.times(quantity);
+        weightSnapshot = perUnitCbm.times(200).times(quantity);
+      } else {
+        cbmSnapshot = perUnitCbm.times(quantity);
+        weightSnapshot = perUnitWeight.times(quantity);
+      }
+    } else {
+      const carton =
+        snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
+          ? {
+              heightCm: snap.cartonHeight ?? snap.height ?? 0,
+              widthCm: snap.cartonWidth ?? snap.width ?? 0,
+              lengthCm: snap.cartonLength ?? snap.length ?? 0,
+              weightKg: snap.cartonWeight ?? 0,
+              unitsPerCarton: snap.unitsPerCarton ?? 1,
+            }
+          : null;
+      const unit = {
+        heightCm: snap.height ?? undefined,
+        widthCm: snap.width ?? undefined,
+        lengthCm: snap.length ?? undefined,
+      };
+      const dims = getDimensionsForCbm(carton, unit);
+      cbmSnapshot = computeTotalCbm(quantity, dims);
+      weightSnapshot = computeWeight(quantity, dims);
+    }
 
     if (snap.taxSnapshot) {
       taxRates = {
@@ -585,24 +622,44 @@ export async function updateSimulationItem(
         values.cbmSnapshot = cbmSnapshot.toFixed(6);
       }
     } else if (snap) {
-      const carton =
-        snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
-          ? {
-              heightCm: snap.cartonHeight ?? snap.height ?? 0,
-              widthCm: snap.cartonWidth ?? snap.width ?? 0,
-              lengthCm: snap.cartonLength ?? snap.length ?? 0,
-              weightKg: snap.cartonWeight ?? 0,
-              unitsPerCarton: snap.unitsPerCarton ?? 1,
-            }
-          : null;
-      const unit = {
-        heightCm: snap.height ?? undefined,
-        widthCm: snap.width ?? undefined,
-        lengthCm: snap.length ?? undefined,
-      };
-      const dims = getDimensionsForCbm(carton, unit);
-      cbmSnapshot = computeTotalCbm(quantity, dims);
-      weightSnapshot = computeWeight(quantity, dims);
+      const hasDirectCbmWeight =
+        (snap.totalCbm != null && snap.totalCbm > 0) ||
+        (snap.totalWeight != null && snap.totalWeight > 0);
+
+      if (hasDirectCbmWeight) {
+        // totalCbm/totalWeight no snapshot são por unidade; multiplicar por quantity para total da linha
+        const perUnitCbm = new Decimal(snap.totalCbm ?? 0);
+        const perUnitWeight = new Decimal(snap.totalWeight ?? 0);
+        if (perUnitCbm.isZero() && perUnitWeight.gt(0)) {
+          cbmSnapshot = perUnitWeight.div(200).times(quantity);
+          weightSnapshot = perUnitWeight.times(quantity);
+        } else if (perUnitWeight.isZero() && perUnitCbm.gt(0)) {
+          cbmSnapshot = perUnitCbm.times(quantity);
+          weightSnapshot = perUnitCbm.times(200).times(quantity);
+        } else {
+          cbmSnapshot = perUnitCbm.times(quantity);
+          weightSnapshot = perUnitWeight.times(quantity);
+        }
+      } else {
+        const carton =
+          snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
+            ? {
+                heightCm: snap.cartonHeight ?? snap.height ?? 0,
+                widthCm: snap.cartonWidth ?? snap.width ?? 0,
+                lengthCm: snap.cartonLength ?? snap.length ?? 0,
+                weightKg: snap.cartonWeight ?? 0,
+                unitsPerCarton: snap.unitsPerCarton ?? 1,
+              }
+            : null;
+        const unit = {
+          heightCm: snap.height ?? undefined,
+          widthCm: snap.width ?? undefined,
+          lengthCm: snap.length ?? undefined,
+        };
+        const dims = getDimensionsForCbm(carton, unit);
+        cbmSnapshot = computeTotalCbm(quantity, dims);
+        weightSnapshot = computeWeight(quantity, dims);
+      }
       values.weightSnapshot = weightSnapshot.toFixed(3);
       values.cbmSnapshot = cbmSnapshot.toFixed(6);
     }
@@ -666,91 +723,6 @@ export async function updateSimulationItem(
   return updated ?? null;
 }
 
-export interface CalculateAndSaveQuoteTaxesResult {
-  success: boolean;
-  items?: LandedCostItemResult[];
-  error?: string;
-}
-
-/**
- * Calcula e persiste os impostos (Landed Cost) na cotação.
- * Busca quote + items, chama o motor de cálculo, faz batch update em quote_items.
- *
- * @param quoteId - Quote UUID
- * @param organizationId - Organization UUID
- * @param userId - Profile ID from Supabase Auth
- * @param totalFreightUsd - Frete total em USD
- * @param totalInsuranceUsd - Seguro total em USD
- */
-export async function calculateAndSaveQuoteTaxes(
-  quoteId: string,
-  organizationId: string,
-  userId: string,
-  totalFreightUsd: number,
-  totalInsuranceUsd: number,
-): Promise<CalculateAndSaveQuoteTaxesResult> {
-  const data = await getSimulationById(quoteId, organizationId, userId);
-  if (!data) {
-    return { success: false, error: 'Simulation not found or no access' };
-  }
-
-  const { simulation, items } = data;
-
-  const targetDolar = Number(simulation.targetDolar ?? 0);
-  const exchangeRateIof = Number(simulation.exchangeRateIof ?? 0);
-  const shippingModality = simulation.shippingModality;
-
-  if (targetDolar <= 0) {
-    return { success: false, error: 'Target exchange rate (target_dolar) is required' };
-  }
-
-  if (!shippingModality) {
-    return { success: false, error: 'Shipping modality is required' };
-  }
-
-  if (items.length === 0) {
-    return { success: false, error: 'No items in simulation' };
-  }
-
-  const landedInputs: LandedCostItemInput[] = items.map((i) => ({
-    id: i.id,
-    priceUsd: i.priceUsd ?? '0',
-    quantity: i.quantity,
-    weightSnapshot: i.weightSnapshot ?? '0',
-    iiRate: i.iiRateSnapshot ?? '0',
-    ipiRate: i.ipiRateSnapshot ?? '0',
-    pisRate: i.pisRateSnapshot ?? '0',
-    cofinsRate: i.cofinsRateSnapshot ?? '0',
-  }));
-
-  const results = calculateLandedCost(
-    {
-      targetDolar,
-      exchangeRateIof,
-      shippingModality,
-    },
-    landedInputs,
-    totalFreightUsd,
-    totalInsuranceUsd,
-  );
-
-  await db.transaction(async (tx) => {
-    for (const r of results) {
-      await tx
-        .update(quoteItems)
-        .set({
-          iiValueSnapshot: r.iiValue.toFixed(4),
-          ipiValueSnapshot: r.ipiValue.toFixed(4),
-          pisValueSnapshot: r.pisValue.toFixed(4),
-          cofinsValueSnapshot: r.cofinsValue.toFixed(4),
-        })
-        .where(eq(quoteItems.id, r.id));
-    }
-  });
-
-  return { success: true, items: results };
-}
-
 export interface QuoteFinancialSummary {
   totalFobUsd: number;
   totalFreightUsd: number;
@@ -792,7 +764,10 @@ export async function getQuoteFinancialSummary(
       Number(i.iiValueSnapshot ?? 0) +
       Number(i.ipiValueSnapshot ?? 0) +
       Number(i.pisValueSnapshot ?? 0) +
-      Number(i.cofinsValueSnapshot ?? 0);
+      Number(i.cofinsValueSnapshot ?? 0) +
+      Number(i.siscomexValueSnapshot ?? 0) +
+      Number(i.afrmmValueSnapshot ?? 0) +
+      Number(i.icmsValueSnapshot ?? 0);
   }
 
   const totalCifBrl =

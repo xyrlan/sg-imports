@@ -1,9 +1,8 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { Label, Button, Card, NumberField } from '@heroui/react';
+import { useActionState, useState, useEffect } from 'react';
+import { Label, Button, Card, NumberField, toast } from '@heroui/react';
 import { Plus, Trash2 } from 'lucide-react';
-import { FormError } from '@/components/ui/form-error';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { updateSiscomexFeeAction } from '../../actions';
 import type { SiscomexFeeConfig } from '@/services/admin';
@@ -30,6 +29,11 @@ export function SiscomexForm({ siscomexFee, t }: SiscomexFormProps) {
   const addAddition = () => setAdditions((prev) => [...prev, '0']);
   const removeAddition = (index: number) =>
     setAdditions((prev) => prev.filter((_, i) => i !== index));
+
+  useEffect(() => {
+    if (state?.ok) toast.success(t('Taxes.saveSuccess'));
+    if (state?.error) toast.danger(state.error);
+  }, [state, t]);
 
   return (
     <Card className="space-y-6">
@@ -134,7 +138,6 @@ export function SiscomexForm({ siscomexFee, t }: SiscomexFormProps) {
               <NumberField.Input className="w-40" />
             </NumberField.Group>
           </NumberField>
-          {state?.error && <FormError message={state.error} />}
           <Button type="submit" variant="primary" isPending={isPending}>
             {isPending ? t('Taxes.saving') : t('Taxes.saveSiscomex')}
           </Button>

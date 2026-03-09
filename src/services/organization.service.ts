@@ -1,6 +1,6 @@
 import { cache } from 'react';
 import { db } from '@/db';
-import { memberships, organizations } from '@/db/schema';
+import { memberships, organizations, addresses } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 
@@ -212,6 +212,25 @@ export async function createOrganizationForOwner(
   });
 
   return { organization: newOrg };
+}
+
+/**
+ * Get the delivery address state (UF) for an organization.
+ * Used as default for ICMS destination state in simulations.
+ */
+export async function getOrganizationDeliveryState(
+  orgId: string,
+  userId: string
+): Promise<string | null> {
+  const access = await getOrganizationById(orgId, userId);
+  if (!access?.organization.deliveryAddressId) return null;
+
+  const [addr] = await db
+    .select({ state: addresses.state })
+    .from(addresses)
+    .where(eq(addresses.id, access.organization.deliveryAddressId));
+
+  return addr?.state ?? null;
 }
 
 /**

@@ -41,6 +41,10 @@ export type ProductSnapshot = {
   cartonLength?: number;
   cartonWeight?: number;
   packagingType?: 'BOX' | 'PALLET' | 'BAG';
+  /** Para rascunho rápido: CBM total direto (sem dimensões de caixa) */
+  totalCbm?: number;
+  /** Para rascunho rápido: Peso total direto (sem dimensões de caixa) */
+  totalWeight?: number;
 };
 
 // Adicional: Regras de Armazenagem
@@ -58,4 +62,8 @@ export interface ShippingMetadata {
   isOverride?: boolean;
   totalFreightUsd?: number;
   totalInsuranceUsd?: number;
+  /** Capatazia em USD (para rateio AFRMM) */
+  capataziaUsd?: number;
+  /** UF para ICMS (ex: 'SP') — estado de destino/desembaraço */
+  destinationState?: string;
 }

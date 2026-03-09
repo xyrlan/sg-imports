@@ -3,10 +3,19 @@
 import { useTranslations } from 'next-intl';
 import { Card } from '@heroui/react';
 import { DollarSign, Package, Truck, Receipt } from 'lucide-react';
-import type { QuoteFinancialSummary } from '@/services/simulation.service';
+import { useFreightModality } from '@/hooks/useFreightModality';
+import { FreightCapacityProgress } from './freight-capacity-progress';
+import type {
+  QuoteFinancialSummary,
+  Simulation,
+  SimulationItem,
+} from '@/services/simulation.service';
+import type { ShippingMetadata } from '@/db/types';
 
 interface SimulationFinancialSummaryProps {
   summary: QuoteFinancialSummary | null;
+  items?: SimulationItem[];
+  simulation?: Simulation;
 }
 
 function formatUsd(value: number): string {
@@ -27,8 +36,37 @@ function formatBrl(value: number): string {
   }).format(value);
 }
 
-export function SimulationFinancialSummary({ summary }: SimulationFinancialSummaryProps) {
+export function SimulationFinancialSummary({
+  summary,
+  items = [],
+  simulation,
+}: SimulationFinancialSummaryProps) {
   const t = useTranslations('Simulations.FinancialSummary');
+
+  const quote = simulation
+    ? {
+        totalCbm: simulation.totalCbm,
+        totalWeight: simulation.totalWeight,
+        totalChargeableWeight: simulation.totalChargeableWeight,
+        shippingModality: simulation.shippingModality,
+        metadata: simulation.metadata as ShippingMetadata | null,
+      }
+    : {
+        totalCbm: null,
+        totalWeight: null,
+        totalChargeableWeight: null,
+        shippingModality: null,
+        metadata: null,
+      };
+
+  const {
+    selectedModality,
+    selectedEquipment,
+    totalCbm,
+    totalWeight,
+    totalChargeableWeight,
+    effectiveCapacity,
+  } = useFreightModality(quote ?? { totalCbm: null, totalWeight: null });
 
   if (!summary) {
     return null;
@@ -47,58 +85,68 @@ export function SimulationFinancialSummary({ summary }: SimulationFinancialSumma
   const taxesPct = totalBrl > 0 ? (totalTaxesBrl / totalBrl) * 100 : 0;
 
   return (
-    <Card variant="default" className="p-6">
+    <Card className="p-6">
       <Card.Header className="px-0 pt-0">
         <Card.Title className="flex items-center gap-2 text-lg">
-          <DollarSign className="size-5" />
           {t('title')}
         </Card.Title>
       </Card.Header>
       <Card.Content className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-lg border border-default-200 p-3 flex items-center gap-3">
-            <Package className="size-5 text-default-500" />
+        {simulation && (
+          <FreightCapacityProgress
+            modality={selectedModality}
+            totalCbm={totalCbm}
+            totalWeight={totalWeight}
+            totalChargeableWeight={totalChargeableWeight}
+            effectiveCapacity={effectiveCapacity}
+            containerType={selectedEquipment?.type}
+            containerQuantity={selectedEquipment?.quantity}
+          />
+        )}
+        <div className="grid grid-cols-1  gap-4">
+          <div className="rounded-lg border p-3 flex items-center gap-3">
+            <Package className="size-5" />
             <div>
-              <p className="text-xs text-default-500">{t('totalFobUsd')}</p>
+              <p className="text-xs">{t('totalFobUsd')}</p>
               <p className="font-medium">{formatUsd(totalFobUsd)}</p>
             </div>
           </div>
-          <div className="rounded-lg border border-default-200 p-3 flex items-center gap-3">
-            <Truck className="size-5 text-default-500" />
+          <div className="rounded-lg border p-3 flex items-center gap-3">
+            <Truck className="size-5" />
             <div>
-              <p className="text-xs text-default-500">{t('totalFreightUsd')}</p>
+              <p className="text-xs">{t('totalFreightUsd')}</p>
               <p className="font-medium">{formatUsd(totalFreightUsd)}</p>
             </div>
           </div>
-          <div className="rounded-lg border border-default-200 p-3 flex items-center gap-3">
-            <Receipt className="size-5 text-default-500" />
+          <div className="rounded-lg border p-3 flex items-center gap-3">
+            <Receipt className="size-5" />
             <div>
-              <p className="text-xs text-default-500">{t('totalTaxesBrl')}</p>
+              <p className="text-xs">{t('totalTaxesBrl')}</p>
               <p className="font-medium">{formatBrl(totalTaxesBrl)}</p>
             </div>
           </div>
-          <div className="rounded-lg border border-default-200 p-3 flex items-center gap-3">
-            <DollarSign className="size-5 text-default-500" />
+          <div className="rounded-lg border p-3 flex items-center gap-3">
+            <DollarSign className="size-5" />
             <div>
-              <p className="text-xs text-default-500">{t('totalLandedCostBrl')}</p>
+              <p className="text-xs">{t('totalLandedCostBrl')}</p>
               <p className="font-medium">{formatBrl(totalLandedCostBrl)}</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-default-600">{t('breakdown')}</p>
-          <div className="h-3 w-full rounded-full bg-default-200 overflow-hidden flex">
+          <p className="text-sm font-medium">{t('breakdown')}</p>
+          <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
             {productPct > 0 && (
               <div
-                className="h-full bg-primary transition-all"
+                className="h-full bg-accent transition-all"
                 style={{ width: `${productPct}%` }}
                 title={`${t('productShare')}: ${productPct.toFixed(1)}%`}
               />
             )}
             {logisticsPct > 0 && (
               <div
-                className="h-full bg-secondary transition-all"
+                className="h-full bg-blue-500 transition-all"
                 style={{ width: `${logisticsPct}%` }}
                 title={`${t('logisticsShare')}: ${logisticsPct.toFixed(1)}%`}
               />
@@ -111,13 +159,13 @@ export function SimulationFinancialSummary({ summary }: SimulationFinancialSumma
               />
             )}
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-default-500">
+          <div className="flex flex-wrap gap-4 text-xs">
             <span className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full bg-primary" />
+              <span className="size-2.5 rounded-full bg-accent" />
               {t('productShare')} ({productPct.toFixed(1)}%)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full bg-secondary" />
+              <span className="size-2.5 rounded-full bg-blue-500" />
               {t('logisticsShare')} ({logisticsPct.toFixed(1)}%)
             </span>
             <span className="flex items-center gap-1.5">
@@ -126,6 +174,33 @@ export function SimulationFinancialSummary({ summary }: SimulationFinancialSumma
             </span>
           </div>
         </div>
+        {items.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t('landedCostPerItem')}</p>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {items.map((item) => {
+                const name =
+                  item.variant?.product?.name && item.variant?.name
+                    ? `${item.variant.product.name} - ${item.variant.name}`
+                    : item.simulatedProductSnapshot?.name ?? 'Item';
+                const landedUnit = Number(
+                  (item as { landedCostUnitSnapshot?: string })?.landedCostUnitSnapshot ?? 0,
+                );
+                return (
+                  <div
+                    key={item.id}
+                    className="flex justify-between text-sm py-1 border-b last:border-0"
+                  >
+                    <span className="truncate max-w-[180px]" title={name}>
+                      {name}
+                    </span>
+                    <span className="font-mono shrink-0">{formatBrl(landedUnit)}/un</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </Card.Content>
     </Card>
   );

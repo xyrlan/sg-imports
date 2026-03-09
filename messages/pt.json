@@ -1120,6 +1120,8 @@
       "namePlaceholder": "ex: Estimativa custos Q1 2025",
       "shippingModalityLabel": "Modalidade de frete",
       "shippingModalityPlaceholder": "Selecione a modalidade",
+      "targetDolarLabel": "Taxa de câmbio (dólar alvo)",
+      "targetDolarPlaceholder": "ex: 5,50",
       "exchangeRateIofLabel": "Taxa de câmbio IOF (%)",
       "exchangeRateIofPlaceholder": "ex: 0,38",
       "none": "Nenhum",
@@ -1131,6 +1133,8 @@
       "status": "Status",
       "settings": "Configurações da simulação",
       "shippingModality": "Modalidade de frete",
+      "targetDolar": "Taxa de câmbio (dólar alvo)",
+      "targetDolarPlaceholder": "ex: 5,50",
       "exchangeRateIof": "Taxa de câmbio IOF (%)",
       "saveSettings": "Salvar",
       "none": "Nenhum",
@@ -1155,6 +1159,18 @@
       "noProducts": "Nenhum produto encontrado. Adicione produtos ao catálogo primeiro.",
       "quantity": "Quantidade",
       "priceUsd": "Preço (USD)",
+      "add": "Adicionar"
+    },
+    "QuickForm": {
+      "defaultName": "Produto simulado",
+      "selectNcm": "Selecionar NCM",
+      "quantity": "Quantidade",
+      "totalCbm": "CBM por unidade",
+      "totalWeight": "Peso por unidade (kg)",
+      "cbmWeightHint": "Por unidade. Informe ao menos um: volume (CBM) ou peso (kg) para o frete. Total = valor × quantidade.",
+      "advancedOptions": "Opções avançadas (dimensões da caixa)",
+      "unitsPerCarton": "Unidades por caixa",
+      "cartonWeight": "Peso da caixa (kg)",
       "add": "Adicionar"
     },
     "FreightModalityCards": {
@@ -1186,8 +1202,14 @@
       "confirmModality": "Confirmar Modalidade",
       "softWarning": "Atenção: Volume no limite. Sujeito à aprovação do fornecedor no estufamento.",
       "hardBlockToast": "Carga excede o limite permitido. Ajuste o volume ou peso.",
+      "targetDolar": "Taxa de câmbio (dólar alvo)",
+      "targetDolarPlaceholder": "ex: 5,50",
+      "targetDolarRequired": "Taxa de câmbio (dólar alvo) é obrigatória",
       "totalFreightUsd": "Frete Internacional (USD)",
-      "totalInsuranceUsd": "Seguro (USD)"
+      "totalInsuranceUsd": "Seguro (USD)",
+      "capataziaUsd": "Capatazia (USD)",
+      "destinationState": "Estado de Destino (ICMS)",
+      "destinationStatePlaceholder": "Selecione o estado"
     },
     "FinancialSummary": {
       "title": "Resumo Financeiro",
@@ -1199,7 +1221,8 @@
       "breakdown": "Breakdown de custos",
       "productShare": "Produto",
       "logisticsShare": "Logística",
-      "taxesShare": "Impostos"
+      "taxesShare": "Impostos",
+      "landedCostPerItem": "Custo posto unitário por item"
     },
     "SimulatedProduct": {
       "name": "Nome do produto",

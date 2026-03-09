@@ -12,6 +12,7 @@ import type {
   Simulation,
   SimulationItem,
   QuoteFinancialSummary,
+  HsCodeOption,
 } from '@/services/simulation.service';
 import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
@@ -24,7 +25,9 @@ interface SimulationDetailContentProps {
   items: SimulationItem[];
   organizationId: string;
   products: ProductWithVariants[];
+  hsCodes: HsCodeOption[];
   financialSummary?: QuoteFinancialSummary | null;
+  defaultDestinationState?: string | null;
 }
 
 export function SimulationDetailContent({
@@ -32,13 +35,16 @@ export function SimulationDetailContent({
   items,
   organizationId,
   products,
+  hsCodes,
   financialSummary = null,
+  defaultDestinationState = null,
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
   const router = useRouter();
 
   const [updateState, updateAction, isUpdatePending] = useActionState(updateSimulationAction, null);
+  const [targetDolar, setTargetDolar] = useState(simulation.targetDolar ?? '');
   const [exchangeRateIof, setExchangeRateIof] = useState(simulation.exchangeRateIof ?? '');
   const didRefreshRef = useRef(false);
 
@@ -94,76 +100,111 @@ export function SimulationDetailContent({
           simulationId={simulation.id}
           organizationId={organizationId}
           products={products}
+          hsCodes={hsCodes}
           onMutate={handleMutate}
         />
       </div>
 
-      {items.length > 0 && (
-        <ShippingSelectionSection
-          simulation={simulation}
-          onMutate={handleMutate}
-        />
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+        <div className="space-y-6 min-w-0">
+          {items.length > 0 && (
+            <ShippingSelectionSection
+              simulation={simulation}
+              defaultDestinationState={defaultDestinationState}
+              onMutate={handleMutate}
+            />
+          )}
 
-      {items.length > 0 && (
-        <SimulationFinancialSummary summary={financialSummary ?? null} />
-      )}
+          <form onSubmit={handleSettingsSubmit} className="rounded-lg border p-4 space-y-4">
+            <h3 className="text-sm font-semibold">{t('settings')}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <TextField
+                  variant="primary"
+                  name="targetDolar"
+                  value={targetDolar}
+                  onChange={setTargetDolar}
+                  isInvalid={!!updateState?.fieldErrors?.targetDolar}
+                  isDisabled={isUpdatePending}
+                  validate={() => updateState?.fieldErrors?.targetDolar ?? null}
+                >
+                  <Label>{t('targetDolar')}</Label>
+                  <Input
+                    name="targetDolar"
+                    placeholder={t('targetDolarPlaceholder')}
+                    value={targetDolar}
+                    type="text"
+                    inputMode="decimal"
+                  />
+                  <FieldError />
+                </TextField>
+              </div>
+              <div className="flex flex-col gap-2">
+                <TextField
+                  variant="primary"
+                  name="exchangeRateIof"
+                  value={exchangeRateIof}
+                  onChange={setExchangeRateIof}
+                  isInvalid={!!updateState?.fieldErrors?.exchangeRateIof}
+                  isDisabled={isUpdatePending}
+                  validate={() => updateState?.fieldErrors?.exchangeRateIof ?? null}
+                >
+                  <Label>{t('exchangeRateIof')}</Label>
+                  <Input
+                    name="exchangeRateIof"
+                    placeholder="e.g. 0.38"
+                    value={exchangeRateIof}
+                    type="text"
+                    inputMode="decimal"
+                  />
+                  <FieldError />
+                </TextField>
+              </div>
+            </div>
+            {updateState?.error && (
+              <p className="text-sm text-danger">{updateState.error}</p>
+            )}
+            <Button type="submit" variant="primary" size="sm" isDisabled={isUpdatePending}>
+              {t('saveSettings')}
+            </Button>
+          </form>
 
-      <form onSubmit={handleSettingsSubmit} className="rounded-lg border p-4 space-y-4">
-        <h3 className="text-sm font-semibold text-default-700">{t('settings')}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <TextField
-              variant="primary"
-              name="exchangeRateIof"
-              value={exchangeRateIof}
-              onChange={setExchangeRateIof}
-              isInvalid={!!updateState?.fieldErrors?.exchangeRateIof}
-              isDisabled={isUpdatePending}
-              validate={() => updateState?.fieldErrors?.exchangeRateIof ?? null}
-            >
-              <Label>{t('exchangeRateIof')}</Label>
-              <Input
-                name="exchangeRateIof"
-                placeholder="e.g. 0.38"
-                value={exchangeRateIof}
-                type="text"
-                inputMode="decimal"
+          {items.length > 0 ? (
+            <SimulationItemsList
+              items={items}
+              simulationId={simulation.id}
+              organizationId={organizationId}
+              hsCodes={hsCodes}
+              onMutate={handleMutate}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 border border-dashed rounded-lg">
+              <PackageOpen className="size-12 text-muted mb-4" />
+              <p className="text-muted text-center max-w-sm mb-4">
+                {t('emptyMessage')}
+              </p>
+              <AddProductToSimulationModal
+                simulationId={simulation.id}
+                organizationId={organizationId}
+                products={products}
+                hsCodes={hsCodes}
+                onMutate={handleMutate}
+                triggerLabel={t('addFirstProduct')}
               />
-              <FieldError />
-            </TextField>
-          </div>
+            </div>
+          )}
         </div>
-        {updateState?.error && (
-          <p className="text-sm text-danger">{updateState.error}</p>
-        )}
-        <Button type="submit" variant="primary" size="sm" isDisabled={isUpdatePending}>
-          {t('saveSettings')}
-        </Button>
-      </form>
 
-      {items.length > 0 ? (
-        <SimulationItemsList
-          items={items}
-          simulationId={simulation.id}
-          organizationId={organizationId}
-          onMutate={handleMutate}
-        />
-      ) : (
-        <div className="flex flex-col items-center justify-center py-16 border border-dashed rounded-lg">
-          <PackageOpen className="size-12 text-muted mb-4" />
-          <p className="text-muted text-center max-w-sm mb-4">
-            {t('emptyMessage')}
-          </p>
-          <AddProductToSimulationModal
-            simulationId={simulation.id}
-            organizationId={organizationId}
-            products={products}
-            onMutate={handleMutate}
-            triggerLabel={t('addFirstProduct')}
-          />
-        </div>
-      )}
+        {items.length > 0 && (
+          <div className="lg:sticky lg:top-4 lg:self-start">
+            <SimulationFinancialSummary
+              summary={financialSummary ?? null}
+              items={items}
+              simulation={simulation}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

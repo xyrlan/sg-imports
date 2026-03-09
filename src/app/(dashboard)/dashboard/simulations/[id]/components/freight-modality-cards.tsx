@@ -36,7 +36,7 @@ export function FreightModalityCards({
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-default-700">{t('title')}</h3>
+      <h3 className="font-semibold">{t('title')}</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {MODALITIES.map(({ id, icon: Icon }) => {
           const disabled = id === 'SEA_LCL' && isLCLDisabled;
@@ -48,8 +48,8 @@ export function FreightModalityCards({
               key={id}
               variant="default"
               className={`cursor-pointer transition-all border-2 ${
-                isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-transparent'
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-default-300'}`}
+                isSelected ? 'border-accent' : 'border-transparent'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-muted'}`}
               role="button"
               tabIndex={disabled ? -1 : 0}
               onClick={() => !disabled && onModalityChange(id)}
@@ -58,7 +58,7 @@ export function FreightModalityCards({
               }
             >
               <Card.Content className="p-4 flex flex-col items-center gap-2">
-                <Icon className="size-8 text-default-600" />
+                <Icon className="size-8" />
                 <span className="text-sm font-medium text-center">{t(id)}</span>
                 {suggested && (
                   <span className="text-xs text-success">{t('suggested')}</span>
@@ -71,7 +71,7 @@ export function FreightModalityCards({
 
       {selectedModality === 'SEA_FCL' && (
         <div className="mt-4 space-y-2">
-          <label className="text-sm font-medium text-default-700">{t('containerSize')}</label>
+          <label className="text-sm font-medium">{t('containerSize')}</label>
           <RadioGroup
             value={selectedEquipment?.type ?? optimalEquipment?.type ?? ''}
             onChange={(v) => {
@@ -98,7 +98,7 @@ export function FreightModalityCards({
                   <Label>
                     {getContainerTypeLabel(type)}
                     {optimalEquipment?.type === type && optimalEquipment.quantity > 1 && (
-                      <span className="ml-1 text-xs text-default-500">
+                      <span className="ml-1 text-xs">
                         ({optimalEquipment.quantity}x)
                       </span>
                     )}

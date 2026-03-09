@@ -78,7 +78,7 @@ export function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-default-300 bg-content2">
+    <header className="sticky top-0 z-50 w-full border-b border-default-300 bg-background">
       <nav className="mx-auto flex h-16 max-w-full items-center justify-between px-4">
         {/* Left Content */}
         <div className="flex items-center gap-4">

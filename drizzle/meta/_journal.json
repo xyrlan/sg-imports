@@ -36,6 +36,20 @@
       "when": 1773066555947,
       "tag": "0004_motionless_lady_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773076921173,
+      "tag": "0005_stiff_ken_ellis",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773077172189,
+      "tag": "0006_luxuriant_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

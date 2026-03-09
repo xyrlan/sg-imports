@@ -6,12 +6,13 @@ import { DataTable } from '@/components/ui/data-table';
 import { getSimulationItemColumns } from './simulation-item-columns';
 import { EditSimulationItemModal } from './edit-simulation-item-modal';
 import { removeSimulationItemAction } from '../../actions';
-import type { SimulationItem } from '@/services/simulation.service';
+import type { HsCodeOption, SimulationItem } from '@/services/simulation.service';
 
 interface SimulationItemsListProps {
   items: SimulationItem[];
   simulationId: string;
   organizationId: string;
+  hsCodes: HsCodeOption[];
   onMutate?: () => void;
 }
 
@@ -19,6 +20,7 @@ export function SimulationItemsList({
   items,
   simulationId,
   organizationId,
+  hsCodes,
   onMutate,
 }: SimulationItemsListProps) {
   const [editingItem, setEditingItem] = useState<SimulationItem | null>(null);
@@ -54,8 +56,8 @@ export function SimulationItemsList({
       />
       <EditSimulationItemModal
         item={editingItem}
-        simulationId={simulationId}
         organizationId={organizationId}
+        hsCodes={hsCodes}
         open={!!editingItem}
         onOpenChange={(open) => !open && setEditingItem(null)}
         onMutate={onMutate}

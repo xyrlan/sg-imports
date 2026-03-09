@@ -5,15 +5,16 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '@heroui/react';
 import { Box } from 'lucide-react';
-import { ProductForm } from '@/app/(dashboard)/dashboard/products/components/product-form';
+import { SimulatedProductQuickForm } from './simulated-product-quick-form';
 import { updateSimulationItemAction } from '../../actions';
 import type { ProductSnapshot } from '@/db/types';
+import type { HsCodeOption } from '@/services/simulation.service';
 import type { SimulationItem } from '@/services/simulation.service';
 
 interface EditSimulationItemModalProps {
   item: SimulationItem | null;
-  simulationId: string;
   organizationId: string;
+  hsCodes: HsCodeOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMutate?: () => void;
@@ -21,8 +22,8 @@ interface EditSimulationItemModalProps {
 
 export function EditSimulationItemModal({
   item,
-  simulationId,
   organizationId,
+  hsCodes,
   open,
   onOpenChange,
   onMutate,
@@ -42,11 +43,13 @@ export function EditSimulationItemModal({
     priceUsd: string
   ) {
     if (!item) return;
+    setIsPending(true);
     const result = await updateSimulationItemAction(item.id, organizationId, {
       simulatedProductSnapshot: updatedSnapshot,
       quantity,
       priceUsd,
     });
+    setIsPending(false);
     if (result.success) {
       onOpenChange(false);
       onMutate?.();
@@ -62,7 +65,7 @@ export function EditSimulationItemModal({
     <Modal>
       <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange} isDismissable={false}>
         <Modal.Container>
-          <Modal.Dialog className="max-w-5xl max-h-[90vh]">
+          <Modal.Dialog className="max-w-5xl">
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Icon className="bg-default text-foreground">
@@ -70,18 +73,17 @@ export function EditSimulationItemModal({
               </Modal.Icon>
               <Modal.Heading>{t('editItem')}</Modal.Heading>
             </Modal.Header>
-            <Modal.Body>
-              <ProductForm
-                organizationId={organizationId}
-                mode="simulated"
-                initialSimulatedSnapshot={{ snapshot, quantity: item.quantity }}
-                onSimulatedSubmit={handleUpdate}
+            <Modal.Body className='overflow-visible'>
+             <SimulatedProductQuickForm
+                hsCodes={hsCodes}
+                onSubmit={handleUpdate}
                 isSubmitting={isPending}
-                submitLabel={t('saveItem')}
-                onClose={() => onOpenChange(false)}
-                hideFooter
                 formId={formId}
-                onPendingChange={setIsPending}
+                initialSnapshot={snapshot}
+                initialQuantity={item.quantity}
+                initialPriceUsd={String(item.priceUsd ?? '')}
+                submitLabel={t('saveItem')}
+                hideSubmitButton
               />
             </Modal.Body>
             <Modal.Footer>

@@ -102,6 +102,17 @@ export function CreateSimulationModal({ organizationId, onMutate }: CreateSimula
                   </div>
                   <TextField
                     variant="primary"
+                    name="targetDolar"
+                    isInvalid={!!state?.fieldErrors?.targetDolar}
+                    isDisabled={isPending}
+                    validate={() => state?.fieldErrors?.targetDolar ?? null}
+                  >
+                    <Label>{t('targetDolarLabel')}</Label>
+                    <Input name="targetDolar" placeholder={t('targetDolarPlaceholder')} type="text" inputMode="decimal" />
+                    <FieldError />
+                  </TextField>
+                  <TextField
+                    variant="primary"
                     name="exchangeRateIof"
                     isInvalid={!!state?.fieldErrors?.exchangeRateIof}
                     isDisabled={isPending}

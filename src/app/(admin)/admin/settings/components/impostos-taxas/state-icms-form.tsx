@@ -1,9 +1,8 @@
 'use client';
 
-import { useActionState, useState, useMemo } from 'react';
-import { Button, Card, Label, NumberField, Radio, RadioGroup } from '@heroui/react';
+import { useActionState, useState, useMemo, useEffect } from 'react';
+import { Button, Card, Label, NumberField, Radio, RadioGroup, toast } from '@heroui/react';
 import { Search } from 'lucide-react';
-import { FormError } from '@/components/ui/form-error';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { updateStateIcmsAction } from '../../actions';
 import { STATE_REGIONS } from '../../constants';
@@ -40,6 +39,10 @@ export function StateIcmsForm({ stateIcmsRates, t }: StateIcmsFormProps) {
     initialDifalPerState,
   );
 
+  useEffect(() => {
+    if (state?.ok) toast.success(t('Taxes.saveSuccess'));
+    if (state?.error) toast.danger(state.error);
+  }, [state, t]);
 
   const getIcmsRateValue = (stateCode: string, difal: 'INSIDE' | 'OUTSIDE'): number => {
     const rateStr =
@@ -70,9 +73,6 @@ export function StateIcmsForm({ stateIcmsRates, t }: StateIcmsFormProps) {
             />
           </div>
         </div>
-        {state?.ok && (
-          <p className="mb-4 text-sm text-success">{t('Taxes.saveSuccess')}</p>
-        )}
         <div className="overflow-x-auto">
           <div className="min-w-[520px] overflow-y-auto rounded-xl border border-default-200 overflow-hidden">
             <div className="grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-2 px-4 py-3 bg-default-100 sticky top-0 z-10 border-b border-default-200 text-xs font-semibold tracking-wider text-muted">
@@ -161,7 +161,6 @@ export function StateIcmsForm({ stateIcmsRates, t }: StateIcmsFormProps) {
             </div>
           </div>
         </div>
-        {state?.error && <FormError message={state.error} />}
         <Button type="submit" variant="primary" className="mt-4" isPending={isPending}>
           {isPending ? t('Taxes.saving') : t('Taxes.saveIcms')}
         </Button>

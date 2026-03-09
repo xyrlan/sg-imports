@@ -1120,6 +1120,8 @@
       "namePlaceholder": "e.g. Q1 2025 cost estimate",
       "shippingModalityLabel": "Shipping modality",
       "shippingModalityPlaceholder": "Select modality",
+      "targetDolarLabel": "Exchange rate (USD target)",
+      "targetDolarPlaceholder": "e.g. 5.50",
       "exchangeRateIofLabel": "Exchange rate IOF (%)",
       "exchangeRateIofPlaceholder": "e.g. 0.38",
       "none": "None",
@@ -1131,6 +1133,8 @@
       "status": "Status",
       "settings": "Simulation settings",
       "shippingModality": "Shipping modality",
+      "targetDolar": "Exchange rate (USD target)",
+      "targetDolarPlaceholder": "e.g. 5.50",
       "exchangeRateIof": "Exchange rate IOF (%)",
       "saveSettings": "Save",
       "none": "None",
@@ -1155,6 +1159,18 @@
       "noProducts": "No products found. Add products to your catalog first.",
       "quantity": "Quantity",
       "priceUsd": "Price (USD)",
+      "add": "Add"
+    },
+    "QuickForm": {
+      "defaultName": "Simulated product",
+      "selectNcm": "Select NCM",
+      "quantity": "Quantity",
+      "totalCbm": "Volume per unit (CBM)",
+      "totalWeight": "Weight per unit (kg)",
+      "cbmWeightHint": "Per unit. Inform at least one: volume (CBM) or weight (kg) for freight. Total = value × quantity.",
+      "advancedOptions": "Advanced options (carton dimensions)",
+      "unitsPerCarton": "Units per carton",
+      "cartonWeight": "Carton weight (kg)",
       "add": "Add"
     },
     "FreightModalityCards": {
@@ -1186,8 +1202,14 @@
       "confirmModality": "Confirm Modality",
       "softWarning": "Warning: Volume at limit. Subject to supplier approval for stuffing.",
       "hardBlockToast": "Cargo exceeds allowed limit. Adjust volume or weight.",
+      "targetDolar": "Exchange rate (USD target)",
+      "targetDolarPlaceholder": "e.g. 5.50",
+      "targetDolarRequired": "Exchange rate (USD target) is required",
       "totalFreightUsd": "International Freight (USD)",
-      "totalInsuranceUsd": "Insurance (USD)"
+      "totalInsuranceUsd": "Insurance (USD)",
+      "capataziaUsd": "Capatazia (USD)",
+      "destinationState": "Destination State (ICMS)",
+      "destinationStatePlaceholder": "Select state"
     },
     "FinancialSummary": {
       "title": "Financial Summary",
@@ -1199,7 +1221,8 @@
       "breakdown": "Cost breakdown",
       "productShare": "Product",
       "logisticsShare": "Logistics",
-      "taxesShare": "Taxes"
+      "taxesShare": "Taxes",
+      "landedCostPerItem": "Landed cost per item"
     },
     "SimulatedProduct": {
       "name": "Product name",
