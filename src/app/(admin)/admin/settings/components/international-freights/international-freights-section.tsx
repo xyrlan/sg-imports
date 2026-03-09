@@ -3,8 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Accordion, Button } from '@heroui/react';
+import { Accordion, Button, Card } from '@heroui/react';
 import { Plus } from 'lucide-react';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { FreightFormModal } from './freight-form-modal';
 import { FreightFilters, type StatusFilter } from './freight-filters';
 import { FreightsEmptyState } from './freights-empty-state';
@@ -127,23 +128,24 @@ export function InternationalFreightsSection({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h2 className="text-lg font-semibold">{t('title')}</h2>
-          <p className="text-sm text-muted">{t('description')}</p>
-        </div>
-        <Button
-          variant="primary"
-          onPress={() => {
-            setEditingFreight(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="size-4" />
-          {t('addFreight')}
-        </Button>
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('title')}
+        description={t('description')}
+        actions={
+          <Button
+            variant="primary"
+            onPress={() => {
+              setEditingFreight(null);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="size-4" />
+            {t('addFreight')}
+          </Button>
+        }
+        responsive
+      />
 
       <FreightFilters
         searchQuery={searchQuery}
@@ -188,6 +190,6 @@ export function InternationalFreightsSection({
         onConfirm={handleDeleteConfirm}
         onClose={() => setDeletingFreight(null)}
       />
-    </div>
+    </Card>
   );
 }

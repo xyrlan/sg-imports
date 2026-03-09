@@ -6,6 +6,7 @@ import { RATE_TYPES } from '../../constants';
 import { updateAllPlatformRatesAction } from '../../actions';
 import { PlatformRateFormRow } from './platform-rate-form';
 import { FormError } from '@/components/ui/form-error';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import type { GlobalPlatformRate } from '@/services/admin';
 import type { TranslateFn } from '../../constants';
 
@@ -21,13 +22,11 @@ export function PlatformRatesForm({ platformRates, t }: PlatformRatesFormProps) 
   );
 
   return (
-    <Card className="p-6">
-      <div className="mb-6">
-        <h3 className="font-semibold text-lg">{t('Taxes.platformRates')}</h3>
-        <p className="text-sm text-muted mt-1">
-          {t('Taxes.platformRatesDescription')}
-        </p>
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('Taxes.platformRates')}
+        description={t('Taxes.platformRatesDescription')}
+      />
       <form action={formAction} className="space-y-4">
         {state?.ok && (
           <p className="text-sm text-success">{t('Taxes.platformSaveSuccess')}</p>

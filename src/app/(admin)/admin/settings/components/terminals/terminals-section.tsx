@@ -7,6 +7,7 @@ import { Button, Card, Spinner } from '@heroui/react';
 import { Plus, Pencil, Settings } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddTerminalModal } from './add-terminal-modal';
 import { EditTerminalModal } from './edit-terminal-modal';
 import { TerminalEditForm } from '../../terminals/[id]/terminal-edit-form';
@@ -121,7 +122,7 @@ export function TerminalsSection({ terminals }: TerminalsSectionProps) {
   const showEditForm = !!selectedTerminal;
 
   return (
-    <Card className="p-6">
+    <Card className="space-y-6">
       {showEditForm ? (
         <TerminalEditForm
           terminal={selectedTerminal}
@@ -134,22 +135,22 @@ export function TerminalsSection({ terminals }: TerminalsSectionProps) {
         </div>
       ) : (
         <>
-          <div className="mb-4 flex justify-between items-center">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-lg font-semibold">{t('Terminals.title')}</h2>
-              <p className="text-sm text-muted">{t('Terminals.description')}</p>
-            </div>
-            <AddTerminalModal
-              isOpen={addModalOpen}
-              onOpenChange={setAddModalOpen}
-              trigger={
-                <Button variant="primary" onPress={() => setAddModalOpen(true)}>
-                  <Plus className="size-4" />
-                  {t('Terminals.addTerminal')}
-                </Button>
-              }
-            />
-          </div>
+          <SettingsSectionHeader
+            title={t('Terminals.title')}
+            description={t('Terminals.description')}
+            actions={
+              <AddTerminalModal
+                isOpen={addModalOpen}
+                onOpenChange={setAddModalOpen}
+                trigger={
+                  <Button variant="primary" onPress={() => setAddModalOpen(true)}>
+                    <Plus className="size-4" />
+                    {t('Terminals.addTerminal')}
+                  </Button>
+                }
+              />
+            }
+          />
           {terminals.length === 0 ? (
             <p className="text-muted">{t('Terminals.noTerminals')}</p>
           ) : (

@@ -8,6 +8,7 @@ import { Button, Card, Chip } from '@heroui/react';
 import { RefreshCw } from 'lucide-react';
 import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { syncCarriersFromShipsGoAction } from '../../actions';
 import type { Carrier } from '@/services/admin';
 
@@ -112,21 +113,22 @@ export function CarriersSection({ carriers }: CarriersSectionProps) {
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">{t('Carriers.title')}</h2>
-          <p className="text-sm text-muted">{t('Carriers.description')}</p>
-        </div>
-        <Button
-          variant="primary"
-          onPress={handleSync}
-          isPending={isPending}
-        >
-          <RefreshCw className="size-4" />
-          {t('Carriers.syncWithShipsGo')}
-        </Button>
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('Carriers.title')}
+        description={t('Carriers.description')}
+        actions={
+          <Button
+            variant="primary"
+            onPress={handleSync}
+            isPending={isPending}
+          >
+            <RefreshCw className="size-4" />
+            {t('Carriers.syncWithShipsGo')}
+          </Button>
+        }
+        className="mb-4"
+      />
       {syncResult && (
         <div className="mb-4 p-3 rounded-lg bg-default-100 text-sm">
           {syncResult.errors.length > 0 ? (

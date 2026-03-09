@@ -574,6 +574,7 @@
         "stateIcms": "各州 ICMS 税率",
         "stateIcmsDescription": "按 UF 配置 ICMS 税率。选择 DIFAL（州内/州际）并输入百分比。",
         "siscomexFee": "Siscomex 费",
+        "siscomexFeeDescription": "Siscomex 费用配置",
         "platformRates": "其他费用",
         "platformRatesDescription": "配置 AFRMM、PIS、COFINS、保险和其他平台费用。可设为百分比或固定金额（BRL/USD）。",
         "platformSaveSuccess": "平台费率已保存。",

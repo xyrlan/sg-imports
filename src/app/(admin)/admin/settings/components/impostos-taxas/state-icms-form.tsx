@@ -4,6 +4,7 @@ import { useActionState, useState, useMemo } from 'react';
 import { Button, Card, Label, NumberField, Radio, RadioGroup } from '@heroui/react';
 import { Search } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { updateStateIcmsAction } from '../../actions';
 import { STATE_REGIONS } from '../../constants';
 import type { StateIcmsRate } from '@/services/admin';
@@ -50,11 +51,11 @@ export function StateIcmsForm({ stateIcmsRates, t }: StateIcmsFormProps) {
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-6">
-        <h3 className="font-semibold text-lg">{t('Taxes.stateIcms')}</h3>
-        <p className="text-sm text-muted mt-1">{t('Taxes.stateIcmsDescription')}</p>
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('Taxes.stateIcms')}
+        description={t('Taxes.stateIcmsDescription')}
+      />
       <form action={formAction}>
         <div className="mb-4 flex items-center gap-2">
           <div className="relative w-full max-w-sm">

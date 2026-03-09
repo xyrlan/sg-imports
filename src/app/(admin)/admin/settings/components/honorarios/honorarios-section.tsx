@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Label, NumberField, Button, Card, Switch } from '@heroui/react';
 import { FormError } from '@/components/ui/form-error';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { updateHonorariosAction } from '../../actions';
 import type { GlobalServiceFeeConfig } from '@/services/admin';
 
@@ -25,9 +26,11 @@ export function HonorariosSection({ honorarios }: HonorariosSectionProps) {
   const applyToChina = honorarios?.defaultApplyToChina !== false;
 
   return (
-    <Card className="p-6">
-      <h2 className="text-lg font-semibold ">{t('Honorarios.title')}</h2>
-      <p className="text-sm text-muted mb-4">{t('Honorarios.description')}</p>
+    <Card className="space-y-6">
+        <SettingsSectionHeader
+          title={t('Honorarios.title')}
+          description={t('Honorarios.description')}
+        />
       <form action={formAction} className='flex flex-col gap-4'>
           <NumberField
             variant="primary"

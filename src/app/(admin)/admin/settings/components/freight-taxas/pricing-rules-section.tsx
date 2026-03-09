@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Accordion, Button, Card } from '@heroui/react';
 import { DollarSign, Plus } from 'lucide-react';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { PricingRuleFormModal } from './pricing-rule-form-modal';
 import { CarrierRulesGroup } from './carrier-rules-group';
 import { DeletePricingRuleDialog } from './delete-pricing-rule-dialog';
@@ -155,17 +156,17 @@ export function FreightTaxasSection({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-default-800">{t('title')}</h3>
-          <p className="mt-1 text-sm text-default-600">{t('description')}</p>
-        </div>
-        <Button variant="primary" onPress={openCreate}>
-          <Plus size={16} className="mr-1" />
-          {t('addRule')}
-        </Button>
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('title')}
+        description={t('description')}
+        actions={
+          <Button variant="primary" onPress={openCreate}>
+            <Plus size={16} className="mr-1" />
+            {t('addRule')}
+          </Button>
+        }
+      />
 
       {ports.length === 0 && (
         <Card className="border border-warning-200 bg-warning-50">
@@ -215,6 +216,6 @@ export function FreightTaxasSection({
         onConfirm={handleDeleteConfirm}
         onClose={() => setDeletingRule(null)}
       />
-    </div>
+    </Card>
   );
 }

@@ -574,6 +574,7 @@
         "stateIcms": "ICMS Rates by State",
         "stateIcmsDescription": "Configure ICMS rate by UF. Select DIFAL (internal / interstate) and enter the percentage.",
         "siscomexFee": "Siscomex Fee",
+        "siscomexFeeDescription": "Configuration of the Siscomex fee",
         "platformRates": "Other Fees",
         "platformRatesDescription": "Configure AFRMM, PIS, COFINS, insurance, and other platform fees. Set value as percentage or fixed amount (BRL/USD).",
         "platformSaveSuccess": "Platform rates saved successfully.",

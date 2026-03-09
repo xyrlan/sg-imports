@@ -4,7 +4,7 @@
 
 @layer components {
   .accordion {
-    @apply  bg-surface;
+    @apply  bg-background-secondary;
   }
 
   .accordion__trigger {

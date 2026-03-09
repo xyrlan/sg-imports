@@ -51,15 +51,15 @@ export function ImpostosTaxasSection({
         </Tabs.List>
       </Tabs.ListContainer>
 
-      <Tabs.Panel id="icms" className="pt-6">
+      <Tabs.Panel id="icms">
         <StateIcmsForm stateIcmsRates={stateIcmsRates} t={translate} />
       </Tabs.Panel>
 
-      <Tabs.Panel id="siscomex" className="pt-6">
+      <Tabs.Panel id="siscomex">
         <SiscomexForm siscomexFee={siscomexFee} t={translate} />
       </Tabs.Panel>
 
-      <Tabs.Panel id="platform" className="pt-6">
+      <Tabs.Panel id="platform">
         <PlatformRatesForm platformRates={platformRates} t={translate} />
       </Tabs.Panel>
     </Tabs>

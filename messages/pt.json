@@ -574,6 +574,7 @@
         "stateIcms": "Alíquotas ICMS por Estado",
         "stateIcmsDescription": "Configure a alíquota ICMS por UF. Selecione o DIFAL (interno / interestadual) e informe o percentual.",
         "siscomexFee": "Taxa Siscomex",
+        "siscomexFeeDescription": "Configuração da taxa Siscomex",
         "platformRates": "Outras Taxas",
         "platformRatesDescription": "Configure AFRMM, PIS, COFINS, seguro e outras taxas da plataforma. Defina o valor como percentual ou valor fixo (BRL/USD).",
         "platformSaveSuccess": "Taxas da plataforma salvas com sucesso.",

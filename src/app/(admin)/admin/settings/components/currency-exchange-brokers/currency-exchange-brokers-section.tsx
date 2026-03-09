@@ -8,6 +8,7 @@ import { AlertDialog, Button, Card } from '@heroui/react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddCurrencyExchangeBrokerModal } from './add-currency-exchange-broker-modal';
 import { EditCurrencyExchangeBrokerModal } from './edit-currency-exchange-broker-modal';
 import { deleteCurrencyExchangeBrokerAction } from '../../actions';
@@ -106,27 +107,24 @@ export function CurrencyExchangeBrokersSection({
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">
-            {t('CurrencyExchangeBrokers.title')}
-          </h2>
-          <p className="text-sm text-muted">
-            {t('CurrencyExchangeBrokers.description')}
-          </p>
-        </div>
-        <AddCurrencyExchangeBrokerModal
-          isOpen={addModalOpen}
-          onOpenChange={setAddModalOpen}
-          trigger={
-            <Button variant="primary" onPress={() => setAddModalOpen(true)}>
-              <Plus className="size-4" />
-              {t('CurrencyExchangeBrokers.addBroker')}
-            </Button>
-          }
-        />
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('CurrencyExchangeBrokers.title')}
+        description={t('CurrencyExchangeBrokers.description')}
+        actions={
+          <AddCurrencyExchangeBrokerModal
+            isOpen={addModalOpen}
+            onOpenChange={setAddModalOpen}
+            trigger={
+              <Button variant="primary" onPress={() => setAddModalOpen(true)}>
+                <Plus className="size-4" />
+                {t('CurrencyExchangeBrokers.addBroker')}
+              </Button>
+            }
+          />
+        }
+        className="mb-4"
+      />
       {brokers.length === 0 ? (
         <p className="text-muted">
           {t('CurrencyExchangeBrokers.noBrokers')}

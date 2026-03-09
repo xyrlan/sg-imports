@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import { Label, Button, Card, NumberField } from '@heroui/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { updateSiscomexFeeAction } from '../../actions';
 import type { SiscomexFeeConfig } from '@/services/admin';
 import type { TranslateFn } from '../../constants';
@@ -31,8 +32,11 @@ export function SiscomexForm({ siscomexFee, t }: SiscomexFormProps) {
     setAdditions((prev) => prev.filter((_, i) => i !== index));
 
   return (
-    <Card className="p-6">
-      <h3 className="font-semibold mb-4">{t('Taxes.siscomexFee')}</h3>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('Taxes.siscomexFee')}
+        description={t('Taxes.siscomexFeeDescription')}
+      />
       <form action={formAction}>
         <div className="space-y-4 max-w-xl">
           <NumberField

@@ -8,6 +8,7 @@ import { AlertDialog, Button, Card } from '@heroui/react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
+import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddPortModal } from './add-port-modal';
 import { EditPortModal } from './edit-port-modal';
 import { deletePortAction } from '../../actions';
@@ -126,23 +127,23 @@ export function PortsSection({ ports }: PortsSectionProps) {
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">{t('Ports.title')}</h2>
-          <p className="text-sm text-muted">{t('Ports.description')}</p>
-        </div>
-        <AddPortModal
-          isOpen={addModalOpen}
-          onOpenChange={setAddModalOpen}
-          trigger={
-            <Button variant="primary" onPress={() => setAddModalOpen(true)}>
-              <Plus className="size-4" />
-              {t('Ports.addPort')}
-            </Button>
-          }
-        />
-      </div>
+    <Card className="space-y-6">
+      <SettingsSectionHeader
+        title={t('Ports.title')}
+        description={t('Ports.description')}
+        actions={
+          <AddPortModal
+            isOpen={addModalOpen}
+            onOpenChange={setAddModalOpen}
+            trigger={
+              <Button variant="primary" onPress={() => setAddModalOpen(true)}>
+                <Plus className="size-4" />
+                {t('Ports.addPort')}
+              </Button>
+            }
+          />
+        }
+      />
       {ports.length === 0 ? (
         <p className="text-muted">{t('Ports.noPorts')}</p>
       ) : (
