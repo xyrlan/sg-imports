@@ -8,6 +8,7 @@ import {
   getAllCarriers,
   getAllCurrencyExchangeBrokers,
   getAllInternationalFreights,
+  getAllPricingRules,
 } from '@/services/admin';
 import { SettingsContent } from './settings-content';
 
@@ -22,6 +23,7 @@ export default async function AdminSettingsPage() {
     carriersList,
     currencyExchangeBrokersList,
     internationalFreightsList,
+    pricingRulesList,
   ] = await Promise.all([
     getGlobalServiceFeeConfig(),
     getStateIcmsRates(),
@@ -32,6 +34,7 @@ export default async function AdminSettingsPage() {
     getAllCarriers(),
     getAllCurrencyExchangeBrokers(),
     getAllInternationalFreights(),
+    getAllPricingRules(),
   ]);
 
   return (
@@ -45,6 +48,7 @@ export default async function AdminSettingsPage() {
       carriers={carriersList}
       currencyExchangeBrokers={currencyExchangeBrokersList}
       internationalFreights={internationalFreightsList}
+      pricingRules={pricingRulesList}
     />
   );
 }

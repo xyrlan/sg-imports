@@ -764,23 +764,36 @@ export const freightProposals = pgTable('freight_proposals', {
 });
 
 /** Admin tariff rules — carrier/port/container scope */
-export const pricingRules = pgTable('pricing_rules', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'restrict' }).notNull(),
-  portId: uuid('port_id').references(() => ports.id, { onDelete: 'restrict' }),
-  containerType: containerTypeEnum('container_type'),
-  scope: pricingScopeEnum('scope').default('SPECIFIC').notNull(),
-  validFrom: timestamp('valid_from').notNull(),
-  validTo: timestamp('valid_to'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const pricingRules = pgTable(
+  'pricing_rules',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'restrict' }).notNull(),
+    portId: uuid('port_id').references(() => ports.id, { onDelete: 'restrict' }),
+    containerType: containerTypeEnum('container_type'),
+    portDirection: text('port_direction').$type<'ORIGIN' | 'DESTINATION' | 'BOTH'>().default('BOTH').notNull(),
+    scope: pricingScopeEnum('scope').default('SPECIFIC').notNull(),
+    validFrom: timestamp('valid_from').notNull(),
+    validTo: timestamp('valid_to'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [
+    check(
+      'pricing_rules_scope_integrity',
+      sql`(
+        (${t.scope} = 'CARRIER' AND ${t.portId} IS NULL AND ${t.containerType} IS NULL)
+        OR (${t.scope} = 'PORT' AND ${t.portId} IS NOT NULL AND ${t.containerType} IS NULL)
+        OR (${t.scope} = 'SPECIFIC' AND ${t.portId} IS NOT NULL AND ${t.containerType} IS NOT NULL)
+      )`
+    ),
+  ]
+);
 
-/** Fee items within a pricing rule (AFRMM, desova, etc.) */
+/** Fee items within a pricing rule (AFRMM, desova, etc.) — Catalog only, no shipment link */
 export const pricingItems = pgTable('pricing_items', {
   id: uuid('id').defaultRandom().primaryKey(),
   pricingRuleId: uuid('pricing_rule_id').references(() => pricingRules.id, { onDelete: 'cascade' }),
-  shipmentId: uuid('shipment_id').references(() => shipments.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   currency: currencyEnum('currency').default('BRL').notNull(),
@@ -859,7 +872,6 @@ export const shipmentsRelations = relations(shipments, ({ one, many }) => ({
   expenses: many(shipmentExpenses),
   transactions: many(transactions),
   documents: many(shipmentDocuments),
-  pricingItems: many(pricingItems),
   freightReceipt: one(shipmentFreightReceipts),
   
   // Auditoria e Histórico
@@ -994,7 +1006,6 @@ export const pricingRulesRelations = relations(pricingRules, ({ one, many }) => 
 
 export const pricingItemsRelations = relations(pricingItems, ({ one }) => ({
   pricingRule: one(pricingRules, { fields: [pricingItems.pricingRuleId], references: [pricingRules.id] }),
-  shipment: one(shipments, { fields: [pricingItems.shipmentId], references: [shipments.id] }),
 }));
 
 export const shipmentFreightReceiptsRelations = relations(shipmentFreightReceipts, ({ one }) => ({

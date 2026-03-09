@@ -551,6 +551,13 @@
       "currencyExchangeBrokersDescription": "管理合同的外汇经纪商",
       "internationalFreights": "国际运费",
       "internationalFreightsDescription": "按承运人、集装箱类型和港口配置国际运费",
+      "freightTaxas": "运费费率",
+      "freightTaxasDescription": "按承运人、港口和集装箱配置运费费率",
+      "portDirectionOrigin": "起运地",
+      "portDirectionDestination": "目的地",
+      "portDirectionBoth": "两者",
+      "statusValid": "有效",
+      "statusExpired": "已过期",
       "Honorarios": {
         "title": "服务费",
         "description": "所有组织的默认服务费配置",

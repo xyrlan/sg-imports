@@ -551,6 +551,13 @@
       "currencyExchangeBrokersDescription": "Manage currency exchange brokers for contracts",
       "internationalFreights": "International freight",
       "internationalFreightsDescription": "Configure international freights by carrier, container type, and ports",
+      "freightTaxas": "Freight Rates",
+      "freightTaxasDescription": "Configure freight rates by carrier, port, and container",
+      "portDirectionOrigin": "Origin",
+      "portDirectionDestination": "Destination",
+      "portDirectionBoth": "Both",
+      "statusValid": "Valid",
+      "statusExpired": "Expired",
       "Honorarios": {
         "title": "Service Fees",
         "description": "Default service fee configuration for all organizations",

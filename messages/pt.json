@@ -551,6 +551,13 @@
       "currencyExchangeBrokersDescription": "Gerencie corretoras de câmbio para contratos",
       "internationalFreights": "Frete internacional",
       "internationalFreightsDescription": "Configure fretes internacionais por armador, tipo de container e portos",
+      "freightTaxas": "Taxas de Frete",
+      "freightTaxasDescription": "Configure taxas de frete por transportadora, porto e container",
+      "portDirectionOrigin": "Origem",
+      "portDirectionDestination": "Destino",
+      "portDirectionBoth": "Ambos",
+      "statusValid": "Válido",
+      "statusExpired": "Expirado",
       "Honorarios": {
         "title": "Honorários",
         "description": "Configuração padrão de honorários para todas as organizações",

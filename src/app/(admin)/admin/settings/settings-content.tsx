@@ -5,6 +5,7 @@ import {
   Anchor,
   Building2,
   DollarSign,
+  FileText,
   Landmark,
   Package,
   Receipt,
@@ -21,6 +22,7 @@ import type {
   Carrier,
   CurrencyExchangeBroker,
   InternationalFreightWithPorts,
+  PricingRuleWithRelations,
 } from '@/services/admin';
 import { SECTION_KEYS, type SectionKey } from './constants';
 import {
@@ -32,6 +34,7 @@ import {
   CarriersSection,
   CurrencyExchangeBrokersSection,
   InternationalFreightsSection,
+  FreightTaxasSection,
 } from './components';
 
 interface SettingsContentProps {
@@ -44,6 +47,7 @@ interface SettingsContentProps {
   carriers: Carrier[];
   currencyExchangeBrokers: CurrencyExchangeBroker[];
   internationalFreights: InternationalFreightWithPorts[];
+  pricingRules: PricingRuleWithRelations[];
 }
 
 export function SettingsContent({
@@ -56,6 +60,7 @@ export function SettingsContent({
   carriers,
   currencyExchangeBrokers,
   internationalFreights,
+  pricingRules,
 }: SettingsContentProps) {
   const t = useTranslations('Admin.Settings');
   const [activeSection, setActiveSection] = useQueryState(
@@ -75,6 +80,12 @@ export function SettingsContent({
       label: t('internationalFreights'),
       icon: <Package size={16} />,
       description: t('internationalFreightsDescription'),
+    },
+    {
+      key: 'freight_taxas' as const,
+      label: t('freightTaxas'),
+      icon: <FileText size={16} />,
+      description: t('freightTaxasDescription'),
     },
     {
       key: 'impostos_taxas' as const,
@@ -115,6 +126,13 @@ export function SettingsContent({
       <InternationalFreightsSection
         freights={internationalFreights}
         ports={ports}
+      />
+    ),
+    freight_taxas: (
+      <FreightTaxasSection
+        pricingRules={pricingRules}
+        ports={ports}
+        carriers={carriers}
       />
     ),
     impostos_taxas:

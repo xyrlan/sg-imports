@@ -117,6 +117,24 @@ export {
   type UpdateInternationalFreightData,
 } from './international-freights.service';
 
+// Pricing Rules (Taxas de Frete)
+export {
+  getAllPricingRules,
+  createPricingRule,
+  updatePricingRule,
+  deletePricingRule,
+  resolveEffectivePricing,
+  type PricingRule,
+  type PricingItem,
+  type PricingRuleWithRelations,
+  type CreatePricingRuleData,
+  type UpdatePricingRuleData,
+  type ResolvedPricingItem,
+  type ResolutionResult,
+  type PortDirection,
+  type PricingScope,
+} from './pricing-rules.service';
+
 // Terminals & storage rules
 export {
   getAllTerminals,

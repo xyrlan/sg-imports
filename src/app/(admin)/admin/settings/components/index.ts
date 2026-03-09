@@ -7,3 +7,4 @@ export { PortsSection } from './ports/ports-section';
 export { CarriersSection } from './carriers/carriers-section';
 export { CurrencyExchangeBrokersSection } from './currency-exchange-brokers/currency-exchange-brokers-section';
 export { InternationalFreightsSection } from './international-freights';
+export { FreightTaxasSection } from './freight-taxas';
