@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Autocomplete, EmptyState, ListBox, SearchField, Spinner } from '@heroui/react';
 import { getCarrierByIdAction, searchCarriersAction } from '../../actions';
@@ -37,6 +37,22 @@ export function CarrierAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [filterText, setFilterText] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [triggerWidth, setTriggerWidth] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!triggerRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Usamos borderBoxSize para pegar o width total (incluindo padding/border)
+        setTriggerWidth(entry.borderBoxSize[0].inlineSize);
+      }
+    });
+
+    observer.observe(triggerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const loadCarriers = useCallback(async (search: string) => {
     setIsLoading(true);
@@ -104,13 +120,17 @@ export function CarrierAutocomplete({
       fullWidth={fullWidth}
       allowsEmptyCollection
     >
-      <Autocomplete.Trigger className={fullWidth ? 'w-full' : undefined}>
+      <Autocomplete.Trigger ref={triggerRef} className={fullWidth ? 'w-full' : undefined}>
         <Autocomplete.Value />
         <Autocomplete.ClearButton />
         <Autocomplete.Indicator />
       </Autocomplete.Trigger>
       <Autocomplete.Popover
-        className={fullWidth ? undefined : '!min-w-[300px] !w-[300px]'}
+       style={{ 
+        width: triggerWidth ? `${triggerWidth}px` : 'auto',
+        minWidth: triggerWidth ? `${triggerWidth}px` : '300px'
+      }}
+      className={fullWidth ? undefined : 'shadow-lg'}
       >
         <Autocomplete.Filter
           inputValue={filterText}
