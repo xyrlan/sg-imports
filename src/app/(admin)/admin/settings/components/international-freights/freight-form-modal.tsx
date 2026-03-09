@@ -58,7 +58,22 @@ export function FreightFormModal({
   const [validToStr, setValidToStr] = useState<string>('');
   const [portOfLoadingIds, setPortOfLoadingIds] = useState<Set<string>>(new Set());
   const [portOfDischargeIds, setPortOfDischargeIds] = useState<Set<string>>(new Set());
+  const [portOfLoadingSearch, setPortOfLoadingSearch] = useState('');
+  const [portOfDischargeSearch, setPortOfDischargeSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const filterPorts = (portsList: Port[], query: string) => {
+    if (!query.trim()) return portsList;
+    const q = query.toLowerCase().trim();
+    return portsList.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.code?.toLowerCase().includes(q) ?? false)
+    );
+  };
+
+  const filteredPortsOfLoading = filterPorts(ports, portOfLoadingSearch);
+  const filteredPortsOfDischarge = filterPorts(ports, portOfDischargeSearch);
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
@@ -88,6 +103,8 @@ export function FreightFormModal({
         setPortOfLoadingIds(new Set());
         setPortOfDischargeIds(new Set());
       }
+      setPortOfLoadingSearch('');
+      setPortOfDischargeSearch('');
       setError(null);
     }
   }, [isOpen, editingFreight]);
@@ -134,7 +151,7 @@ export function FreightFormModal({
     <Modal>
       <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable={false}>
         <Modal.Container>
-          <Modal.Dialog className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <Modal.Dialog className="max-w-xl overflow-y-auto">
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
               <Modal.Icon className="bg-default text-foreground">
@@ -146,8 +163,8 @@ export function FreightFormModal({
             </Modal.Header>
             <form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4 p-2">
-                <div className="flex flex-col gap-2">
-                  <Label>{t('carrier')} *</Label>
+                <TextField variant="primary" isRequired>
+                  <Label>{t('carrier')}</Label>
                   <CarrierAutocomplete
                     placeholder={t('carrierPlaceholder')}
                     value={carrierId || null}
@@ -156,15 +173,16 @@ export function FreightFormModal({
                     variant="primary"
                     selectedCarrierId={carrierId || null}
                   />
-                </div>
+                </TextField>
 
                 <div className="flex flex-col gap-2">
-                  <Label>{t('containerType')} *</Label>
+                  <Label>{t('containerType')}</Label>
                   <Select
                     placeholder={t('containerTypePlaceholder')}
                     value={containerType || null}
                     onChange={(k) => setContainerType(k ? String(k) : '')}
                     variant="primary"
+                    isRequired
                   >
                   <Select.Trigger>
                     <Select.Value />
@@ -250,16 +268,33 @@ export function FreightFormModal({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>{t('portsOfLoading')} *</Label>
+                  <Label>{t('portsOfLoading')}</Label>
                   <p className="text-xs text-muted">{t('portsSearchHint')}</p>
+                  <Input
+                    placeholder={t('portsSearchPlaceholder')}
+                    value={portOfLoadingSearch}
+                    onChange={(e) => setPortOfLoadingSearch(e.target.value)}
+                    variant="primary"
+                    className="mb-1"
+                  />
                   <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1">
                     <CheckboxGroup
+                      name="portOfLoading"
                       value={Array.from(portOfLoadingIds)}
                       onChange={(vals) => setPortOfLoadingIds(new Set(vals))}
+                      className="flex flex-col gap-2"
+                      isRequired
                     >
-                      {ports.map((p) => (
+                      {filteredPortsOfLoading.map((p) => (
                         <Checkbox key={p.id} value={p.id}>
-                          {p.name} {p.code && `(${p.code})`}
+                          <Checkbox.Control>
+                            <Checkbox.Indicator />
+                          </Checkbox.Control>
+                          <Checkbox.Content>
+                            <Label>
+                              {p.name} {p.code && `(${p.code})`}
+                            </Label>
+                          </Checkbox.Content>
                         </Checkbox>
                       ))}
                     </CheckboxGroup>
@@ -267,15 +302,33 @@ export function FreightFormModal({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>{t('portsOfDischarge')} *</Label>
+                  <Label>{t('portsOfDischarge')}</Label>
+                  <p className="text-xs text-muted">{t('portsSearchHint')}</p>
+                  <Input
+                    placeholder={t('portsSearchPlaceholder')}
+                    value={portOfDischargeSearch}
+                    onChange={(e) => setPortOfDischargeSearch(e.target.value)}
+                    variant="primary"
+                    className="mb-1"
+                  />
                   <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1">
                     <CheckboxGroup
+                      name="portOfDischarge"
                       value={Array.from(portOfDischargeIds)}
                       onChange={(vals) => setPortOfDischargeIds(new Set(vals))}
+                      className="flex flex-col gap-2"
+                      isRequired
                     >
-                      {ports.map((p) => (
+                      {filteredPortsOfDischarge.map((p) => (
                         <Checkbox key={p.id} value={p.id}>
-                          {p.name} {p.code && `(${p.code})`}
+                          <Checkbox.Control>
+                            <Checkbox.Indicator />
+                          </Checkbox.Control>
+                          <Checkbox.Content>
+                            <Label>
+                              {p.name} {p.code && `(${p.code})`}
+                            </Label>
+                          </Checkbox.Content>
                         </Checkbox>
                       ))}
                     </CheckboxGroup>

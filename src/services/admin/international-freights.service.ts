@@ -184,37 +184,65 @@ export async function getInternationalFreightById(
 export async function createInternationalFreight(
   data: CreateInternationalFreightData
 ): Promise<InternationalFreight> {
-  const [inserted] = await db
-    .insert(internationalFreights)
-    .values({
-      carrierId: data.carrierId,
-      containerType: data.containerType,
-      value: data.value,
-      currency: data.currency ?? 'USD',
-      freeTimeDays: data.freeTimeDays ?? 0,
-      expectedProfit: data.expectedProfit ?? null,
-      validTo: data.validTo ?? null,
-    } as InferInsertModel<typeof internationalFreights>)
-    .returning();
+  // #region agent log
+  fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:createInternationalFreight',message:'Before main insert',data:{carrierId:data.carrierId,portOfLoadingIds:data.portOfLoadingIds,portOfDischargeIds:data.portOfDischargeIds},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
-  if (!inserted) throw new Error('Failed to create international freight');
+  let inserted: InternationalFreight;
+  try {
+    const [row] = await db
+      .insert(internationalFreights)
+      .values({
+        carrierId: data.carrierId,
+        containerType: data.containerType,
+        value: data.value,
+        currency: data.currency ?? 'USD',
+        freeTimeDays: data.freeTimeDays ?? 0,
+        expectedProfit: data.expectedProfit ?? null,
+        validTo: data.validTo ?? null,
+      } as InferInsertModel<typeof internationalFreights>)
+      .returning();
 
-  if (data.portOfLoadingIds.length > 0) {
-    await db.insert(internationalFreightPortsOfLoading).values(
-      data.portOfLoadingIds.map((portId) => ({
-        internationalFreightId: inserted.id,
-        portId,
-      }))
-    );
+    if (!row) throw new Error('Failed to create international freight');
+    inserted = row;
+  } catch (err) {
+    // #region agent log
+    const e = err as { code?: string; message?: string; detail?: string; cause?: unknown };
+    const cause = e.cause as { code?: string; message?: string; detail?: string } | undefined;
+    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:mainInsert',message:'Main insert failed',data:{code:e.code,causeCode:cause?.code,message:e.message,causeMessage:cause?.message,detail:e.detail,causeDetail:cause?.detail},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    throw err;
   }
 
-  if (data.portOfDischargeIds.length > 0) {
-    await db.insert(internationalFreightPortsOfDischarge).values(
-      data.portOfDischargeIds.map((portId) => ({
-        internationalFreightId: inserted.id,
-        portId,
-      }))
-    );
+  // #region agent log
+  fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:createInternationalFreight',message:'Main insert succeeded, before junction',data:{insertedId:inserted.id},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  try {
+    if (data.portOfLoadingIds.length > 0) {
+      await db.insert(internationalFreightPortsOfLoading).values(
+        data.portOfLoadingIds.map((portId) => ({
+          internationalFreightId: inserted.id,
+          portId,
+        }))
+      );
+    }
+
+    if (data.portOfDischargeIds.length > 0) {
+      await db.insert(internationalFreightPortsOfDischarge).values(
+        data.portOfDischargeIds.map((portId) => ({
+          internationalFreightId: inserted.id,
+          portId,
+        }))
+      );
+    }
+  } catch (err) {
+    // #region agent log
+    const e = err as { code?: string; message?: string; detail?: string; cause?: unknown };
+    const cause = e.cause as { code?: string; message?: string; detail?: string } | undefined;
+    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:junctionInsert',message:'Junction insert failed',data:{code:e.code,causeCode:cause?.code,message:e.message,causeMessage:cause?.message,detail:e.detail,causeDetail:cause?.detail},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    throw err;
   }
 
   return inserted;

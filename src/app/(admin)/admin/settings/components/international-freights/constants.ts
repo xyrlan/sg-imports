@@ -1,3 +1,5 @@
+import type { InternationalFreightWithPorts } from '@/services/admin';
+
 export const CONTAINER_TYPE_LABELS: Record<string, string> = {
   GP_20: "GP 20'",
   GP_40: "GP 40'",
@@ -27,4 +29,16 @@ export function getDaysRemaining(validTo: Date | string | null): number | null {
   today.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
   return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export function groupedByContainer(
+  freights: InternationalFreightWithPorts[]
+): [string, InternationalFreightWithPorts[]][] {
+  const map = new Map<string, InternationalFreightWithPorts[]>();
+  for (const f of freights) {
+    const list = map.get(f.containerType) ?? [];
+    list.push(f);
+    map.set(f.containerType, list);
+  }
+  return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 }

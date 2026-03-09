@@ -770,6 +770,7 @@
         "portsOfDischarge": "Portos de destino",
         "portsOfDischargePlaceholder": "Selecione os portos",
         "portsSearchHint": "Digite para buscar entre os portos",
+        "portsSearchPlaceholder": "Buscar portos...",
         "validTo": "Válido até",
         "validToDescription": "Deixe em branco para sem data limite",
         "noFreights": "Nenhum frete internacional cadastrado",

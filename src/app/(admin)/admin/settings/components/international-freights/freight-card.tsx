@@ -1,0 +1,73 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
+import { Button, Card, Chip } from '@heroui/react';
+import { Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { ValidityChip } from './validity-chip';
+import type { InternationalFreightWithPorts } from '@/services/admin';
+
+interface FreightCardProps {
+  freight: InternationalFreightWithPorts;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
+  const t = useTranslations('Admin.Settings.InternationalFreights');
+
+  return (
+    <Card key={freight.id} className="p-4">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-xl font-bold">
+            {Number(freight.value).toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: freight.currency ?? 'USD',
+            })}
+          </span>
+          <ValidityChip freight={freight} />
+        </div>
+        <div className="flex flex-wrap items-center gap-1 text-sm text-muted">
+          {freight.portsOfLoading.length <= 2
+            ? freight.portsOfLoading.map((p) => (
+                <Chip key={p.id} size="sm" variant="soft">
+                  {p.name}
+                </Chip>
+              ))
+            : (
+                <Chip size="sm" variant="soft">
+                  {freight.portsOfLoading.length} {t('ports')}
+                </Chip>
+              )}
+          <ArrowRight className="size-4 shrink-0" />
+          {freight.portsOfDischarge.length <= 2
+            ? freight.portsOfDischarge.map((p) => (
+                <Chip key={p.id} size="sm" variant="soft">
+                  {p.name}
+                </Chip>
+              ))
+            : (
+                <Chip size="sm" variant="soft">
+                  {freight.portsOfDischarge.length} {t('ports')}
+                </Chip>
+              )}
+        </div>
+        {(freight.freeTimeDays ?? 0) > 0 && (
+          <p className="text-xs text-muted">
+            {t('freeTimeDaysCount', { count: freight.freeTimeDays ?? 0 })}
+          </p>
+        )}
+        <div className="flex justify-end gap-1 pt-2">
+          <Button size="sm" variant="tertiary" onPress={onEdit}>
+            <Pencil className="size-4" />
+            {t('edit')}
+          </Button>
+          <Button size="sm" variant="danger-soft" onPress={onDelete}>
+            <Trash2 className="size-4" />
+            {t('delete')}
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}

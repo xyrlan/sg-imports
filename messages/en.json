@@ -770,6 +770,7 @@
         "portsOfDischarge": "Ports of discharge",
         "portsOfDischargePlaceholder": "Select ports",
         "portsSearchHint": "Type to search among ports",
+        "portsSearchPlaceholder": "Search ports...",
         "validTo": "Valid until",
         "validToDescription": "Leave blank for no expiry",
         "noFreights": "No international freights registered",

@@ -437,6 +437,21 @@ const createInternationalFreightSchema = z.object({
 
 const updateInternationalFreightSchema = createInternationalFreightSchema.partial();
 
+function getDbErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const e = err as { code?: string; detail?: string; message?: string };
+    if (e.code === '23503') {
+      return 'Transportadora não encontrada. Verifique se a transportadora ainda existe.';
+    }
+    if (e.code === '23505') {
+      return 'Já existe um frete com essas configurações.';
+    }
+    if (e.detail) return e.detail;
+    if (e.message) return e.message;
+  }
+  return 'Erro ao criar frete internacional';
+}
+
 export async function createInternationalFreightAction(data: unknown) {
   try {
     await requireSuperAdmin();
@@ -448,6 +463,22 @@ export async function createInternationalFreightAction(data: unknown) {
       };
     }
     const p = parsed.data;
+
+    // #region agent log
+    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'actions.ts:createInternationalFreightAction',message:'Parsed data before carrier check',data:{carrierId:p.carrierId,portOfLoadingIds:p.portOfLoadingIds,portOfDischargeIds:p.portOfDischargeIds},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
+    const carrier = await getCarrierById(p.carrierId);
+    // #region agent log
+    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'actions.ts:createInternationalFreightAction',message:'Carrier check result',data:{carrierExists:!!carrier,carrierId:p.carrierId},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    if (!carrier) {
+      return {
+        ok: false,
+        error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
+      };
+    }
+
     await createInternationalFreight({
       carrierId: p.carrierId,
       containerType: p.containerType,
@@ -462,9 +493,14 @@ export async function createInternationalFreightAction(data: unknown) {
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch (err) {
+    // #region agent log
+    const e = err as { code?: string; message?: string; detail?: string; cause?: unknown };
+    const cause = e.cause as { code?: string; message?: string; detail?: string } | undefined;
+    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'actions.ts:createInternationalFreightAction:catch',message:'DB error captured',data:{code:e.code,causeCode:cause?.code,message:e.message,causeMessage:cause?.message,detail:e.detail,causeDetail:cause?.detail},hypothesisId:'H3,H4',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return {
       ok: false,
-      error: err instanceof Error ? err.message : 'Erro ao criar frete internacional',
+      error: getDbErrorMessage(err),
     };
   }
 }
@@ -480,6 +516,17 @@ export async function updateInternationalFreightAction(id: string, data: unknown
       };
     }
     const p = parsed.data;
+
+    if (p.carrierId) {
+      const carrier = await getCarrierById(p.carrierId);
+      if (!carrier) {
+        return {
+          ok: false,
+          error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
+        };
+      }
+    }
+
     await updateInternationalFreight(id, {
       ...(p.carrierId && { carrierId: p.carrierId }),
       ...(p.containerType && { containerType: p.containerType }),
@@ -498,7 +545,7 @@ export async function updateInternationalFreightAction(id: string, data: unknown
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : 'Erro ao atualizar frete internacional',
+      error: getDbErrorMessage(err),
     };
   }
 }

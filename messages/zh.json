@@ -770,6 +770,7 @@
         "portsOfDischarge": "卸货港",
         "portsOfDischargePlaceholder": "选择港口",
         "portsSearchHint": "输入以在港口中搜索",
+        "portsSearchPlaceholder": "搜索港口...",
         "validTo": "有效期至",
         "validToDescription": "留空表示无期限",
         "noFreights": "未注册国际运费",

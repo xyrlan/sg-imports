@@ -716,26 +716,30 @@ export const internationalFreights = pgTable('international_freights', {
 
 /** Junction: international freight ↔ ports of loading (many-to-many) */
 export const internationalFreightPortsOfLoading = pgTable(
-  'international_freight_ports_of_loading',
+  'int_freight_ports_loading',
   {
     internationalFreightId: uuid('international_freight_id')
       .references(() => internationalFreights.id, { onDelete: 'cascade' })
       .notNull(),
     portId: uuid('port_id').references(() => ports.id, { onDelete: 'cascade' }).notNull(),
   },
-  (t) => [primaryKey({ columns: [t.internationalFreightId, t.portId] })]
+  (t) => [primaryKey({ 
+    name: 'int_freight_loading_pk',
+    columns: [t.internationalFreightId, t.portId] })]
 );
 
 /** Junction: international freight ↔ ports of discharge (many-to-many) */
 export const internationalFreightPortsOfDischarge = pgTable(
-  'international_freight_ports_of_discharge',
+  'int_freight_ports_discharge',
   {
     internationalFreightId: uuid('international_freight_id')
       .references(() => internationalFreights.id, { onDelete: 'cascade' })
       .notNull(),
     portId: uuid('port_id').references(() => ports.id, { onDelete: 'cascade' }).notNull(),
   },
-  (t) => [primaryKey({ columns: [t.internationalFreightId, t.portId] })]
+  (t) => [primaryKey({ 
+    name: 'int_freight_discharge_pk',
+    columns: [t.internationalFreightId, t.portId] })]
 );
 
 /** Commercial proposals sent to clients (based on internationalFreights) */

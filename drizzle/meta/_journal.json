@@ -15,6 +15,13 @@
       "when": 1773018164935,
       "tag": "0001_wise_changeling",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773023777750,
+      "tag": "0002_busy_typhoid_mary",
+      "breakpoints": true
     }
   ]
 }
