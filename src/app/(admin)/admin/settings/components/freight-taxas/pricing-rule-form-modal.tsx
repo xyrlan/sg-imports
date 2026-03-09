@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Button,
   Input,
@@ -15,14 +16,12 @@ import {
 } from '@heroui/react';
 import { DollarSign, Plus, X } from 'lucide-react';
 import { CarrierAutocomplete } from '../international-freights/carrier-autocomplete';
-import { CONTAINER_TYPE_LABELS, PORT_DIRECTION_LABELS } from './constants';
 import {
   createPricingRuleAction,
   updatePricingRuleAction,
 } from '../../actions';
 import type { PricingRuleWithRelations, Port } from './types';
 
-const CONTAINER_TYPES = ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40'] as const;
 const CURRENCIES = ['BRL', 'USD', 'CNY'] as const;
 const BASIS_OPTIONS = ['PER_BL', 'PER_CONTAINER'] as const;
 
@@ -81,6 +80,8 @@ interface PricingRuleFormModalProps {
   ports: Port[];
 }
 
+const CONTAINER_TYPES_KEYS = ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40'] as const;
+
 function PricingRuleFormContent({
   initialSource,
   editingRule,
@@ -96,6 +97,7 @@ function PricingRuleFormContent({
   onSave: () => void;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations('Admin.Settings.FreightTaxas');
   const [isPending, startTransition] = useTransition();
   const initialState = getInitialFormState(initialSource);
   const [scope, setScope] = useState<'CARRIER' | 'PORT' | 'SPECIFIC'>(initialState.scope);
@@ -131,25 +133,25 @@ function PricingRuleFormContent({
     setError(null);
 
     if (!carrierId) {
-      setError('Transportadora é obrigatória');
+      setError(t('validation.carrierRequired'));
       return;
     }
     if ((scope === 'PORT' || scope === 'SPECIFIC') && !portId) {
-      setError('Porto é obrigatório para este nível');
+      setError(t('validation.portRequired'));
       return;
     }
     if (scope === 'SPECIFIC' && !containerType) {
-      setError('Container é obrigatório para nível específico');
+      setError(t('validation.containerRequired'));
       return;
     }
     if (!validFrom) {
-      setError('Data inicial é obrigatória');
+      setError(t('validation.validFromRequired'));
       return;
     }
 
     const validItems = items.filter((i) => i.name.trim() && i.amount && parseFloat(i.amount) > 0);
     if (validItems.length === 0) {
-      setError('Pelo menos um item de preço é obrigatório');
+      setError(t('validation.itemsRequired'));
       return;
     }
 
@@ -178,20 +180,20 @@ function PricingRuleFormContent({
           items: payload.items,
         });
         if (result.ok) {
-          toast.success('Regra atualizada com sucesso!');
+          toast.success(t('toast.updateSuccess'));
           onSave();
           onOpenChange(false);
         } else {
-          setError(result.error ?? 'Erro ao atualizar');
+          setError(result.error ?? t('validation.errorUpdate'));
         }
       } else {
         const result = await createPricingRuleAction(payload);
         if (result.ok) {
-          toast.success('Regra criada com sucesso!');
+          toast.success(t('toast.createSuccess'));
           onSave();
           onOpenChange(false);
         } else {
-          setError(result.error ?? 'Erro ao criar');
+          setError(result.error ?? t('validation.errorCreate'));
         }
       }
     });
@@ -202,12 +204,12 @@ function PricingRuleFormContent({
               <Modal.Body className="space-y-4 p-2">
                 {duplicatingFrom && (
                   <div className="rounded-lg border border-primary-200 bg-primary-50 p-2 text-primary-800 text-xs">
-                    Criando nova regra baseada em regra existente.
+                    {t('duplicatingHint')}
                   </div>
                 )}
 
                 <div>
-                  <Label className="mb-2 block text-sm font-medium">Nível da Regra</Label>
+                  <Label className="mb-2 block text-sm font-medium">{t('ruleLevel')}</Label>
                   <RadioGroup
                     isDisabled={!!editingRule}
                     value={scope}
@@ -226,8 +228,8 @@ function PricingRuleFormContent({
                         <Radio.Indicator />
                       </Radio.Control>
                       <Radio.Content>
-                        <Label>Nível Transportadora</Label>
-                        <span className="text-xs text-muted">Taxas aplicadas a todos os portos e containers desta transportadora</span>
+                        <Label>{t('levelCarrier')}</Label>
+                        <span className="text-xs text-muted">{t('levelCarrierHint')}</span>
                       </Radio.Content>
                     </Radio>
                     <Radio value="PORT">
@@ -235,8 +237,8 @@ function PricingRuleFormContent({
                         <Radio.Indicator />
                       </Radio.Control>
                       <Radio.Content>
-                        <Label>Nível Porto</Label>
-                        <span className="text-xs text-muted">Taxas aplicadas a este porto para todos os containers</span>
+                        <Label>{t('levelPort')}</Label>
+                        <span className="text-xs text-muted">{t('levelPortHint')}</span>
                       </Radio.Content>
                     </Radio>
                     <Radio value="SPECIFIC">
@@ -244,17 +246,17 @@ function PricingRuleFormContent({
                         <Radio.Indicator />
                       </Radio.Control>
                       <Radio.Content>
-                        <Label>Específico (Porto + Container)</Label>
-                        <span className="text-xs text-muted">Taxas aplicadas a esta combinação específica</span>
+                        <Label>{t('levelSpecific')}</Label>
+                        <span className="text-xs text-muted">{t('levelSpecificHint')}</span>
                       </Radio.Content>
                     </Radio>
                   </RadioGroup>
                 </div>
 
                 <TextField variant="primary" isRequired>
-                  <Label>Transportadora</Label>
+                  <Label>{t('carrier')}</Label>
                   <CarrierAutocomplete
-                    placeholder="Selecione a transportadora"
+                    placeholder={t('carrierPlaceholder')}
                     value={carrierId || null}
                     onChange={(k) => setCarrierId(k ?? '')}
                     fullWidth
@@ -266,9 +268,9 @@ function PricingRuleFormContent({
                 {(scope === 'PORT' || scope === 'SPECIFIC') && (
                   <>
                     <div className="flex flex-col gap-2">
-                      <Label>Porto</Label>
+                      <Label>{t('port')}</Label>
                       <Select
-                        placeholder="Selecione o porto"
+                        placeholder={t('portPlaceholder')}
                         value={portId || null}
                         onChange={(k) => setPortId(k ? String(k) : '')}
                         variant="primary"
@@ -292,7 +294,7 @@ function PricingRuleFormContent({
                     </div>
 
                     <div>
-                      <Label className="mb-2 block text-sm font-medium">Direção do Porto</Label>
+                      <Label className="mb-2 block text-sm font-medium">{t('portDirection')}</Label>
                       <RadioGroup
                         value={portDirection}
                         onChange={(v) => setPortDirection(v as 'ORIGIN' | 'DESTINATION' | 'BOTH')}
@@ -302,7 +304,7 @@ function PricingRuleFormContent({
                             <Radio.Indicator />
                           </Radio.Control>
                           <Radio.Content>
-                            <Label>{PORT_DIRECTION_LABELS.ORIGIN}</Label>
+                            <Label>{t('portDirectionOrigin')}</Label>
                           </Radio.Content>
                         </Radio>
                         <Radio value="DESTINATION">
@@ -310,7 +312,7 @@ function PricingRuleFormContent({
                             <Radio.Indicator />
                           </Radio.Control>
                           <Radio.Content>
-                            <Label>{PORT_DIRECTION_LABELS.DESTINATION}</Label>
+                            <Label>{t('portDirectionDestination')}</Label>
                           </Radio.Content>
                         </Radio>
                         <Radio value="BOTH">
@@ -318,7 +320,7 @@ function PricingRuleFormContent({
                             <Radio.Indicator />
                           </Radio.Control>
                           <Radio.Content>
-                            <Label>{PORT_DIRECTION_LABELS.BOTH}</Label>
+                            <Label>{t('portDirectionBoth')}</Label>
                           </Radio.Content>
                         </Radio>
                       </RadioGroup>
@@ -328,9 +330,9 @@ function PricingRuleFormContent({
 
                 {scope === 'SPECIFIC' && (
                   <div className="flex flex-col gap-2">
-                    <Label>Container</Label>
+                    <Label>{t('container')}</Label>
                     <Select
-                      placeholder="Selecione o tipo"
+                      placeholder={t('containerPlaceholder')}
                       value={containerType || null}
                       onChange={(k) => setContainerType(k ? String(k) : '')}
                       variant="primary"
@@ -340,11 +342,11 @@ function PricingRuleFormContent({
                         <Select.Value />
                         <Select.Indicator />
                       </Select.Trigger>
-                      <Select.Popover>
+                        <Select.Popover>
                         <ListBox>
-                          {CONTAINER_TYPES.map((ct) => (
-                            <ListBox.Item key={ct} id={ct} textValue={CONTAINER_TYPE_LABELS[ct] ?? ct}>
-                              {CONTAINER_TYPE_LABELS[ct] ?? ct}
+                          {CONTAINER_TYPES_KEYS.map((ct) => (
+                            <ListBox.Item key={ct} id={ct} textValue={t(`containerTypes.${ct}`)}>
+                              {t(`containerTypes.${ct}`)}
                               <ListBox.ItemIndicator />
                             </ListBox.Item>
                           ))}
@@ -356,7 +358,7 @@ function PricingRuleFormContent({
 
                 <div className="grid grid-cols-2 gap-4">
                   <TextField variant="primary" isRequired>
-                    <Label>Válido de</Label>
+                    <Label>{t('validFrom')}</Label>
                     <Input
                       type="date"
                       value={validFrom}
@@ -364,22 +366,22 @@ function PricingRuleFormContent({
                     />
                   </TextField>
                   <TextField variant="primary">
-                    <Label>Válido até</Label>
+                    <Label>{t('validTo')}</Label>
                     <Input
                       type="date"
                       value={validTo}
                       onChange={(e) => setValidTo(e.target.value)}
                     />
-                    <p className="mt-1 text-xs text-muted">Deixe em branco para sem data limite</p>
+                    <p className="mt-1 text-xs text-muted">{t('validToHint')}</p>
                   </TextField>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Itens de Preço</Label>
+                    <Label className="text-sm font-medium">{t('priceItems')}</Label>
                     <Button type="button" variant="secondary"  onPress={addItem}>
                       <Plus size={14} className="mr-1" />
-                      Adicionar Item
+                      {t('addItem')}
                     </Button>
                   </div>
                   <div className="space-y-2">
@@ -388,7 +390,7 @@ function PricingRuleFormContent({
                         <div className="flex-1 grid gap-1 grid-cols-12">
                           <div className="col-span-4">
                             <Input
-                              placeholder="Ex: Frete Básico"
+                              placeholder={t('itemNamePlaceholder')}
                               value={item.name}
                               onChange={(e) => updateItem(item.id, 'name', e.target.value)}
                               className="max-w-full"
@@ -398,7 +400,7 @@ function PricingRuleFormContent({
                             <Input
                               type="number"
                               step="0.01"
-                              placeholder="0.00"
+                              placeholder={t('amountPlaceholder')}
                               value={item.amount}
                               onChange={(e) => updateItem(item.id, 'amount', e.target.value)}
                               className="max-w-full"
@@ -438,12 +440,12 @@ function PricingRuleFormContent({
                               </Select.Trigger>
                               <Select.Popover>
                                 <ListBox>
-                                  <ListBox.Item key="PER_CONTAINER" id="PER_CONTAINER" textValue="Por Container">
-                                    Por Container
+                                  <ListBox.Item key="PER_CONTAINER" id="PER_CONTAINER" textValue={t('perContainer')}>
+                                    {t('perContainer')}
                                     <ListBox.ItemIndicator />
                                   </ListBox.Item>
-                                  <ListBox.Item key="PER_BL" id="PER_BL" textValue="Por BL">
-                                    Por BL
+                                  <ListBox.Item key="PER_BL" id="PER_BL" textValue={t('perBl')}>
+                                    {t('perBl')}
                                     <ListBox.ItemIndicator />
                                   </ListBox.Item>
                                 </ListBox>
@@ -474,10 +476,10 @@ function PricingRuleFormContent({
               </Modal.Body>
               <Modal.Footer>
                 <Button type="button" variant="outline" slot="close" onPress={() => onOpenChange(false)}>
-                  Cancelar
+                  {t('cancel')}
                 </Button>
                 <Button type="submit" variant="primary" isPending={isPending}>
-                  {editingRule ? 'Atualizar' : 'Criar'}
+                  {editingRule ? t('update') : t('create')}
                 </Button>
               </Modal.Footer>
             </form>
@@ -492,6 +494,7 @@ export function PricingRuleFormModal({
   duplicatingFrom,
   ports,
 }: PricingRuleFormModalProps) {
+  const t = useTranslations('Admin.Settings.FreightTaxas');
   const source = editingRule ?? duplicatingFrom;
   const formKey = isOpen ? `${source?.id ?? 'new'}` : 'closed';
 
@@ -507,10 +510,10 @@ export function PricingRuleFormModal({
               </Modal.Icon>
               <Modal.Heading>
                 {editingRule
-                  ? 'Editar Regra de Preço'
+                  ? t('editRule')
                   : duplicatingFrom
-                    ? 'Criar Regra a Partir de Existente'
-                    : 'Nova Regra de Preço'}
+                    ? t('duplicateRule')
+                    : t('newRule')}
               </Modal.Heading>
             </Modal.Header>
             {isOpen && (

@@ -1,9 +1,10 @@
 'use client';
 
 import { memo } from 'react';
+import { useTranslations } from 'next-intl';
 import { Accordion, Chip } from '@heroui/react';
 import { Ship } from 'lucide-react';
-import { PricingRuleCard } from './PricingRuleCard';
+import { PricingRuleCard } from './pricing-rule-card';
 import type { PricingRuleWithRelations } from './types';
 
 interface CarrierSummary {
@@ -31,7 +32,9 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
   onDelete,
   onDuplicate,
 }: CarrierRulesGroupProps) {
+  const t = useTranslations('Admin.Settings.FreightTaxas');
   const totalRules = carrierRules.length + portRules.length + specificRules.length;
+  const rulesLabel = totalRules === 1 ? t('rulesCount', { count: totalRules }) : t('rulesCountPlural', { count: totalRules });
 
   return (
     <Accordion.Item key={carrier.id} id={carrier.id}>
@@ -46,14 +49,12 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
                 {carrier.scacCode && (
                   <p className="text-xs text-muted">SCAC: {carrier.scacCode}</p>
                 )}
-                <span className="text-muted text-xs">
-                {totalRules} {totalRules === 1 ? 'regra' : 'regras'}
-                </span>
+                <span className="text-muted text-xs">{rulesLabel}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Chip color="warning" variant="soft" size="sm">
-                Armador
+                {t('carrierLabel')}
               </Chip>
               <Accordion.Indicator />
             </div>
@@ -66,9 +67,9 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
                 <div>
                   <div className="mb-3 flex items-center gap-2">
                     <div className="h-1 w-1 rounded-full bg-success-500" />
-                    <h4 className="text-sm font-semibold text-default-800">Taxas Gerais</h4>
+                    <h4 className="text-sm font-semibold text-default-800">{t('generalRates')}</h4>
                     <Chip size="sm" color="success" variant="soft">
-                      Aplica a todos portos/containers
+                      {t('generalRatesHint')}
                     </Chip>
                   </div>
                   <div className="grid gap-3 md:grid-cols-1 lg:grid-cols-1">
@@ -90,9 +91,9 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
                 <div>
                   <div className="mb-3 flex items-center gap-2">
                     <div className="h-1 w-1 rounded-full bg-primary-500" />
-                    <h4 className="text-sm font-semibold text-default-800">Taxas por Porto</h4>
+                    <h4 className="text-sm font-semibold text-default-800">{t('portRates')}</h4>
                     <Chip size="sm" color="accent" variant="soft">
-                      Aplica a todos containers do porto
+                      {t('portRatesHint')}
                     </Chip>
                   </div>
                   <div className="grid gap-3 md:grid-cols-1 lg:grid-cols-2">
@@ -115,9 +116,9 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
                 <div>
                   <div className="mb-3 flex items-center gap-2">
                     <div className="h-1 w-1 rounded-full bg-default-500" />
-                    <h4 className="text-sm font-semibold text-default-800">Taxas Específicas</h4>
+                    <h4 className="text-sm font-semibold text-default-800">{t('specificRates')}</h4>
                     <Chip size="sm" color="default" variant="soft">
-                      Porto + Container
+                      {t('specificRatesHint')}
                     </Chip>
                   </div>
                   <div className="grid gap-3 md:grid-cols-1 lg:grid-cols-2">

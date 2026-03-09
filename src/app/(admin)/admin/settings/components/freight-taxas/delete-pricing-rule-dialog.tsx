@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { AlertDialog, Button } from '@heroui/react';
 import type { PricingRuleWithRelations } from './types';
 
@@ -16,6 +17,7 @@ export function DeletePricingRuleDialog({
   onConfirm,
   onClose,
 }: DeletePricingRuleDialogProps) {
+  const t = useTranslations('Admin.Settings.FreightTaxas.delete');
   return (
     <AlertDialog>
       <AlertDialog.Backdrop isOpen={!!rule} onOpenChange={(open) => !open && onClose()}>
@@ -24,19 +26,17 @@ export function DeletePricingRuleDialog({
             <AlertDialog.CloseTrigger />
             <AlertDialog.Header>
               <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>Excluir regra de preço?</AlertDialog.Heading>
+              <AlertDialog.Heading>{t('title')}</AlertDialog.Heading>
             </AlertDialog.Header>
             <AlertDialog.Body>
-              <p>
-                Deseja realmente excluir esta regra de preço? Esta ação não pode ser desfeita.
-              </p>
+              <p>{t('confirm')}</p>
             </AlertDialog.Body>
             <AlertDialog.Footer>
               <Button slot="close" variant="tertiary" onPress={onClose}>
-                Cancelar
+                {t('cancel')}
               </Button>
               <Button variant="danger" isPending={isDeleting} onPress={onConfirm}>
-                Excluir
+                {t('confirmButton')}
               </Button>
             </AlertDialog.Footer>
           </AlertDialog.Dialog>

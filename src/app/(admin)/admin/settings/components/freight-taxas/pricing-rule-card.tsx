@@ -1,9 +1,10 @@
 'use client';
 
 import { memo, useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button, Card, Chip } from '@heroui/react';
 import { Calendar, Copy, DollarSign, Edit, Trash2 } from 'lucide-react';
-import { CONTAINER_TYPE_LABELS, PORT_DIRECTION_LABELS, getValidityStatus } from './constants';
+import { getValidityStatus } from './constants';
 import { resolveEffectivePricingAction } from '../../actions';
 import type { PricingRuleWithRelations } from './types';
 
@@ -32,6 +33,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
   onDuplicate,
   showDuplicate = true,
 }: PricingRuleCardProps) {
+  const t = useTranslations('Admin.Settings.FreightTaxas');
   const [effectiveFees, setEffectiveFees] = useState<Array<{ name: string; amount: number; currency: string; source: string }> | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -73,7 +75,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
             <div className="flex items-center gap-2">
               {rule.containerType && (
                 <Chip size="sm" variant="soft">
-                  {CONTAINER_TYPE_LABELS[rule.containerType] ?? rule.containerType}
+                  {t(`containerTypes.${rule.containerType}`)}
                 </Chip>
               )}
               {(rule.scope === 'PORT' || rule.scope === 'SPECIFIC') && (
@@ -82,7 +84,11 @@ export const PricingRuleCard = memo(function PricingRuleCard({
                   variant="soft"
                   color={directionColor[rule.portDirection as keyof typeof directionColor] ?? 'default'}
                 >
-                  {PORT_DIRECTION_LABELS[rule.portDirection as keyof typeof PORT_DIRECTION_LABELS] ?? rule.portDirection}
+                  {rule.portDirection === 'ORIGIN'
+                    ? t('portDirectionOrigin')
+                    : rule.portDirection === 'DESTINATION'
+                      ? t('portDirectionDestination')
+                      : t('portDirectionBoth')}
                 </Chip>
               )}
             </div>
@@ -93,14 +99,14 @@ export const PricingRuleCard = memo(function PricingRuleCard({
           <Calendar size={10} />
           <span>
             {formatDate(rule.validFrom)}
-            {rule.validTo && ` até ${formatDate(rule.validTo)}`}
+            {rule.validTo && ` ${t('until')} ${formatDate(rule.validTo)}`}
           </span>
           <Chip
             size="sm"
             variant="soft"
             color={validityStatus === 'valid' ? 'success' : validityStatus === 'expired' ? 'danger' : 'warning'}
           >
-            {validityStatus === 'valid' ? 'Válido' : validityStatus === 'expired' ? 'Expirado' : 'Expirando'}
+            {validityStatus === 'valid' ? t('validity.valid') : validityStatus === 'expired' ? t('validity.expired') : t('validity.expiring')}
           </Chip>
         </div>
 
@@ -108,7 +114,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
           {rule.items.map((item) => (
             <div key={item.id} className="flex justify-between text-xs">
               <span className="text-default-700">
-                {item.name} {item.basis === 'PER_BL' ? '(por BL)' : '(por container)'}
+                {item.name} {item.basis === 'PER_BL' ? `(${t('perBl')})` : `(${t('perContainer')})`}
               </span>
               <span className={`font-semibold ${colors.text}`}>
                 {CURRENCY_SYMBOLS[item.currency] ?? item.currency}{' '}
@@ -123,17 +129,17 @@ export const PricingRuleCard = memo(function PricingRuleCard({
             {!effectiveFees && !isPending && (
               <Button size="sm" variant="secondary" fullWidth onPress={loadEffectiveFees}>
                 <DollarSign size={14} className="mr-1" />
-                Ver Taxas Efetivas
+                {t('viewEffectiveFees')}
               </Button>
             )}
             {isPending && (
               <div className="rounded-lg border border-default-200 bg-default-50 p-2">
-                <p className="text-xs text-default-500 text-center">Carregando taxas efetivas...</p>
+                <p className="text-xs text-default-500 text-center">{t('loadingEffectiveFees')}</p>
               </div>
             )}
             {effectiveFees && effectiveFees.length > 0 && (
               <div className="rounded-lg border border-primary-200 bg-primary-50 p-2">
-                <p className="text-xs font-semibold text-primary-800 mb-2">Taxas Efetivas Calculadas:</p>
+                <p className="text-xs font-semibold text-primary-800 mb-2">{t('effectiveFeesTitle')}</p>
                 <div className="space-y-1">
                   {effectiveFees.map((fee, idx) => (
                     <div key={idx} className="flex justify-between items-center text-xs">
@@ -147,7 +153,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
                           variant="soft"
                           className="h-4"
                         >
-                          {fee.source === 'CARRIER' ? 'Geral' : fee.source === 'PORT' ? 'Porto' : 'Específica'}
+                          {fee.source === 'CARRIER' ? t('sourceCarrier') : fee.source === 'PORT' ? t('sourcePort') : t('sourceSpecific')}
                         </Chip>
                       </div>
                       <span className="font-bold text-primary-700">
@@ -163,20 +169,20 @@ export const PricingRuleCard = memo(function PricingRuleCard({
         )}
 
         <div className={`flex gap-1 justify-end pt-1 border-t ${colors.border}`}>
-          <Button isIconOnly size="sm" variant="ghost" onPress={() => onEdit(rule)} aria-label="Editar">
+          <Button isIconOnly size="sm" variant="ghost" onPress={() => onEdit(rule)} aria-label={t('ariaEdit')}>
             <Edit size={14} />
           </Button>
           {showDuplicate && (
-            <Button isIconOnly size="sm" variant="ghost" onPress={() => onDuplicate(rule)} aria-label="Duplicar">
+            <Button isIconOnly size="sm" variant="ghost" onPress={() => onDuplicate(rule)} aria-label={t('ariaDuplicate')}>
               <Copy size={14} />
             </Button>
           )}
           {rule.scope === 'SPECIFIC' && rule.portId && rule.containerType && (
-            <Button isIconOnly size="sm" variant="ghost" onPress={loadEffectiveFees} aria-label="Ver taxas efetivas">
+            <Button isIconOnly size="sm" variant="ghost" onPress={loadEffectiveFees} aria-label={t('ariaViewEffectiveFees')}>
               <DollarSign size={14} />
             </Button>
           )}
-          <Button isIconOnly size="sm" variant="danger-soft" onPress={() => onDelete(rule)} aria-label="Excluir">
+          <Button isIconOnly size="sm" variant="danger-soft" onPress={() => onDelete(rule)} aria-label={t('ariaDelete')}>
             <Trash2 size={14} />
           </Button>
         </div>
