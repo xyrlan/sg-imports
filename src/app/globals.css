@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
+
+@layer components {
+  .accordion {
+    @apply  bg-surface;
+  }
+
+  .accordion__trigger {
+    @apply cursor-pointer;
+  }
+}
+
 /* Font families: Inter (sans), JetBrains Mono (mono) - variables set on html via next/font */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui;
