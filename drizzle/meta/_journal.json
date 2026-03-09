@@ -29,6 +29,13 @@
       "when": 1773026109912,
       "tag": "0003_true_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773066555947,
+      "tag": "0004_motionless_lady_vermin",
+      "breakpoints": true
     }
   ]
 }

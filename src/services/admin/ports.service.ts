@@ -6,6 +6,9 @@ import { db } from '@/db';
 import { ports } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
+import type { DbTransaction } from './audit.service';
+
+type DbOrTx = typeof db | DbTransaction;
 
 // ============================================
 // Types
@@ -38,8 +41,8 @@ export async function getPortById(id: string): Promise<Port | null> {
   return row ?? null;
 }
 
-export async function createPort(data: CreatePortData): Promise<Port> {
-  const [inserted] = await db
+export async function createPort(data: CreatePortData, client: DbOrTx = db): Promise<Port> {
+  const [inserted] = await client
     .insert(ports)
     .values(data as InferInsertModel<typeof ports>)
     .returning();
@@ -49,8 +52,9 @@ export async function createPort(data: CreatePortData): Promise<Port> {
 export async function updatePort(
   id: string,
   data: UpdatePortData,
+  client: DbOrTx = db,
 ): Promise<Port | null> {
-  const [updated] = await db
+  const [updated] = await client
     .update(ports)
     .set(data)
     .where(eq(ports.id, id))
@@ -58,7 +62,7 @@ export async function updatePort(
   return updated ?? null;
 }
 
-export async function deletePort(id: string): Promise<boolean> {
-  const deleted = await db.delete(ports).where(eq(ports.id, id)).returning();
+export async function deletePort(id: string, client: DbOrTx = db): Promise<boolean> {
+  const deleted = await client.delete(ports).where(eq(ports.id, id)).returning();
   return deleted.length > 0;
 }

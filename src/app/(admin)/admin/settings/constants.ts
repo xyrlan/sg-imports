@@ -30,6 +30,7 @@ export const SECTION_KEYS = [
   'ports',
   'carriers',
   'currency_exchange_brokers',
+  'audit_log',
 ] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];

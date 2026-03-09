@@ -12,6 +12,9 @@ import {
 } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
+import type { DbTransaction } from './audit.service';
+
+type DbOrTx = typeof db | DbTransaction;
 
 // ============================================
 // Types
@@ -182,75 +185,49 @@ export async function getInternationalFreightById(
 }
 
 export async function createInternationalFreight(
-  data: CreateInternationalFreightData
+  data: CreateInternationalFreightData,
+  client: DbOrTx = db,
 ): Promise<InternationalFreight> {
-  // #region agent log
-  fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:createInternationalFreight',message:'Before main insert',data:{carrierId:data.carrierId,portOfLoadingIds:data.portOfLoadingIds,portOfDischargeIds:data.portOfDischargeIds},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
+  const [row] = await client
+    .insert(internationalFreights)
+    .values({
+      carrierId: data.carrierId,
+      containerType: data.containerType,
+      value: data.value,
+      currency: data.currency ?? 'USD',
+      freeTimeDays: data.freeTimeDays ?? 0,
+      expectedProfit: data.expectedProfit ?? null,
+      validTo: data.validTo ?? null,
+    } as InferInsertModel<typeof internationalFreights>)
+    .returning();
 
-  let inserted: InternationalFreight;
-  try {
-    const [row] = await db
-      .insert(internationalFreights)
-      .values({
-        carrierId: data.carrierId,
-        containerType: data.containerType,
-        value: data.value,
-        currency: data.currency ?? 'USD',
-        freeTimeDays: data.freeTimeDays ?? 0,
-        expectedProfit: data.expectedProfit ?? null,
-        validTo: data.validTo ?? null,
-      } as InferInsertModel<typeof internationalFreights>)
-      .returning();
+  if (!row) throw new Error('Failed to create international freight');
 
-    if (!row) throw new Error('Failed to create international freight');
-    inserted = row;
-  } catch (err) {
-    // #region agent log
-    const e = err as { code?: string; message?: string; detail?: string; cause?: unknown };
-    const cause = e.cause as { code?: string; message?: string; detail?: string } | undefined;
-    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:mainInsert',message:'Main insert failed',data:{code:e.code,causeCode:cause?.code,message:e.message,causeMessage:cause?.message,detail:e.detail,causeDetail:cause?.detail},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    throw err;
+  if (data.portOfLoadingIds.length > 0) {
+    await client.insert(internationalFreightPortsOfLoading).values(
+      data.portOfLoadingIds.map((portId) => ({
+        internationalFreightId: row.id,
+        portId,
+      })),
+    );
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:createInternationalFreight',message:'Main insert succeeded, before junction',data:{insertedId:inserted.id},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
-  try {
-    if (data.portOfLoadingIds.length > 0) {
-      await db.insert(internationalFreightPortsOfLoading).values(
-        data.portOfLoadingIds.map((portId) => ({
-          internationalFreightId: inserted.id,
-          portId,
-        }))
-      );
-    }
-
-    if (data.portOfDischargeIds.length > 0) {
-      await db.insert(internationalFreightPortsOfDischarge).values(
-        data.portOfDischargeIds.map((portId) => ({
-          internationalFreightId: inserted.id,
-          portId,
-        }))
-      );
-    }
-  } catch (err) {
-    // #region agent log
-    const e = err as { code?: string; message?: string; detail?: string; cause?: unknown };
-    const cause = e.cause as { code?: string; message?: string; detail?: string } | undefined;
-    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'international-freights.service.ts:junctionInsert',message:'Junction insert failed',data:{code:e.code,causeCode:cause?.code,message:e.message,causeMessage:cause?.message,detail:e.detail,causeDetail:cause?.detail},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    throw err;
+  if (data.portOfDischargeIds.length > 0) {
+    await client.insert(internationalFreightPortsOfDischarge).values(
+      data.portOfDischargeIds.map((portId) => ({
+        internationalFreightId: row.id,
+        portId,
+      })),
+    );
   }
 
-  return inserted;
+  return row;
 }
 
 export async function updateInternationalFreight(
   id: string,
-  data: UpdateInternationalFreightData
+  data: UpdateInternationalFreightData,
+  client: DbOrTx = db,
 ): Promise<InternationalFreight | null> {
   const baseData: Partial<InferInsertModel<typeof internationalFreights>> = {};
   if (data.carrierId !== undefined) baseData.carrierId = data.carrierId;
@@ -262,51 +239,51 @@ export async function updateInternationalFreight(
   if (data.validTo !== undefined) baseData.validTo = data.validTo;
 
   if (Object.keys(baseData).length > 0) {
-    await db
+    await client
       .update(internationalFreights)
       .set(baseData)
       .where(eq(internationalFreights.id, id));
   }
 
   if (data.portOfLoadingIds !== undefined) {
-    await db
+    await client
       .delete(internationalFreightPortsOfLoading)
       .where(eq(internationalFreightPortsOfLoading.internationalFreightId, id));
 
     if (data.portOfLoadingIds.length > 0) {
-      await db.insert(internationalFreightPortsOfLoading).values(
+      await client.insert(internationalFreightPortsOfLoading).values(
         data.portOfLoadingIds.map((portId) => ({
           internationalFreightId: id,
           portId,
-        }))
+        })),
       );
     }
   }
 
   if (data.portOfDischargeIds !== undefined) {
-    await db
+    await client
       .delete(internationalFreightPortsOfDischarge)
       .where(eq(internationalFreightPortsOfDischarge.internationalFreightId, id));
 
     if (data.portOfDischargeIds.length > 0) {
-      await db.insert(internationalFreightPortsOfDischarge).values(
+      await client.insert(internationalFreightPortsOfDischarge).values(
         data.portOfDischargeIds.map((portId) => ({
           internationalFreightId: id,
           portId,
-        }))
+        })),
       );
     }
   }
 
-  const [updated] = await db
+  const [updated] = await client
     .select()
     .from(internationalFreights)
     .where(eq(internationalFreights.id, id));
   return updated ?? null;
 }
 
-export async function deleteInternationalFreight(id: string): Promise<boolean> {
-  const deleted = await db
+export async function deleteInternationalFreight(id: string, client: DbOrTx = db): Promise<boolean> {
+  const deleted = await client
     .delete(internationalFreights)
     .where(eq(internationalFreights.id, id))
     .returning();

@@ -6,6 +6,9 @@ import { db } from '@/db';
 import { pricingRules, pricingItems, carriers, ports } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc, and, or, lte, gte, isNull, inArray } from 'drizzle-orm';
+import type { DbTransaction } from './audit.service';
+
+type DbOrTx = typeof db | DbTransaction;
 
 // ============================================
 // Types
@@ -123,75 +126,96 @@ export async function getAllPricingRules(): Promise<PricingRuleWithRelations[]> 
 // Mutations
 // ============================================
 
-export async function createPricingRule(data: CreatePricingRuleData): Promise<PricingRule> {
-  return db.transaction(async (tx) => {
-    const [rule] = await tx
-      .insert(pricingRules)
-      .values({
-        carrierId: data.carrierId,
-        portId: data.scope === 'CARRIER' ? null : data.portId ?? null,
-        containerType: data.scope === 'SPECIFIC' ? data.containerType ?? null : null,
-        portDirection: data.portDirection ?? 'BOTH',
-        scope: data.scope,
-        validFrom: data.validFrom,
-        validTo: data.validTo ?? null,
-      } as InferInsertModel<typeof pricingRules>)
-      .returning();
+async function execCreatePricingRule(tx: DbOrTx, data: CreatePricingRuleData): Promise<PricingRule> {
+  const [rule] = await tx
+    .insert(pricingRules)
+    .values({
+      carrierId: data.carrierId,
+      portId: data.scope === 'CARRIER' ? null : data.portId ?? null,
+      containerType: data.scope === 'SPECIFIC' ? data.containerType ?? null : null,
+      portDirection: data.portDirection ?? 'BOTH',
+      scope: data.scope,
+      validFrom: data.validFrom,
+      validTo: data.validTo ?? null,
+    } as InferInsertModel<typeof pricingRules>)
+    .returning();
 
-    if (!rule) throw new Error('Failed to create pricing rule');
+  if (!rule) throw new Error('Failed to create pricing rule');
 
+  if (data.items.length > 0) {
+    await tx.insert(pricingItems).values(
+      data.items.map((item) => ({
+        pricingRuleId: rule.id,
+        name: item.name,
+        amount: String(typeof item.amount === 'number' ? item.amount : parseFloat(item.amount)),
+        currency: item.currency,
+        basis: item.basis,
+      })),
+    );
+  }
+
+  return rule;
+}
+
+export async function createPricingRule(
+  data: CreatePricingRuleData,
+  client?: DbOrTx,
+): Promise<PricingRule> {
+  if (client) {
+    return execCreatePricingRule(client, data);
+  }
+  return db.transaction((tx) => execCreatePricingRule(tx, data));
+}
+
+async function execUpdatePricingRule(
+  tx: DbOrTx,
+  id: string,
+  data: UpdatePricingRuleData,
+): Promise<PricingRule | null> {
+  const updateData: Partial<InferInsertModel<typeof pricingRules>> = {};
+  if (data.portDirection !== undefined) updateData.portDirection = data.portDirection;
+  if (data.validFrom !== undefined) updateData.validFrom = data.validFrom;
+  if (data.validTo !== undefined) updateData.validTo = data.validTo;
+
+  const [updated] = await tx
+    .update(pricingRules)
+    .set({ ...updateData, updatedAt: new Date() })
+    .where(eq(pricingRules.id, id))
+    .returning();
+
+  if (!updated) return null;
+
+  if (data.items !== undefined) {
+    await tx.delete(pricingItems).where(eq(pricingItems.pricingRuleId, id));
     if (data.items.length > 0) {
       await tx.insert(pricingItems).values(
         data.items.map((item) => ({
-          pricingRuleId: rule.id,
+          pricingRuleId: id,
           name: item.name,
-          amount: String(typeof item.amount === 'number' ? item.amount : parseFloat(item.amount)),
+          amount: String(typeof item.amount === 'number' ? item.amount : parseFloat(String(item.amount))),
           currency: item.currency,
           basis: item.basis,
-        }))
+        })),
       );
     }
+  }
 
-    return rule;
-  });
+  return updated;
 }
 
-export async function updatePricingRule(id: string, data: UpdatePricingRuleData): Promise<PricingRule | null> {
-  return db.transaction(async (tx) => {
-    const updateData: Partial<InferInsertModel<typeof pricingRules>> = {};
-    if (data.portDirection !== undefined) updateData.portDirection = data.portDirection;
-    if (data.validFrom !== undefined) updateData.validFrom = data.validFrom;
-    if (data.validTo !== undefined) updateData.validTo = data.validTo;
-
-    const [updated] = await tx
-      .update(pricingRules)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(pricingRules.id, id))
-      .returning();
-
-    if (!updated) return null;
-
-    if (data.items !== undefined) {
-      await tx.delete(pricingItems).where(eq(pricingItems.pricingRuleId, id));
-      if (data.items.length > 0) {
-        await tx.insert(pricingItems).values(
-          data.items.map((item) => ({
-            pricingRuleId: id,
-            name: item.name,
-            amount: String(typeof item.amount === 'number' ? item.amount : parseFloat(String(item.amount))),
-            currency: item.currency,
-            basis: item.basis,
-          }))
-        );
-      }
-    }
-
-    return updated;
-  });
+export async function updatePricingRule(
+  id: string,
+  data: UpdatePricingRuleData,
+  client?: DbOrTx,
+): Promise<PricingRule | null> {
+  if (client) {
+    return execUpdatePricingRule(client, id, data);
+  }
+  return db.transaction((tx) => execUpdatePricingRule(tx, id, data));
 }
 
-export async function deletePricingRule(id: string): Promise<boolean> {
-  const deleted = await db.delete(pricingRules).where(eq(pricingRules.id, id)).returning();
+export async function deletePricingRule(id: string, client: DbOrTx = db): Promise<boolean> {
+  const deleted = await client.delete(pricingRules).where(eq(pricingRules.id, id)).returning();
   return deleted.length > 0;
 }
 

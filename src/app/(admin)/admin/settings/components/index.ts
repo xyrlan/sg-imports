@@ -8,3 +8,4 @@ export { CarriersSection } from './carriers/carriers-section';
 export { CurrencyExchangeBrokersSection } from './currency-exchange-brokers/currency-exchange-brokers-section';
 export { InternationalFreightsSection } from './international-freights';
 export { FreightTaxasSection } from './freight-taxas';
+export { AuditLogSection } from './audit-log/audit-log-section';

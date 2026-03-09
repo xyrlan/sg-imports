@@ -549,6 +549,8 @@
       "carriersDescription": "Transportadoras marítimas sincronizadas com ShipsGo",
       "currencyExchangeBrokers": "Corretoras de Câmbio",
       "currencyExchangeBrokersDescription": "Gerencie corretoras de câmbio para contratos",
+      "auditLog": "Histórico de alterações",
+      "auditLogDescription": "Registro de alterações em configurações da plataforma",
       "internationalFreights": "Frete internacional",
       "internationalFreightsDescription": "Configure fretes internacionais por armador, tipo de container e portos",
       "freightTaxas": "Taxas de Frete",
@@ -752,6 +754,46 @@
         "searchPlaceholder": "Buscar corretoras...",
         "columns": {
           "name": "Nome"
+        }
+      },
+      "AuditLog": {
+        "title": "Histórico de alterações",
+        "description": "Registro de alterações em configurações da plataforma",
+        "filterTable": "Tabela",
+        "filterTablePlaceholder": "Todas as tabelas",
+        "filterActor": "Usuário",
+        "filterAction": "Ação",
+        "filterActionPlaceholder": "Todas",
+        "filterFrom": "De",
+        "filterTo": "Até",
+        "applyFilters": "Filtrar",
+        "clearFilters": "Limpar",
+        "noLogs": "Nenhum registro encontrado",
+        "loading": "Carregando...",
+        "columns": {
+          "createdAt": "Data",
+          "action": "Ação",
+          "tableName": "Tabela",
+          "entityId": "ID",
+          "actorEmail": "Usuário",
+          "changes": "Alterações"
+        },
+        "actionCreate": "Criar",
+        "actionUpdate": "Atualizar",
+        "actionDelete": "Excluir",
+        "diffOld": "Antes",
+        "diffNew": "Depois",
+        "tables": {
+          "global_service_fee_config": "Honorários",
+          "state_icms_rates": "ICMS",
+          "siscomex_fee_config": "Siscomex",
+          "global_platform_rates": "Taxas plataforma",
+          "terminals": "Terminais",
+          "ports": "Portos",
+          "currency_exchange_brokers": "Corretoras",
+          "international_freights": "Fretes internacionais",
+          "pricing_rules": "Regras de preço",
+          "storage_rules": "Regras de armazenagem"
         }
       },
       "InternationalFreights": {

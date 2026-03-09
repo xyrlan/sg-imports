@@ -6,6 +6,7 @@ import {
   Building2,
   DollarSign,
   FileText,
+  History,
   Landmark,
   Package,
   Receipt,
@@ -35,6 +36,7 @@ import {
   CurrencyExchangeBrokersSection,
   InternationalFreightsSection,
   FreightTaxasSection,
+  AuditLogSection,
 } from './components';
 
 interface SettingsContentProps {
@@ -117,7 +119,12 @@ export function SettingsContent({
       icon: <Landmark size={16} />,
       description: t('currencyExchangeBrokersDescription'),
     },
-
+    {
+      key: 'audit_log' as const,
+      label: t('auditLog'),
+      icon: <History size={16} />,
+      description: t('auditLogDescription'),
+    },
   ];
 
   const sectionContent: Record<SectionKey, React.ReactNode> = {
@@ -146,7 +153,7 @@ export function SettingsContent({
     carriers: <CarriersSection carriers={carriers} />,
     currency_exchange_brokers:
       <CurrencyExchangeBrokersSection brokers={currencyExchangeBrokers} />,
-    
+    audit_log: <AuditLogSection />,
   };
 
   return (

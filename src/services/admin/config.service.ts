@@ -13,6 +13,9 @@ import {
 } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq } from 'drizzle-orm';
+import type { DbTransaction } from './audit.service';
+
+type DbOrTx = typeof db | DbTransaction;
 
 // ============================================
 // Types
@@ -55,19 +58,22 @@ export interface UpsertGlobalPlatformRateData {
 // Global Service Fee (Honorários)
 // ============================================
 
-export async function getGlobalServiceFeeConfig(): Promise<GlobalServiceFeeConfig | null> {
-  const [row] = await db.select().from(globalServiceFeeConfig).limit(1);
+export async function getGlobalServiceFeeConfig(
+  client: DbOrTx = db,
+): Promise<GlobalServiceFeeConfig | null> {
+  const [row] = await client.select().from(globalServiceFeeConfig).limit(1);
   return row ?? null;
 }
 
 export async function upsertGlobalServiceFeeConfig(
   data: UpsertGlobalServiceFeeData,
+  client: DbOrTx = db,
 ): Promise<GlobalServiceFeeConfig> {
-  const [existing] = await db.select().from(globalServiceFeeConfig).limit(1);
+  const [existing] = await client.select().from(globalServiceFeeConfig).limit(1);
   const payload = { ...data, updatedAt: new Date() };
 
   if (existing) {
-    const [updated] = await db
+    const [updated] = await client
       .update(globalServiceFeeConfig)
       .set(payload)
       .where(eq(globalServiceFeeConfig.id, existing.id))
@@ -75,7 +81,7 @@ export async function upsertGlobalServiceFeeConfig(
     return updated!;
   }
 
-  const [inserted] = await db
+  const [inserted] = await client
     .insert(globalServiceFeeConfig)
     .values(payload as Partial<InferInsertModel<typeof globalServiceFeeConfig>>)
     .returning();
@@ -86,13 +92,16 @@ export async function upsertGlobalServiceFeeConfig(
 // State ICMS Rates
 // ============================================
 
-export async function getStateIcmsRates(): Promise<StateIcmsRate[]> {
-  return db.select().from(stateIcmsRates);
+export async function getStateIcmsRates(client: DbOrTx = db): Promise<StateIcmsRate[]> {
+  return client.select().from(stateIcmsRates);
 }
 
-export async function upsertStateIcmsRates(rates: UpsertStateIcmsData[]): Promise<void> {
+export async function upsertStateIcmsRates(
+  rates: UpsertStateIcmsData[],
+  client: DbOrTx = db,
+): Promise<void> {
   for (const r of rates) {
-    await db
+    await client
       .insert(stateIcmsRates)
       .values({
         state: r.state,
@@ -111,19 +120,22 @@ export async function upsertStateIcmsRates(rates: UpsertStateIcmsData[]): Promis
 // Siscomex Fee Config
 // ============================================
 
-export async function getSiscomexFeeConfig(): Promise<SiscomexFeeConfig | null> {
-  const [row] = await db.select().from(siscomexFeeConfig).limit(1);
+export async function getSiscomexFeeConfig(
+  client: DbOrTx = db,
+): Promise<SiscomexFeeConfig | null> {
+  const [row] = await client.select().from(siscomexFeeConfig).limit(1);
   return row ?? null;
 }
 
 export async function upsertSiscomexFeeConfig(
   data: UpsertSiscomexFeeData,
+  client: DbOrTx = db,
 ): Promise<SiscomexFeeConfig> {
-  const [existing] = await db.select().from(siscomexFeeConfig).limit(1);
+  const [existing] = await client.select().from(siscomexFeeConfig).limit(1);
   const payload = { ...data, updatedAt: new Date() };
 
   if (existing) {
-    const [updated] = await db
+    const [updated] = await client
       .update(siscomexFeeConfig)
       .set(payload)
       .where(eq(siscomexFeeConfig.id, existing.id))
@@ -131,7 +143,7 @@ export async function upsertSiscomexFeeConfig(
     return updated!;
   }
 
-  const [inserted] = await db
+  const [inserted] = await client
     .insert(siscomexFeeConfig)
     .values(payload as Partial<InferInsertModel<typeof siscomexFeeConfig>>)
     .returning();
@@ -142,19 +154,22 @@ export async function upsertSiscomexFeeConfig(
 // Global Platform Rates
 // ============================================
 
-export async function getGlobalPlatformRates(): Promise<GlobalPlatformRate[]> {
-  return db.select().from(globalPlatformRates);
+export async function getGlobalPlatformRates(
+  client: DbOrTx = db,
+): Promise<GlobalPlatformRate[]> {
+  return client.select().from(globalPlatformRates);
 }
 
 export async function upsertGlobalPlatformRate(
   data: UpsertGlobalPlatformRateData,
+  client: DbOrTx = db,
 ): Promise<GlobalPlatformRate> {
   const unit = (data.unit ?? 'PERCENT') as 'PERCENT' | 'FIXED_BRL' | 'FIXED_USD' | 'PER_CONTAINER_BRL';
   const value = data.value ?? '0';
   const description = data.description ?? null;
   const updatedAt = new Date();
 
-  const [result] = await db
+  const [result] = await client
     .insert(globalPlatformRates)
     .values({
       rateType: data.rateType as InferInsertModel<typeof globalPlatformRates>['rateType'],

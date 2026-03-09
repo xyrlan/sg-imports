@@ -549,6 +549,8 @@
       "carriersDescription": "Ocean carriers synced with ShipsGo",
       "currencyExchangeBrokers": "Currency Exchange Brokers",
       "currencyExchangeBrokersDescription": "Manage currency exchange brokers for contracts",
+      "auditLog": "Change History",
+      "auditLogDescription": "Log of changes to platform settings",
       "internationalFreights": "International freight",
       "internationalFreightsDescription": "Configure international freights by carrier, container type, and ports",
       "freightTaxas": "Freight Rates",
@@ -752,6 +754,46 @@
         "searchPlaceholder": "Search brokers...",
         "columns": {
           "name": "Name"
+        }
+      },
+      "AuditLog": {
+        "title": "Change History",
+        "description": "Log of changes to platform settings",
+        "filterTable": "Table",
+        "filterTablePlaceholder": "All tables",
+        "filterActor": "User",
+        "filterAction": "Action",
+        "filterActionPlaceholder": "All",
+        "filterFrom": "From",
+        "filterTo": "To",
+        "applyFilters": "Filter",
+        "clearFilters": "Clear",
+        "noLogs": "No records found",
+        "loading": "Loading...",
+        "columns": {
+          "createdAt": "Date",
+          "action": "Action",
+          "tableName": "Table",
+          "entityId": "ID",
+          "actorEmail": "User",
+          "changes": "Changes"
+        },
+        "actionCreate": "Create",
+        "actionUpdate": "Update",
+        "actionDelete": "Delete",
+        "diffOld": "Before",
+        "diffNew": "After",
+        "tables": {
+          "global_service_fee_config": "Service Fees",
+          "state_icms_rates": "ICMS",
+          "siscomex_fee_config": "Siscomex",
+          "global_platform_rates": "Platform Rates",
+          "terminals": "Terminals",
+          "ports": "Ports",
+          "currency_exchange_brokers": "Brokers",
+          "international_freights": "International Freights",
+          "pricing_rules": "Pricing Rules",
+          "storage_rules": "Storage Rules"
         }
       },
       "InternationalFreights": {

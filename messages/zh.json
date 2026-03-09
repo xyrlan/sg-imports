@@ -549,6 +549,8 @@
       "carriersDescription": "与 ShipsGo 同步的海运公司",
       "currencyExchangeBrokers": "外汇经纪商",
       "currencyExchangeBrokersDescription": "管理合同的外汇经纪商",
+      "auditLog": "变更历史",
+      "auditLogDescription": "平台配置变更记录",
       "internationalFreights": "国际运费",
       "internationalFreightsDescription": "按承运人、集装箱类型和港口配置国际运费",
       "freightTaxas": "运费费率",
@@ -752,6 +754,46 @@
         "searchPlaceholder": "搜索经纪商...",
         "columns": {
           "name": "名称"
+        }
+      },
+      "AuditLog": {
+        "title": "变更历史",
+        "description": "平台配置变更记录",
+        "filterTable": "表",
+        "filterTablePlaceholder": "全部表",
+        "filterActor": "用户",
+        "filterAction": "操作",
+        "filterActionPlaceholder": "全部",
+        "filterFrom": "从",
+        "filterTo": "至",
+        "applyFilters": "筛选",
+        "clearFilters": "清除",
+        "noLogs": "未找到记录",
+        "loading": "加载中...",
+        "columns": {
+          "createdAt": "日期",
+          "action": "操作",
+          "tableName": "表",
+          "entityId": "ID",
+          "actorEmail": "用户",
+          "changes": "变更"
+        },
+        "actionCreate": "创建",
+        "actionUpdate": "更新",
+        "actionDelete": "删除",
+        "diffOld": "之前",
+        "diffNew": "之后",
+        "tables": {
+          "global_service_fee_config": "服务费",
+          "state_icms_rates": "ICMS",
+          "siscomex_fee_config": "Siscomex",
+          "global_platform_rates": "平台费率",
+          "terminals": "终端",
+          "ports": "港口",
+          "currency_exchange_brokers": "经纪商",
+          "international_freights": "国际运费",
+          "pricing_rules": "定价规则",
+          "storage_rules": "仓储规则"
         }
       },
       "InternationalFreights": {

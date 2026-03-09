@@ -101,6 +101,7 @@ export const rateUnitEnum = pgEnum('rate_unit', ['PERCENT', 'FIXED_BRL', 'FIXED_
 export const webhookStatusEnum = pgEnum('webhook_status', ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']);
 export const freightProposalStatusEnum = pgEnum('freight_proposal_status', ['DRAFT', 'SENT', 'APPROVED', 'REJECTED']);
 export const pricingScopeEnum = pgEnum('pricing_scope', ['CARRIER', 'PORT', 'SPECIFIC']);
+export const auditActionEnum = pgEnum('audit_action', ['CREATE', 'UPDATE', 'DELETE']);
 
 // ==========================================
 // 2. AUTH & ORGANIZATION
@@ -692,6 +693,30 @@ export const webhookEvents = pgTable(
   (t) => [
     unique('webhook_events_provider_external_id_event_type_key').on(t.provider, t.externalId, t.eventType),
     index('webhook_events_status_created_at_idx').on(t.status, t.createdAt),
+  ]
+);
+
+/** Admin audit log — tracks CREATE/UPDATE/DELETE on admin-managed tables */
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    tableName: text('table_name').notNull(),
+    entityId: text('entity_id').notNull(),
+    action: auditActionEnum('action').notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id),
+    actorEmail: text('actor_email'),
+    oldValues: jsonb('old_values'),
+    newValues: jsonb('new_values'),
+    changedKeys: text('changed_keys').array(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    ip: text('ip'),
+    userAgent: text('user_agent'),
+  },
+  (t) => [
+    index('audit_logs_table_created_idx').on(t.tableName, t.createdAt),
+    index('audit_logs_actor_created_idx').on(t.actorId, t.createdAt),
+    index('audit_logs_entity_table_idx').on(t.entityId, t.tableName),
   ]
 );
 

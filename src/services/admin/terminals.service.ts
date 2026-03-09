@@ -11,6 +11,9 @@ import {
 import type { StorageRuleAdditionalFee } from '@/db/types';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc, and, ne } from 'drizzle-orm';
+import type { DbTransaction } from './audit.service';
+
+type DbOrTx = typeof db | DbTransaction;
 
 // ============================================
 // Types
@@ -104,8 +107,9 @@ export async function getTerminalWithRules(id: string): Promise<TerminalWithRule
 
 export async function createTerminal(
   data: CreateTerminalData,
+  client: DbOrTx = db,
 ): Promise<Terminal> {
-  const [inserted] = await db
+  const [inserted] = await client
     .insert(terminals)
     .values(data as InferInsertModel<typeof terminals>)
     .returning();
@@ -115,8 +119,9 @@ export async function createTerminal(
 export async function updateTerminal(
   id: string,
   data: UpdateTerminalData,
+  client: DbOrTx = db,
 ): Promise<Terminal | null> {
-  const [updated] = await db
+  const [updated] = await client
     .update(terminals)
     .set(data)
     .where(eq(terminals.id, id))
@@ -124,8 +129,8 @@ export async function updateTerminal(
   return updated ?? null;
 }
 
-export async function deleteTerminal(id: string): Promise<boolean> {
-  const deleted = await db.delete(terminals).where(eq(terminals.id, id)).returning();
+export async function deleteTerminal(id: string, client: DbOrTx = db): Promise<boolean> {
+  const deleted = await client.delete(terminals).where(eq(terminals.id, id)).returning();
   return deleted.length > 0;
 }
 
@@ -175,8 +180,9 @@ export async function findStorageRuleConflict(
 
 export async function createStorageRule(
   data: Omit<UpsertStorageRuleData, 'terminalId'> & { terminalId: string },
+  client: DbOrTx = db,
 ): Promise<StorageRule> {
-  const [inserted] = await db
+  const [inserted] = await client
     .insert(storageRules)
     .values({
       terminalId: data.terminalId,
@@ -193,8 +199,9 @@ export async function createStorageRule(
 export async function updateStorageRule(
   id: string,
   data: Partial<UpsertStorageRuleData>,
+  client: DbOrTx = db,
 ): Promise<StorageRule | null> {
-  const [updated] = await db
+  const [updated] = await client
     .update(storageRules)
     .set({
       ...(data.containerType !== undefined && { containerType: data.containerType }),
@@ -208,74 +215,93 @@ export async function updateStorageRule(
   return updated ?? null;
 }
 
-export async function deleteStorageRule(id: string): Promise<boolean> {
-  const deleted = await db.delete(storageRules).where(eq(storageRules.id, id)).returning();
+export async function deleteStorageRule(id: string, client: DbOrTx = db): Promise<boolean> {
+  const deleted = await client.delete(storageRules).where(eq(storageRules.id, id)).returning();
   return deleted.length > 0;
+}
+
+async function execCreateStorageRuleWithPeriods(
+  tx: DbOrTx,
+  data: CreateStorageRuleWithPeriodsData,
+): Promise<StorageRule> {
+  const [inserted] = await tx
+    .insert(storageRules)
+    .values({
+      terminalId: data.terminalId,
+      containerType: data.containerType ?? null,
+      shipmentType: data.shipmentType ?? 'SEA_FCL',
+      minValue: data.minValue ?? '0',
+      cifInsurance: data.cifInsurance ?? '0',
+      additionalFees: data.additionalFees ?? [],
+    } as InferInsertModel<typeof storageRules>)
+    .returning();
+  if (!inserted) throw new Error('Failed to create storage rule');
+
+  for (const p of data.periods) {
+    await tx.insert(storagePeriods).values({
+      ruleId: inserted.id,
+      daysFrom: p.daysFrom,
+      daysTo: p.daysTo ?? null,
+      chargeType: p.chargeType ?? 'PERCENTAGE',
+      rate: p.rate,
+      isDailyRate: p.isDailyRate ?? true,
+    } as InferInsertModel<typeof storagePeriods>);
+  }
+  return inserted;
 }
 
 export async function createStorageRuleWithPeriods(
   data: CreateStorageRuleWithPeriodsData,
+  client?: DbOrTx,
 ): Promise<StorageRule> {
-  return db.transaction(async (tx) => {
-    const [inserted] = await tx
-      .insert(storageRules)
-      .values({
-        terminalId: data.terminalId,
-        containerType: data.containerType ?? null,
-        shipmentType: data.shipmentType ?? 'SEA_FCL',
-        minValue: data.minValue ?? '0',
-        cifInsurance: data.cifInsurance ?? '0',
-        additionalFees: data.additionalFees ?? [],
-      } as InferInsertModel<typeof storageRules>)
-      .returning();
-    if (!inserted) throw new Error('Failed to create storage rule');
+  if (client) {
+    return execCreateStorageRuleWithPeriods(client, data);
+  }
+  return db.transaction((tx) => execCreateStorageRuleWithPeriods(tx, data));
+}
 
-    for (const p of data.periods) {
-      await tx.insert(storagePeriods).values({
-        ruleId: inserted.id,
-        daysFrom: p.daysFrom,
-        daysTo: p.daysTo ?? null,
-        chargeType: p.chargeType ?? 'PERCENTAGE',
-        rate: p.rate,
-        isDailyRate: p.isDailyRate ?? true,
-      } as InferInsertModel<typeof storagePeriods>);
-    }
-    return inserted;
-  });
+async function execUpdateStorageRuleWithPeriods(
+  tx: DbOrTx,
+  ruleId: string,
+  data: Omit<CreateStorageRuleWithPeriodsData, 'terminalId'>,
+): Promise<StorageRule | null> {
+  const [updated] = await tx
+    .update(storageRules)
+    .set({
+      containerType: data.containerType ?? null,
+      shipmentType: data.shipmentType ?? 'SEA_FCL',
+      minValue: data.minValue ?? '0',
+      cifInsurance: data.cifInsurance ?? '0',
+      additionalFees: data.additionalFees ?? [],
+    } as Partial<InferInsertModel<typeof storageRules>>)
+    .where(eq(storageRules.id, ruleId))
+    .returning();
+  if (!updated) return null;
+
+  await tx.delete(storagePeriods).where(eq(storagePeriods.ruleId, ruleId));
+
+  for (const p of data.periods) {
+    await tx.insert(storagePeriods).values({
+      ruleId,
+      daysFrom: p.daysFrom,
+      daysTo: p.daysTo ?? null,
+      chargeType: p.chargeType ?? 'PERCENTAGE',
+      rate: p.rate,
+      isDailyRate: p.isDailyRate ?? true,
+    } as InferInsertModel<typeof storagePeriods>);
+  }
+  return updated;
 }
 
 export async function updateStorageRuleWithPeriods(
   ruleId: string,
   data: Omit<CreateStorageRuleWithPeriodsData, 'terminalId'>,
+  client?: DbOrTx,
 ): Promise<StorageRule | null> {
-  return db.transaction(async (tx) => {
-    const [updated] = await tx
-      .update(storageRules)
-      .set({
-        containerType: data.containerType ?? null,
-        shipmentType: data.shipmentType ?? 'SEA_FCL',
-        minValue: data.minValue ?? '0',
-        cifInsurance: data.cifInsurance ?? '0',
-        additionalFees: data.additionalFees ?? [],
-      } as Partial<InferInsertModel<typeof storageRules>>)
-      .where(eq(storageRules.id, ruleId))
-      .returning();
-    if (!updated) return null;
-
-    await tx.delete(storagePeriods).where(eq(storagePeriods.ruleId, ruleId));
-
-    for (const p of data.periods) {
-      await tx.insert(storagePeriods).values({
-        ruleId,
-        daysFrom: p.daysFrom,
-        daysTo: p.daysTo ?? null,
-        chargeType: p.chargeType ?? 'PERCENTAGE',
-        rate: p.rate,
-        isDailyRate: p.isDailyRate ?? true,
-      } as InferInsertModel<typeof storagePeriods>);
-    }
-    return updated;
-  });
+  if (client) {
+    return execUpdateStorageRuleWithPeriods(client, ruleId, data);
+  }
+  return db.transaction((tx) => execUpdateStorageRuleWithPeriods(tx, ruleId, data));
 }
 
 export async function duplicateStorageRule(ruleId: string): Promise<StorageRule | null> {

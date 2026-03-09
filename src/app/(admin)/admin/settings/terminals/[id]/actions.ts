@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireSuperAdmin } from '@/services/auth.service';
 import {
+  withAuditTransaction,
   getTerminalWithRules,
   createStorageRuleWithPeriods,
   updateStorageRuleWithPeriods,
@@ -12,6 +13,10 @@ import {
 } from '@/services/admin';
 import { z } from 'zod';
 import type { StorageRuleAdditionalFee } from '@/db/types';
+
+function toPlainObject<T>(obj: T): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(obj ?? {})) as Record<string, unknown>;
+}
 
 export async function getTerminalWithRulesAction(terminalId: string) {
   await requireSuperAdmin();
@@ -137,7 +142,7 @@ export async function createStorageRuleAction(
       return { error: msg, ok: false };
     }
 
-    await createStorageRuleWithPeriods({
+    const ruleData = {
       terminalId,
       containerType:
         shipmentType === 'SEA_FCL' && containerType && containerTypeSchema.safeParse(containerType).success
@@ -154,6 +159,16 @@ export async function createStorageRuleAction(
         rate: p.rate,
         isDailyRate: p.isDailyRate,
       })),
+    };
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const created = await createStorageRuleWithPeriods(ruleData, tx);
+      await recordAudit({
+        tableName: 'storage_rules',
+        entityId: created.id,
+        action: 'CREATE',
+        newValues: toPlainObject(created),
+      });
     });
     revalidatePath('/admin/settings');
     return { ok: true };
@@ -200,7 +215,7 @@ export async function updateStorageRuleAction(
       return { error: msg, ok: false };
     }
 
-    const updated = await updateStorageRuleWithPeriods(ruleId, {
+    const updateData = {
       containerType:
         shipmentType === 'SEA_FCL' && containerType && containerTypeSchema.safeParse(containerType).success
           ? (containerType as z.infer<typeof containerTypeSchema>)
@@ -216,10 +231,25 @@ export async function updateStorageRuleAction(
         rate: p.rate,
         isDailyRate: p.isDailyRate,
       })),
+    };
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.storageRules.findFirst({
+        where: (r, { eq }) => eq(r.id, ruleId),
+      });
+      if (!oldData) throw new Error('Regra não encontrada');
+
+      const updated = await updateStorageRuleWithPeriods(ruleId, updateData, tx);
+      if (!updated) throw new Error('Regra não encontrada');
+
+      await recordAudit({
+        tableName: 'storage_rules',
+        entityId: ruleId,
+        action: 'UPDATE',
+        oldValues: toPlainObject(oldData),
+        newValues: toPlainObject(updated),
+      });
     });
-    if (!updated) {
-      return { error: 'Regra não encontrada', ok: false };
-    }
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch (e) {
@@ -229,11 +259,22 @@ export async function updateStorageRuleAction(
 
 export async function deleteStorageRuleAction(ruleId: string, _terminalId: string): Promise<StorageRuleActionState> {
   try {
-    await requireSuperAdmin();
-    const deleted = await deleteStorageRule(ruleId);
-    if (!deleted) {
-      return { error: 'Regra não encontrada', ok: false };
-    }
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.storageRules.findFirst({
+        where: (r, { eq }) => eq(r.id, ruleId),
+      });
+      if (!oldData) throw new Error('Regra não encontrada');
+
+      const deleted = await deleteStorageRule(ruleId, tx);
+      if (!deleted) throw new Error('Regra não encontrada');
+
+      await recordAudit({
+        tableName: 'storage_rules',
+        entityId: ruleId,
+        action: 'DELETE',
+        oldValues: toPlainObject(oldData),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch (e) {

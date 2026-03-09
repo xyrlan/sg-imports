@@ -3,10 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { requireSuperAdmin } from '@/services/auth.service';
 import {
+  withAuditTransaction,
+  getAuditLogsPaginated,
   upsertGlobalServiceFeeConfig,
+  getGlobalServiceFeeConfig,
   upsertStateIcmsRates,
+  getStateIcmsRates,
   getSiscomexFeeConfig,
   upsertSiscomexFeeConfig,
+  getGlobalPlatformRates,
   upsertGlobalPlatformRate,
   createTerminal,
   updateTerminal,
@@ -30,7 +35,13 @@ import {
   getPortById,
 } from '@/services/admin';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import { internationalFreights } from '@/db/schema';
 import { RATE_TYPES } from './constants';
+
+function toPlainObject<T>(obj: T): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(obj ?? {})) as Record<string, unknown>;
+}
 
 const honorariosSchema = z.object({
   minimumWageBrl: z.string().min(1),
@@ -41,7 +52,6 @@ const honorariosSchema = z.object({
 
 export async function updateHonorariosAction(prev: unknown, formData: FormData) {
   try {
-    await requireSuperAdmin();
     const rawPct = formData.get('defaultPercentage');
     const pctNum = rawPct != null ? parseFloat(String(rawPct).replace(',', '.')) : NaN;
     const defaultPercentage = !Number.isNaN(pctNum) && pctNum <= 1
@@ -57,7 +67,18 @@ export async function updateHonorariosAction(prev: unknown, formData: FormData) 
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await upsertGlobalServiceFeeConfig(parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldConfig = await getGlobalServiceFeeConfig(tx);
+      const result = await upsertGlobalServiceFeeConfig(parsed.data, tx);
+      await recordAudit({
+        tableName: 'global_service_fee_config',
+        entityId: result.id,
+        action: oldConfig ? 'UPDATE' : 'CREATE',
+        oldValues: oldConfig ? toPlainObject(oldConfig) : undefined,
+        newValues: toPlainObject(result),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -73,7 +94,6 @@ const stateIcmsSchema = z.object({
 
 export async function updateStateIcmsAction(prev: unknown, formData: FormData) {
   try {
-    await requireSuperAdmin();
     const rates: { state: string; difal: 'INSIDE' | 'OUTSIDE'; icmsRate: string }[] = [];
     const keys = formData.keys();
     for (const key of keys) {
@@ -82,7 +102,6 @@ export async function updateStateIcmsAction(prev: unknown, formData: FormData) {
         const val = formData.get(key);
         if (state && difal && val !== null && val !== '') {
           const num = parseFloat(String(val));
-          // NumberField percent submits 0-1 (0.18 = 18%); convert to percent string for storage
           const icmsRate = !Number.isNaN(num) && num > 0 && num <= 1
             ? (num * 100).toFixed(2)
             : String(val);
@@ -91,7 +110,17 @@ export async function updateStateIcmsAction(prev: unknown, formData: FormData) {
       }
     }
     if (rates.length > 0) {
-      await upsertStateIcmsRates(rates);
+      await withAuditTransaction(async ({ tx, recordAudit }) => {
+        const oldRates = await getStateIcmsRates(tx);
+        await upsertStateIcmsRates(rates, tx);
+        await recordAudit({
+          tableName: 'state_icms_rates',
+          entityId: 'batch',
+          action: 'UPDATE',
+          oldValues: { rates: oldRates.map(toPlainObject) },
+          newValues: { rates },
+        });
+      });
     }
     revalidatePath('/admin/settings');
     return { ok: true };
@@ -115,7 +144,6 @@ function parseAdditions(arr: string[]): string[] {
 
 export async function updateSiscomexFeeAction(prev: unknown, formData: FormData) {
   try {
-    await requireSuperAdmin();
     const parsed = siscomexSchema.safeParse({
       registrationValue: formData.get('registrationValue'),
       additions11To20: formData.get('additions11To20'),
@@ -126,15 +154,26 @@ export async function updateSiscomexFeeAction(prev: unknown, formData: FormData)
       return { error: 'Dados inválidos', ok: false };
     }
     const additionsRaw = formData.getAll('additions') as string[];
-    // Normalize decimal: pt-BR uses comma, DB expects dot
     const parseDecimal = (s: string | undefined) =>
       s ? s.trim().replace(',', '.') : undefined;
-    await upsertSiscomexFeeConfig({
+    const payload = {
       registrationValue: parsed.data.registrationValue.replace(',', '.'),
       additions: parseAdditions(additionsRaw),
       additions11To20: parseDecimal(parsed.data.additions11To20),
       additions21To50: parseDecimal(parsed.data.additions21To50),
       additions51AndAbove: parseDecimal(parsed.data.additions51AndAbove),
+    };
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldConfig = await getSiscomexFeeConfig(tx);
+      const result = await upsertSiscomexFeeConfig(payload, tx);
+      await recordAudit({
+        tableName: 'siscomex_fee_config',
+        entityId: result.id,
+        action: oldConfig ? 'UPDATE' : 'CREATE',
+        oldValues: oldConfig ? toPlainObject(oldConfig) : undefined,
+        newValues: toPlainObject(result),
+      });
     });
     revalidatePath('/admin/settings');
     return { ok: true };
@@ -155,19 +194,37 @@ function parsePlatformRateValue(
 
 export async function updateAllPlatformRatesAction(prev: unknown, formData: FormData) {
   try {
-    await requireSuperAdmin();
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldRates = await getGlobalPlatformRates(tx);
+      const ratesDiff: { rateType: string; oldValue: string; newValue: string; unit: string }[] = [];
 
-    for (const rateType of RATE_TYPES) {
-      const rawValue = formData.get(`rate_${rateType}_value`);
-      const unit = (formData.get(`rate_${rateType}_unit`) ?? 'PERCENT') as string;
-      const value = parsePlatformRateValue(rawValue, unit);
+      for (const rateType of RATE_TYPES) {
+        const rawValue = formData.get(`rate_${rateType}_value`);
+        const unit = (formData.get(`rate_${rateType}_unit`) ?? 'PERCENT') as string;
+        const value = parsePlatformRateValue(rawValue, unit) ?? '0';
 
-      await upsertGlobalPlatformRate({
-        rateType,
-        value: value ?? '0',
-        unit: unit || undefined,
+        const oldRate = oldRates.find((r) => r.rateType === rateType);
+        const oldVal = oldRate?.value?.toString() ?? '0';
+
+        await upsertGlobalPlatformRate(
+          { rateType, value, unit: unit || undefined },
+          tx,
+        );
+        ratesDiff.push({
+          rateType,
+          oldValue: oldVal,
+          newValue: value,
+          unit,
+        });
+      }
+
+      await recordAudit({
+        tableName: 'global_platform_rates',
+        entityId: 'batch_update',
+        action: 'UPDATE',
+        newValues: { rates: ratesDiff },
       });
-    }
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -182,7 +239,6 @@ const terminalSchema = z.object({
 
 export async function createTerminalAction(prev: unknown, formData: FormData) {
   try {
-    await requireSuperAdmin();
     const parsed = terminalSchema.safeParse({
       name: formData.get('name'),
       code: formData.get('code') || undefined,
@@ -190,7 +246,16 @@ export async function createTerminalAction(prev: unknown, formData: FormData) {
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await createTerminal(parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const created = await createTerminal(parsed.data, tx);
+      await recordAudit({
+        tableName: 'terminals',
+        entityId: created.id,
+        action: 'CREATE',
+        newValues: toPlainObject(created),
+      });
+    });
     revalidatePath('/admin/settings');
     revalidatePath('/admin/settings/terminals');
     return { ok: true };
@@ -205,7 +270,6 @@ export async function updateTerminalAction(
   formData: FormData,
 ) {
   try {
-    await requireSuperAdmin();
     const parsed = terminalSchema.safeParse({
       name: formData.get('name'),
       code: formData.get('code') || undefined,
@@ -213,7 +277,22 @@ export async function updateTerminalAction(
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await updateTerminal(id, parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.terminals.findFirst({
+        where: (t, { eq }) => eq(t.id, id),
+      });
+      if (!oldData) throw new Error('Terminal não encontrado');
+
+      await updateTerminal(id, parsed.data, tx);
+      await recordAudit({
+        tableName: 'terminals',
+        entityId: id,
+        action: 'UPDATE',
+        oldValues: toPlainObject(oldData),
+        newValues: parsed.data,
+      });
+    });
     revalidatePath('/admin/settings');
     revalidatePath('/admin/settings/terminals');
     revalidatePath(`/admin/settings/terminals/${id}`);
@@ -225,8 +304,20 @@ export async function updateTerminalAction(
 
 export async function deleteTerminalAction(id: string) {
   try {
-    await requireSuperAdmin();
-    await deleteTerminal(id);
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.terminals.findFirst({
+        where: (t, { eq }) => eq(t.id, id),
+      });
+      if (!oldData) throw new Error('Terminal não encontrado');
+
+      await deleteTerminal(id, tx);
+      await recordAudit({
+        tableName: 'terminals',
+        entityId: id,
+        action: 'DELETE',
+        oldValues: toPlainObject(oldData),
+      });
+    });
     revalidatePath('/admin/settings');
     revalidatePath('/admin/settings/terminals');
     return { ok: true };
@@ -247,7 +338,6 @@ const portSchema = z.object({
 
 export async function createPortAction(prev: unknown, formData: FormData) {
   try {
-    await requireSuperAdmin();
     const parsed = portSchema.safeParse({
       name: formData.get('name'),
       code: formData.get('code'),
@@ -256,7 +346,16 @@ export async function createPortAction(prev: unknown, formData: FormData) {
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await createPort(parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const created = await createPort(parsed.data, tx);
+      await recordAudit({
+        tableName: 'ports',
+        entityId: created.id,
+        action: 'CREATE',
+        newValues: toPlainObject(created),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -270,7 +369,6 @@ export async function updatePortAction(
   formData: FormData,
 ) {
   try {
-    await requireSuperAdmin();
     const parsed = portSchema.safeParse({
       name: formData.get('name'),
       code: formData.get('code'),
@@ -279,7 +377,22 @@ export async function updatePortAction(
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await updatePort(id, parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.ports.findFirst({
+        where: (p, { eq }) => eq(p.id, id),
+      });
+      if (!oldData) throw new Error('Porto não encontrado');
+
+      await updatePort(id, parsed.data, tx);
+      await recordAudit({
+        tableName: 'ports',
+        entityId: id,
+        action: 'UPDATE',
+        oldValues: toPlainObject(oldData),
+        newValues: parsed.data,
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -289,8 +402,20 @@ export async function updatePortAction(
 
 export async function deletePortAction(id: string) {
   try {
-    await requireSuperAdmin();
-    await deletePort(id);
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.ports.findFirst({
+        where: (p, { eq }) => eq(p.id, id),
+      });
+      if (!oldData) throw new Error('Porto não encontrado');
+
+      await deletePort(id, tx);
+      await recordAudit({
+        tableName: 'ports',
+        entityId: id,
+        action: 'DELETE',
+        oldValues: toPlainObject(oldData),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -334,14 +459,22 @@ export async function createCurrencyExchangeBrokerAction(
   formData: FormData,
 ) {
   try {
-    await requireSuperAdmin();
     const parsed = currencyExchangeBrokerSchema.safeParse({
       name: formData.get('name'),
     });
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await createCurrencyExchangeBroker(parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const created = await createCurrencyExchangeBroker(parsed.data, tx);
+      await recordAudit({
+        tableName: 'currency_exchange_brokers',
+        entityId: created.id,
+        action: 'CREATE',
+        newValues: toPlainObject(created),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -355,14 +488,28 @@ export async function updateCurrencyExchangeBrokerAction(
   formData: FormData,
 ) {
   try {
-    await requireSuperAdmin();
     const parsed = currencyExchangeBrokerSchema.safeParse({
       name: formData.get('name'),
     });
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
     }
-    await updateCurrencyExchangeBroker(id, parsed.data);
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.currencyExchangeBrokers.findFirst({
+        where: (c, { eq }) => eq(c.id, id),
+      });
+      if (!oldData) throw new Error('Corretora não encontrada');
+
+      await updateCurrencyExchangeBroker(id, parsed.data, tx);
+      await recordAudit({
+        tableName: 'currency_exchange_brokers',
+        entityId: id,
+        action: 'UPDATE',
+        oldValues: toPlainObject(oldData),
+        newValues: parsed.data,
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -372,8 +519,20 @@ export async function updateCurrencyExchangeBrokerAction(
 
 export async function deleteCurrencyExchangeBrokerAction(id: string) {
   try {
-    await requireSuperAdmin();
-    await deleteCurrencyExchangeBroker(id);
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.currencyExchangeBrokers.findFirst({
+        where: (c, { eq }) => eq(c.id, id),
+      });
+      if (!oldData) throw new Error('Corretora não encontrada');
+
+      await deleteCurrencyExchangeBroker(id, tx);
+      await recordAudit({
+        tableName: 'currency_exchange_brokers',
+        entityId: id,
+        action: 'DELETE',
+        oldValues: toPlainObject(oldData),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch {
@@ -459,7 +618,6 @@ function getDbErrorMessage(err: unknown): string {
 
 export async function createInternationalFreightAction(data: unknown) {
   try {
-    await requireSuperAdmin();
     const parsed = createInternationalFreightSchema.safeParse(data);
     if (!parsed.success) {
       return {
@@ -469,14 +627,7 @@ export async function createInternationalFreightAction(data: unknown) {
     }
     const p = parsed.data;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'actions.ts:createInternationalFreightAction',message:'Parsed data before carrier check',data:{carrierId:p.carrierId,portOfLoadingIds:p.portOfLoadingIds,portOfDischargeIds:p.portOfDischargeIds},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     const carrier = await getCarrierById(p.carrierId);
-    // #region agent log
-    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'actions.ts:createInternationalFreightAction',message:'Carrier check result',data:{carrierExists:!!carrier,carrierId:p.carrierId},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (!carrier) {
       return {
         ok: false,
@@ -484,7 +635,7 @@ export async function createInternationalFreightAction(data: unknown) {
       };
     }
 
-    await createInternationalFreight({
+    const freightData = {
       carrierId: p.carrierId,
       containerType: p.containerType,
       value: p.value,
@@ -494,15 +645,20 @@ export async function createInternationalFreightAction(data: unknown) {
       validTo: p.validTo ? new Date(p.validTo) : null,
       portOfLoadingIds: p.portOfLoadingIds,
       portOfDischargeIds: p.portOfDischargeIds,
+    };
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const created = await createInternationalFreight(freightData, tx);
+      await recordAudit({
+        tableName: 'international_freights',
+        entityId: created.id,
+        action: 'CREATE',
+        newValues: toPlainObject(created),
+      });
     });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch (err) {
-    // #region agent log
-    const e = err as { code?: string; message?: string; detail?: string; cause?: unknown };
-    const cause = e.cause as { code?: string; message?: string; detail?: string } | undefined;
-    fetch('http://127.0.0.1:7457/ingest/47f0091e-c99b-4ec5-874b-1c09193f712c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b6cb52'},body:JSON.stringify({sessionId:'b6cb52',location:'actions.ts:createInternationalFreightAction:catch',message:'DB error captured',data:{code:e.code,causeCode:cause?.code,message:e.message,causeMessage:cause?.message,detail:e.detail,causeDetail:cause?.detail},hypothesisId:'H3,H4',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return {
       ok: false,
       error: getDbErrorMessage(err),
@@ -512,7 +668,6 @@ export async function createInternationalFreightAction(data: unknown) {
 
 export async function updateInternationalFreightAction(id: string, data: unknown) {
   try {
-    await requireSuperAdmin();
     const parsed = updateInternationalFreightSchema.safeParse(data);
     if (!parsed.success) {
       return {
@@ -532,7 +687,7 @@ export async function updateInternationalFreightAction(id: string, data: unknown
       }
     }
 
-    await updateInternationalFreight(id, {
+    const updateData = {
       ...(p.carrierId && { carrierId: p.carrierId }),
       ...(p.containerType && { containerType: p.containerType }),
       ...(p.value && { value: p.value }),
@@ -544,6 +699,23 @@ export async function updateInternationalFreightAction(id: string, data: unknown
       }),
       ...(p.portOfLoadingIds && { portOfLoadingIds: p.portOfLoadingIds }),
       ...(p.portOfDischargeIds && { portOfDischargeIds: p.portOfDischargeIds }),
+    };
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const [oldRow] = await tx
+        .select()
+        .from(internationalFreights)
+        .where(eq(internationalFreights.id, id));
+      if (!oldRow) throw new Error('Frete internacional não encontrado');
+
+      const updated = await updateInternationalFreight(id, updateData, tx);
+      await recordAudit({
+        tableName: 'international_freights',
+        entityId: id,
+        action: 'UPDATE',
+        oldValues: toPlainObject(oldRow),
+        newValues: updated ? toPlainObject(updated) : { ...toPlainObject(oldRow), ...updateData },
+      });
     });
     revalidatePath('/admin/settings');
     return { ok: true };
@@ -557,8 +729,21 @@ export async function updateInternationalFreightAction(id: string, data: unknown
 
 export async function deleteInternationalFreightAction(id: string) {
   try {
-    await requireSuperAdmin();
-    await deleteInternationalFreight(id);
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const [oldRow] = await tx
+        .select()
+        .from(internationalFreights)
+        .where(eq(internationalFreights.id, id));
+      if (!oldRow) throw new Error('Frete internacional não encontrado');
+
+      await deleteInternationalFreight(id, tx);
+      await recordAudit({
+        tableName: 'international_freights',
+        entityId: id,
+        action: 'DELETE',
+        oldValues: toPlainObject(oldRow),
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch (err) {
@@ -620,7 +805,6 @@ const updatePricingRuleSchema = z.object({
 
 export async function createPricingRuleAction(data: unknown) {
   try {
-    await requireSuperAdmin();
     const parsed = createPricingRuleSchema.safeParse(data);
     if (!parsed.success) {
       return {
@@ -642,7 +826,7 @@ export async function createPricingRuleAction(data: unknown) {
       }
     }
 
-    await createPricingRule({
+    const ruleData = {
       scope: p.scope,
       carrierId: p.carrierId,
       portId: p.portId ?? null,
@@ -656,6 +840,16 @@ export async function createPricingRuleAction(data: unknown) {
         currency: item.currency,
         basis: item.basis,
       })),
+    };
+
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const created = await createPricingRule(ruleData, tx);
+      await recordAudit({
+        tableName: 'pricing_rules',
+        entityId: created.id,
+        action: 'CREATE',
+        newValues: toPlainObject(created),
+      });
     });
     revalidatePath('/admin/settings');
     return { ok: true };
@@ -673,7 +867,6 @@ export async function createPricingRuleAction(data: unknown) {
 
 export async function updatePricingRuleAction(id: string, data: unknown) {
   try {
-    await requireSuperAdmin();
     const parsed = updatePricingRuleSchema.safeParse(data);
     if (!parsed.success) {
       return {
@@ -683,7 +876,7 @@ export async function updatePricingRuleAction(id: string, data: unknown) {
     }
     const p = parsed.data;
 
-    const updated = await updatePricingRule(id, {
+    const updateData = {
       ...(p.portDirection !== undefined && { portDirection: p.portDirection }),
       ...(p.validFrom !== undefined && { validFrom: p.validFrom }),
       ...(p.validTo !== undefined && { validTo: p.validTo }),
@@ -695,11 +888,23 @@ export async function updatePricingRuleAction(id: string, data: unknown) {
           basis: item.basis,
         })),
       }),
-    });
+    };
 
-    if (!updated) {
-      return { ok: false, error: 'Regra de preço não encontrada.' };
-    }
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.pricingRules.findFirst({
+        where: (r, { eq }) => eq(r.id, id),
+      });
+      if (!oldData) throw new Error('Regra de preço não encontrada.');
+
+      const updated = await updatePricingRule(id, updateData, tx);
+      await recordAudit({
+        tableName: 'pricing_rules',
+        entityId: id,
+        action: 'UPDATE',
+        oldValues: toPlainObject(oldData),
+        newValues: updated ? toPlainObject(updated) : { ...toPlainObject(oldData), ...updateData },
+      });
+    });
     revalidatePath('/admin/settings');
     return { ok: true };
   } catch (err) {
@@ -712,11 +917,22 @@ export async function updatePricingRuleAction(id: string, data: unknown) {
 
 export async function deletePricingRuleAction(id: string) {
   try {
-    await requireSuperAdmin();
-    const deleted = await deletePricingRule(id);
-    if (!deleted) {
-      return { ok: false, error: 'Regra de preço não encontrada.' };
-    }
+    await withAuditTransaction(async ({ tx, recordAudit }) => {
+      const oldData = await tx.query.pricingRules.findFirst({
+        where: (r, { eq }) => eq(r.id, id),
+      });
+      if (!oldData) throw new Error('Regra de preço não encontrada.');
+
+      const deleted = await deletePricingRule(id, tx);
+      if (!deleted) throw new Error('Regra de preço não encontrada.');
+
+      await recordAudit({
+        tableName: 'pricing_rules',
+        entityId: id,
+        action: 'DELETE',
+        oldValues: toPlainObject(oldData),
+      });
+    });
     revalidatePath('/admin/settings', 'layout');
     return { ok: true };
   } catch (err) {
@@ -745,6 +961,35 @@ export async function resolveEffectivePricingAction(
       carrierRule: null,
       portRule: null,
       specificRule: null,
+    };
+  }
+}
+
+export interface GetAuditLogsActionParams {
+  limit?: number;
+  offset?: number;
+  tableName?: string;
+  actorId?: string;
+  action?: 'CREATE' | 'UPDATE' | 'DELETE';
+  from?: string;
+  to?: string;
+}
+
+export async function getAuditLogsAction(params: GetAuditLogsActionParams = {}) {
+  try {
+    const { from, to, ...rest } = params;
+    const result = await getAuditLogsPaginated({
+      ...rest,
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+    });
+    return { ok: true, ...result };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Erro ao carregar histórico',
+      items: [],
+      total: 0,
     };
   }
 }

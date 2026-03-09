@@ -135,6 +135,18 @@ export {
   type PricingScope,
 } from './pricing-rules.service';
 
+// Audit log
+export {
+  recordAuditInternal,
+  withAuditTransaction,
+  getAuditLogsPaginated,
+  type DbTransaction,
+  type RecordAuditData,
+  type AuditLogEntry,
+  type GetAuditLogsParams,
+  type AuditLogsResult,
+} from './audit.service';
+
 // Terminals & storage rules
 export {
   getAllTerminals,

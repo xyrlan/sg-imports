@@ -7,6 +7,9 @@ import { db } from '@/db';
 import { currencyExchangeBrokers } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
+import type { DbTransaction } from './audit.service';
+
+type DbOrTx = typeof db | DbTransaction;
 
 // ============================================
 // Types
@@ -48,8 +51,9 @@ export async function getCurrencyExchangeBrokerById(
 
 export async function createCurrencyExchangeBroker(
   data: CreateCurrencyExchangeBrokerData,
+  client: DbOrTx = db,
 ): Promise<CurrencyExchangeBroker> {
-  const [inserted] = await db
+  const [inserted] = await client
     .insert(currencyExchangeBrokers)
     .values(data as InferInsertModel<typeof currencyExchangeBrokers>)
     .returning();
@@ -59,8 +63,9 @@ export async function createCurrencyExchangeBroker(
 export async function updateCurrencyExchangeBroker(
   id: string,
   data: UpdateCurrencyExchangeBrokerData,
+  client: DbOrTx = db,
 ): Promise<CurrencyExchangeBroker | null> {
-  const [updated] = await db
+  const [updated] = await client
     .update(currencyExchangeBrokers)
     .set(data)
     .where(eq(currencyExchangeBrokers.id, id))
@@ -70,8 +75,9 @@ export async function updateCurrencyExchangeBroker(
 
 export async function deleteCurrencyExchangeBroker(
   id: string,
+  client: DbOrTx = db,
 ): Promise<boolean> {
-  const deleted = await db
+  const deleted = await client
     .delete(currencyExchangeBrokers)
     .where(eq(currencyExchangeBrokers.id, id))
     .returning();

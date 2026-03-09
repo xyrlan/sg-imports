@@ -114,6 +114,23 @@ export async function requireSuperAdmin() {
 }
 
 /**
+ * Require SUPER_ADMIN and return user + profile for audit logging
+ * Use in admin Server Actions that need actor context
+ */
+export async function getSuperAdminUser(): Promise<{
+  user: NonNullable<Awaited<ReturnType<typeof getAuthenticatedUser>>>;
+  profile: Profile;
+}> {
+  const user = await getAuthenticatedUser();
+  if (!user) throw new Error('Unauthorized');
+  const profile = await getUserProfile(user.id);
+  if (!profile || profile.systemRole !== 'SUPER_ADMIN') {
+    throw new Error('Forbidden');
+  }
+  return { user, profile };
+}
+
+/**
  * Get user profile from database
  * Cached per userId per request to deduplicate when multiple components need it
  */
