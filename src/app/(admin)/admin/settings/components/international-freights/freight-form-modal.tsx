@@ -6,6 +6,9 @@ import {
   Button,
   Checkbox,
   CheckboxGroup,
+  DateField,
+  DateInputGroup,
+  Description,
   Input,
   Label,
   ListBox,
@@ -14,6 +17,7 @@ import {
   Select,
   TextField,
 } from '@heroui/react';
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import { Ship } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { CarrierAutocomplete } from './carrier-autocomplete';
@@ -335,16 +339,21 @@ export function FreightFormModal({
                   </div>
                 </div>
 
-                <TextField variant="primary">
+                <DateField
+                  value={validToStr ? parseDate(validToStr) : null}
+                  onChange={(v) => setValidToStr(v?.toString() ?? '')}
+                  minValue={today(getLocalTimeZone())}
+                >
                   <Label>{t('validTo')}</Label>
-                  <Input
-                    type="date"
-                    value={validToStr}
-                    onChange={(e) => setValidToStr(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  <p className="text-xs text-muted mt-1">{t('validToDescription')}</p>
-                </TextField>
+                  <DateInputGroup variant="primary">
+                    <DateInputGroup.Input>
+                      {(segment) => (
+                        <DateInputGroup.Segment segment={segment} />
+                      )}
+                    </DateInputGroup.Input>
+                  </DateInputGroup>
+                  <Description>{t('validToDescription')}</Description>
+                </DateField>
 
                 {error && <FormError message={error} />}
               </Modal.Body>

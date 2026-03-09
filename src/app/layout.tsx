@@ -7,6 +7,7 @@ import { getLocale } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ReactAriaLocaleProvider } from "@/components/providers/react-aria-locale-provider";
 import { THEME_COOKIE_NAME } from "@/lib/theme";
 
 const inter = Inter({
@@ -40,13 +41,15 @@ export default async function RootLayout({
     <html lang={locale} data-theme={theme} className={`${theme} ${fontVariableClasses}`}>
       <body className="font-sans antialiased bg-background text-foreground">
         <NextIntlClientProvider>
-          <NuqsAdapter>
-            <div className="fixed bottom-4 right-4 z-50">
-              <ThemeToggle initialTheme={theme} fontVariableClass={fontVariableClasses} />
-            </div>
-            {children}
-            <Toast.Provider placement="top end" />
-          </NuqsAdapter>
+          <ReactAriaLocaleProvider locale={locale}>
+            <NuqsAdapter>
+              <div className="fixed bottom-4 right-4 z-50">
+                <ThemeToggle initialTheme={theme} fontVariableClass={fontVariableClasses} />
+              </div>
+              {children}
+              <Toast.Provider placement="top end" />
+            </NuqsAdapter>
+          </ReactAriaLocaleProvider>
         </NextIntlClientProvider>
       </body>
     </html>

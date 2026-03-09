@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Button,
+  DateField,
+  DateInputGroup,
+  Description,
   Input,
   Label,
   ListBox,
@@ -14,6 +17,7 @@ import {
   TextField,
   toast,
 } from '@heroui/react';
+import { parseDate } from '@internationalized/date';
 import { DollarSign, Plus, X } from 'lucide-react';
 import { CarrierAutocomplete } from '../international-freights/carrier-autocomplete';
 import {
@@ -357,23 +361,34 @@ function PricingRuleFormContent({
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
-                  <TextField variant="primary" isRequired>
+                  <DateField
+                    isRequired
+                    value={validFrom ? parseDate(validFrom) : null}
+                    onChange={(v) => setValidFrom(v?.toString() ?? '')}
+                  >
                     <Label>{t('validFrom')}</Label>
-                    <Input
-                      type="date"
-                      value={validFrom}
-                      onChange={(e) => setValidFrom(e.target.value)}
-                    />
-                  </TextField>
-                  <TextField variant="primary">
+                    <DateInputGroup variant="primary">
+                      <DateInputGroup.Input>
+                        {(segment) => (
+                          <DateInputGroup.Segment segment={segment} />
+                        )}
+                      </DateInputGroup.Input>
+                    </DateInputGroup>
+                  </DateField>
+                  <DateField
+                    value={validTo ? parseDate(validTo) : null}
+                    onChange={(v) => setValidTo(v?.toString() ?? '')}
+                  >
                     <Label>{t('validTo')}</Label>
-                    <Input
-                      type="date"
-                      value={validTo}
-                      onChange={(e) => setValidTo(e.target.value)}
-                    />
-                    <p className="mt-1 text-xs text-muted">{t('validToHint')}</p>
-                  </TextField>
+                    <DateInputGroup variant="primary">
+                      <DateInputGroup.Input>
+                        {(segment) => (
+                          <DateInputGroup.Segment segment={segment} />
+                        )}
+                      </DateInputGroup.Input>
+                    </DateInputGroup>
+                    <Description>{t('validToHint')}</Description>
+                  </DateField>
                 </div>
 
                 <div className="space-y-3">
