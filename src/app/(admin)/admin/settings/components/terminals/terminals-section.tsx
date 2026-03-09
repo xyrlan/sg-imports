@@ -129,7 +129,7 @@ export function TerminalsSection({ terminals }: TerminalsSectionProps) {
           onRefresh={handleRefreshTerminal}
         />
       ) : terminalId && loading ? (
-        <div className="flex justify-center py-8">
+        <div className="flex justify-center py-8 shrink-0">
           <Spinner size="lg" />
         </div>
       ) : (

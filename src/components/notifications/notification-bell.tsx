@@ -111,7 +111,9 @@ export function NotificationBell() {
         <div className="max-h-80 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Spinner size="sm" />
+              <span className="inline-flex shrink-0 size-4 items-center justify-center">
+                <Spinner color="current" size="sm" className="size-4!" />
+              </span>
             </div>
           ) : notifications.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-muted">

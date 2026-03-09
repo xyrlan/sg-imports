@@ -6,6 +6,7 @@ import {
   Building2,
   DollarSign,
   Landmark,
+  Package,
   Receipt,
   Ship,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ import type {
   Port,
   Carrier,
   CurrencyExchangeBroker,
+  InternationalFreightWithPorts,
 } from '@/services/admin';
 import { SECTION_KEYS, type SectionKey } from './constants';
 import {
@@ -29,6 +31,7 @@ import {
   PortsSection,
   CarriersSection,
   CurrencyExchangeBrokersSection,
+  InternationalFreightsSection,
 } from './components';
 
 interface SettingsContentProps {
@@ -40,6 +43,7 @@ interface SettingsContentProps {
   ports: Port[];
   carriers: Carrier[];
   currencyExchangeBrokers: CurrencyExchangeBroker[];
+  internationalFreights: InternationalFreightWithPorts[];
 }
 
 export function SettingsContent({
@@ -51,6 +55,7 @@ export function SettingsContent({
   ports,
   carriers,
   currencyExchangeBrokers,
+  internationalFreights,
 }: SettingsContentProps) {
   const t = useTranslations('Admin.Settings');
   const [activeSection, setActiveSection] = useQueryState(
@@ -64,6 +69,12 @@ export function SettingsContent({
       label: t('honorarios'),
       icon: <DollarSign size={16} />,
       description: t('honorariosDescription'),
+    },
+    {
+      key: 'international_freights' as const,
+      label: t('internationalFreights'),
+      icon: <Package size={16} />,
+      description: t('internationalFreightsDescription'),
     },
     {
       key: 'impostos_taxas' as const,
@@ -95,10 +106,17 @@ export function SettingsContent({
       icon: <Landmark size={16} />,
       description: t('currencyExchangeBrokersDescription'),
     },
+
   ];
 
   const sectionContent: Record<SectionKey, React.ReactNode> = {
     honorarios: <HonorariosSection honorarios={honorarios} />,
+    international_freights: (
+      <InternationalFreightsSection
+        freights={internationalFreights}
+        ports={ports}
+      />
+    ),
     impostos_taxas:
       <ImpostosTaxasSection
         stateIcmsRates={stateIcmsRates}
@@ -110,6 +128,7 @@ export function SettingsContent({
     carriers: <CarriersSection carriers={carriers} />,
     currency_exchange_brokers:
       <CurrencyExchangeBrokersSection brokers={currencyExchangeBrokers} />,
+    
   };
 
   return (

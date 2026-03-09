@@ -549,6 +549,8 @@
       "carriersDescription": "Ocean carriers synced with ShipsGo",
       "currencyExchangeBrokers": "Currency Exchange Brokers",
       "currencyExchangeBrokersDescription": "Manage currency exchange brokers for contracts",
+      "internationalFreights": "International freight",
+      "internationalFreightsDescription": "Configure international freights by carrier, container type, and ports",
       "Honorarios": {
         "title": "Service Fees",
         "description": "Default service fee configuration for all organizations",
@@ -742,6 +744,61 @@
         "searchPlaceholder": "Search brokers...",
         "columns": {
           "name": "Name"
+        }
+      },
+      "InternationalFreights": {
+        "title": "International freight",
+        "description": "Configure international freights by carrier, container type, and ports",
+        "addFreight": "Add Freight",
+        "editFreight": "Edit Freight",
+        "edit": "Edit",
+        "delete": "Delete",
+        "create": "Create",
+        "update": "Update",
+        "cancel": "Cancel",
+        "carrier": "Carrier",
+        "carrierPlaceholder": "Select carrier",
+        "containerType": "Container type",
+        "containerTypePlaceholder": "Select type",
+        "value": "Value",
+        "currency": "Currency",
+        "freeTimeDays": "Free time (days)",
+        "expectedProfit": "Expected profit",
+        "expectedProfitPlaceholder": "Optional",
+        "portsOfLoading": "Ports of loading",
+        "portsOfLoadingPlaceholder": "Select ports",
+        "portsOfDischarge": "Ports of discharge",
+        "portsOfDischargePlaceholder": "Select ports",
+        "portsSearchHint": "Type to search among ports",
+        "validTo": "Valid until",
+        "validToDescription": "Leave blank for no expiry",
+        "noFreights": "No international freights registered",
+        "noFreightsHint": "Click \"Add Freight\" to get started",
+        "noCarrier": "No carrier",
+        "ports": "ports",
+        "tariffsActive": "active tariff(s)",
+        "freeTimeDaysCount": "{count} day(s) free time",
+        "deleteConfirmTitle": "Delete international freight?",
+        "deleteConfirm": "Do you really want to delete freight {carrier} - {container}?",
+        "validationRequired": "Fill in all required fields",
+        "validationValue": "Value must be positive",
+        "errorSave": "Error saving",
+        "noCarriersFound": "No carriers found",
+        "filters": {
+          "searchPlaceholder": "Search by port...",
+          "filterByCarrier": "Filter by carrier",
+          "filterByStatus": "Filter by status",
+          "statusAll": "All",
+          "carrierAll": "All carriers",
+          "searchCarrier": "Search carrier...",
+          "statusValid": "Valid",
+          "statusExpired": "Expired"
+        },
+        "validity": {
+          "valid": "Valid",
+          "validDaysRemaining": "Valid ({count} days remaining)",
+          "expiringInDays": "Expires in {count} days",
+          "expired": "Expired"
         }
       }
     }

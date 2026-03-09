@@ -549,6 +549,8 @@
       "carriersDescription": "Transportadoras marítimas sincronizadas com ShipsGo",
       "currencyExchangeBrokers": "Corretoras de Câmbio",
       "currencyExchangeBrokersDescription": "Gerencie corretoras de câmbio para contratos",
+      "internationalFreights": "Frete internacional",
+      "internationalFreightsDescription": "Configure fretes internacionais por armador, tipo de container e portos",
       "Honorarios": {
         "title": "Honorários",
         "description": "Configuração padrão de honorários para todas as organizações",
@@ -742,6 +744,61 @@
         "searchPlaceholder": "Buscar corretoras...",
         "columns": {
           "name": "Nome"
+        }
+      },
+      "InternationalFreights": {
+        "title": "Frete internacional",
+        "description": "Configure fretes internacionais por armador, tipo de container e portos",
+        "addFreight": "Adicionar Frete",
+        "editFreight": "Editar Frete",
+        "edit": "Editar",
+        "delete": "Excluir",
+        "create": "Criar",
+        "update": "Atualizar",
+        "cancel": "Cancelar",
+        "carrier": "Armador",
+        "carrierPlaceholder": "Selecione o armador",
+        "containerType": "Tipo de container",
+        "containerTypePlaceholder": "Selecione o tipo",
+        "value": "Valor",
+        "currency": "Moeda",
+        "freeTimeDays": "Free time (dias)",
+        "expectedProfit": "Lucro esperado",
+        "expectedProfitPlaceholder": "Opcional",
+        "portsOfLoading": "Portos de origem",
+        "portsOfLoadingPlaceholder": "Selecione os portos",
+        "portsOfDischarge": "Portos de destino",
+        "portsOfDischargePlaceholder": "Selecione os portos",
+        "portsSearchHint": "Digite para buscar entre os portos",
+        "validTo": "Válido até",
+        "validToDescription": "Deixe em branco para sem data limite",
+        "noFreights": "Nenhum frete internacional cadastrado",
+        "noFreightsHint": "Clique em \"Adicionar Frete\" para começar",
+        "noCarrier": "Sem armador",
+        "ports": "portos",
+        "tariffsActive": "tarifa(s) ativa(s)",
+        "freeTimeDaysCount": "{count} dia(s) free time",
+        "deleteConfirmTitle": "Excluir frete internacional?",
+        "deleteConfirm": "Deseja realmente excluir o frete {carrier} - {container}?",
+        "validationRequired": "Preencha todos os campos obrigatórios",
+        "validationValue": "Valor deve ser positivo",
+        "errorSave": "Erro ao salvar",
+        "noCarriersFound": "Nenhum armador encontrado",
+        "filters": {
+          "searchPlaceholder": "Buscar por porto...",
+          "filterByCarrier": "Filtrar por armador",
+          "filterByStatus": "Filtrar por status",
+          "statusAll": "Todos",
+          "carrierAll": "Todos os armadores",
+          "searchCarrier": "Buscar armador...",
+          "statusValid": "Válido",
+          "statusExpired": "Expirado"
+        },
+        "validity": {
+          "valid": "Válido",
+          "validDaysRemaining": "Válido ({count} dias restantes)",
+          "expiringInDays": "Expira em {count} dias",
+          "expired": "Expirado"
         }
       }
     }

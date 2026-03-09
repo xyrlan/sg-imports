@@ -8,6 +8,13 @@
       "when": 1772905428198,
       "tag": "0000_right_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773018164935,
+      "tag": "0001_wise_changeling",
+      "breakpoints": true
     }
   ]
 }

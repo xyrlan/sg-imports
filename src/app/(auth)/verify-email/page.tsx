@@ -381,7 +381,9 @@ const LoadingState = ({ t }: { t: TranslationFunction }) => (
   <Card variant="default" className="w-full">
     <Card.Content>
       <div className="flex flex-col items-center justify-center gap-4 py-8">
-        <Spinner size="sm" color="accent" className="w-6 h-6" />
+        <span className="inline-flex shrink-0 size-4 items-center justify-center">
+          <Spinner color="current" size="sm" className="size-4!" />
+        </span>
         <p className="text-sm text-default-500">{t('states.verifying.title')}</p>
       </div>
     </Card.Content>
@@ -392,7 +394,9 @@ const VerifyingState = ({ t }: { t: TranslationFunction }) => (
   <Card variant="default" className="w-full">
     <Card.Content>
       <div className="text-center py-8 space-y-4">
-        <Spinner size="sm" color="accent" />
+        <span className="inline-flex shrink-0 size-4 items-center justify-center">
+          <Spinner color="current" size="sm" className="size-4!" />
+        </span>
         <h1 className="text-xl font-semibold">{t('states.verifying.title')}</h1>
         <p className="text-sm text-default-600">
           {t('states.verifying.description')}

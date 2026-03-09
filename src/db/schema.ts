@@ -704,8 +704,6 @@ export const internationalFreights = pgTable('international_freights', {
   id: uuid('id').defaultRandom().primaryKey(),
   carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'cascade' }),
   containerType: containerTypeEnum('container_type').notNull(),
-  portOfLoadingId: uuid('port_of_loading_id').references(() => ports.id).notNull(),
-  portOfDischargeId: uuid('port_of_discharge_id').references(() => ports.id).notNull(),
   value: decimal('value', { precision: 10, scale: 2 }).notNull(),
   currency: currencyEnum('currency').default('USD').notNull(),
   freeTimeDays: integer('free_time_days').default(0),
@@ -715,6 +713,30 @@ export const internationalFreights = pgTable('international_freights', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+/** Junction: international freight ↔ ports of loading (many-to-many) */
+export const internationalFreightPortsOfLoading = pgTable(
+  'international_freight_ports_of_loading',
+  {
+    internationalFreightId: uuid('international_freight_id')
+      .references(() => internationalFreights.id, { onDelete: 'cascade' })
+      .notNull(),
+    portId: uuid('port_id').references(() => ports.id, { onDelete: 'cascade' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.internationalFreightId, t.portId] })]
+);
+
+/** Junction: international freight ↔ ports of discharge (many-to-many) */
+export const internationalFreightPortsOfDischarge = pgTable(
+  'international_freight_ports_of_discharge',
+  {
+    internationalFreightId: uuid('international_freight_id')
+      .references(() => internationalFreights.id, { onDelete: 'cascade' })
+      .notNull(),
+    portId: uuid('port_id').references(() => ports.id, { onDelete: 'cascade' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.internationalFreightId, t.portId] })]
+);
 
 /** Commercial proposals sent to clients (based on internationalFreights) */
 export const freightProposals = pgTable('freight_proposals', {
@@ -919,10 +941,38 @@ export const carriersRelations = relations(carriers, ({ many }) => ({
   freightReceipts: many(shipmentFreightReceipts),
 }));
 
+export const internationalFreightPortsOfLoadingRelations = relations(
+  internationalFreightPortsOfLoading,
+  ({ one }) => ({
+    internationalFreight: one(internationalFreights, {
+      fields: [internationalFreightPortsOfLoading.internationalFreightId],
+      references: [internationalFreights.id],
+    }),
+    port: one(ports, {
+      fields: [internationalFreightPortsOfLoading.portId],
+      references: [ports.id],
+    }),
+  })
+);
+
+export const internationalFreightPortsOfDischargeRelations = relations(
+  internationalFreightPortsOfDischarge,
+  ({ one }) => ({
+    internationalFreight: one(internationalFreights, {
+      fields: [internationalFreightPortsOfDischarge.internationalFreightId],
+      references: [internationalFreights.id],
+    }),
+    port: one(ports, {
+      fields: [internationalFreightPortsOfDischarge.portId],
+      references: [ports.id],
+    }),
+  })
+);
+
 export const internationalFreightsRelations = relations(internationalFreights, ({ one, many }) => ({
   carrier: one(carriers, { fields: [internationalFreights.carrierId], references: [carriers.id] }),
-  portOfLoading: one(ports, { fields: [internationalFreights.portOfLoadingId], references: [ports.id], relationName: 'portOfLoading' }),
-  portOfDischarge: one(ports, { fields: [internationalFreights.portOfDischargeId], references: [ports.id], relationName: 'portOfDischarge' }),
+  portsOfLoading: many(internationalFreightPortsOfLoading),
+  portsOfDischarge: many(internationalFreightPortsOfDischarge),
   freightProposals: many(freightProposals),
 }));
 
@@ -952,8 +1002,8 @@ export const shipmentFreightReceiptsRelations = relations(shipmentFreightReceipt
 }));
 
 export const portsRelations = relations(ports, ({ many }) => ({
-  internationalFreightsAsLoading: many(internationalFreights, { relationName: 'portOfLoading' }),
-  internationalFreightsAsDischarge: many(internationalFreights, { relationName: 'portOfDischarge' }),
+  internationalFreightLoadings: many(internationalFreightPortsOfLoading),
+  internationalFreightDischarges: many(internationalFreightPortsOfDischarge),
   pricingRules: many(pricingRules),
   freightReceiptsAsLoading: many(shipmentFreightReceipts, { relationName: 'freightReceiptLoading' }),
   freightReceiptsAsDischarge: many(shipmentFreightReceipts, { relationName: 'freightReceiptDischarge' }),

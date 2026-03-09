@@ -15,9 +15,14 @@ import {
   updatePort,
   deletePort,
   syncCarriersFromShipsGo,
+  getCarriersPaginated,
+  getCarrierById,
   createCurrencyExchangeBroker,
   updateCurrencyExchangeBroker,
   deleteCurrencyExchangeBroker,
+  createInternationalFreight,
+  updateInternationalFreight,
+  deleteInternationalFreight,
 } from '@/services/admin';
 import { z } from 'zod';
 import { RATE_TYPES } from './constants';
@@ -368,5 +373,146 @@ export async function deleteCurrencyExchangeBrokerAction(id: string) {
     return { ok: true };
   } catch {
     return { error: 'Erro ao excluir', ok: false };
+  }
+}
+
+// ============================================
+// Carriers (search for Autocomplete)
+// ============================================
+
+const CARRIERS_PAGE_SIZE = 20;
+
+export async function searchCarriersAction(
+  limit: number = CARRIERS_PAGE_SIZE,
+  offset: number = 0,
+  search?: string
+) {
+  try {
+    await requireSuperAdmin();
+    const items = await getCarriersPaginated(limit, offset, search);
+    return { items, ok: true };
+  } catch {
+    return { items: [], ok: false };
+  }
+}
+
+export async function getCarrierByIdAction(id: string) {
+  try {
+    await requireSuperAdmin();
+    const carrier = await getCarrierById(id);
+    return { carrier, ok: true };
+  } catch {
+    return { carrier: null, ok: false };
+  }
+}
+
+// ============================================
+// International Freights
+// ============================================
+
+const CONTAINER_TYPES = ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40'] as const;
+const CURRENCIES = ['BRL', 'USD', 'CNY', 'EUR'] as const;
+
+const createInternationalFreightSchema = z.object({
+  carrierId: z.string().uuid(),
+  containerType: z.enum(CONTAINER_TYPES),
+  value: z.string().min(1).refine((v) => !Number.isNaN(parseFloat(v)), 'Valor inválido'),
+  currency: z.enum(CURRENCIES).default('USD'),
+  freeTimeDays: z.coerce.number().int().min(0).default(0),
+  expectedProfit: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v === '' || v == null ? null : v))
+    .refine((v) => v === null || !Number.isNaN(parseFloat(v!)), 'Lucro inválido'),
+  validTo: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v === '' || v == null ? null : v))
+    .refine((v) => v === null || !Number.isNaN(Date.parse(v!)), 'Data inválida'),
+  portOfLoadingIds: z.array(z.string().uuid()).min(1, 'Pelo menos um porto de origem'),
+  portOfDischargeIds: z.array(z.string().uuid()).min(1, 'Pelo menos um porto de destino'),
+});
+
+const updateInternationalFreightSchema = createInternationalFreightSchema.partial();
+
+export async function createInternationalFreightAction(data: unknown) {
+  try {
+    await requireSuperAdmin();
+    const parsed = createInternationalFreightSchema.safeParse(data);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: parsed.error.issues.map((e) => e.message).join(', ') || 'Dados inválidos',
+      };
+    }
+    const p = parsed.data;
+    await createInternationalFreight({
+      carrierId: p.carrierId,
+      containerType: p.containerType,
+      value: p.value,
+      currency: p.currency,
+      freeTimeDays: p.freeTimeDays,
+      expectedProfit: p.expectedProfit ?? null,
+      validTo: p.validTo ? new Date(p.validTo) : null,
+      portOfLoadingIds: p.portOfLoadingIds,
+      portOfDischargeIds: p.portOfDischargeIds,
+    });
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Erro ao criar frete internacional',
+    };
+  }
+}
+
+export async function updateInternationalFreightAction(id: string, data: unknown) {
+  try {
+    await requireSuperAdmin();
+    const parsed = updateInternationalFreightSchema.safeParse(data);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: parsed.error.issues.map((e) => e.message).join(', ') || 'Dados inválidos',
+      };
+    }
+    const p = parsed.data;
+    await updateInternationalFreight(id, {
+      ...(p.carrierId && { carrierId: p.carrierId }),
+      ...(p.containerType && { containerType: p.containerType }),
+      ...(p.value && { value: p.value }),
+      ...(p.currency && { currency: p.currency }),
+      ...(p.freeTimeDays !== undefined && { freeTimeDays: p.freeTimeDays }),
+      ...(p.expectedProfit !== undefined && { expectedProfit: p.expectedProfit }),
+      ...(p.validTo !== undefined && {
+        validTo: p.validTo ? new Date(p.validTo) : null,
+      }),
+      ...(p.portOfLoadingIds && { portOfLoadingIds: p.portOfLoadingIds }),
+      ...(p.portOfDischargeIds && { portOfDischargeIds: p.portOfDischargeIds }),
+    });
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Erro ao atualizar frete internacional',
+    };
+  }
+}
+
+export async function deleteInternationalFreightAction(id: string) {
+  try {
+    await requireSuperAdmin();
+    await deleteInternationalFreight(id);
+    revalidatePath('/admin/settings');
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Erro ao excluir frete internacional',
+    };
   }
 }

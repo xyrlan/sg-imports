@@ -549,6 +549,8 @@
       "carriersDescription": "与 ShipsGo 同步的海运公司",
       "currencyExchangeBrokers": "外汇经纪商",
       "currencyExchangeBrokersDescription": "管理合同的外汇经纪商",
+      "internationalFreights": "国际运费",
+      "internationalFreightsDescription": "按承运人、集装箱类型和港口配置国际运费",
       "Honorarios": {
         "title": "服务费",
         "description": "所有组织的默认服务费配置",
@@ -742,6 +744,61 @@
         "searchPlaceholder": "搜索经纪商...",
         "columns": {
           "name": "名称"
+        }
+      },
+      "InternationalFreights": {
+        "title": "国际运费",
+        "description": "按承运人、集装箱类型和港口配置国际运费",
+        "addFreight": "添加运费",
+        "editFreight": "编辑运费",
+        "edit": "编辑",
+        "delete": "删除",
+        "create": "创建",
+        "update": "更新",
+        "cancel": "取消",
+        "carrier": "承运人",
+        "carrierPlaceholder": "选择承运人",
+        "containerType": "集装箱类型",
+        "containerTypePlaceholder": "选择类型",
+        "value": "金额",
+        "currency": "货币",
+        "freeTimeDays": "免费用箱期（天）",
+        "expectedProfit": "预期利润",
+        "expectedProfitPlaceholder": "可选",
+        "portsOfLoading": "装货港",
+        "portsOfLoadingPlaceholder": "选择港口",
+        "portsOfDischarge": "卸货港",
+        "portsOfDischargePlaceholder": "选择港口",
+        "portsSearchHint": "输入以在港口中搜索",
+        "validTo": "有效期至",
+        "validToDescription": "留空表示无期限",
+        "noFreights": "未注册国际运费",
+        "noFreightsHint": "点击「添加运费」开始",
+        "noCarrier": "无承运人",
+        "ports": "港口",
+        "tariffsActive": "有效费率",
+        "freeTimeDaysCount": "{count} 天免费用箱期",
+        "deleteConfirmTitle": "删除国际运费？",
+        "deleteConfirm": "确定要删除运费 {carrier} - {container}？",
+        "validationRequired": "请填写所有必填项",
+        "validationValue": "金额必须为正数",
+        "errorSave": "保存失败",
+        "noCarriersFound": "未找到承运人",
+        "filters": {
+          "searchPlaceholder": "按港口搜索...",
+          "filterByCarrier": "按承运人筛选",
+          "filterByStatus": "按状态筛选",
+          "statusAll": "全部",
+          "carrierAll": "所有承运人",
+          "searchCarrier": "搜索承运人...",
+          "statusValid": "有效",
+          "statusExpired": "已过期"
+        },
+        "validity": {
+          "valid": "有效",
+          "validDaysRemaining": "有效（剩余 {count} 天）",
+          "expiringInDays": "{count} 天后过期",
+          "expired": "已过期"
         }
       }
     }

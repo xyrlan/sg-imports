@@ -6,7 +6,7 @@
 import { db } from '@/db';
 import { carriers } from '@/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, ilike } from 'drizzle-orm';
 import { fetchCarriers } from '@/lib/shipsgo/client';
 
 // ============================================
@@ -21,6 +21,29 @@ export type Carrier = InferSelectModel<typeof carriers>;
 
 export async function getAllCarriers(): Promise<Carrier[]> {
   return db.select().from(carriers).orderBy(asc(carriers.name));
+}
+
+export async function getCarriersPaginated(
+  limit: number,
+  offset: number,
+  search?: string
+): Promise<Carrier[]> {
+  if (search?.trim()) {
+    const term = `%${search.trim()}%`;
+    return db
+      .select()
+      .from(carriers)
+      .where(ilike(carriers.name, term))
+      .orderBy(asc(carriers.name))
+      .limit(limit)
+      .offset(offset);
+  }
+  return db
+    .select()
+    .from(carriers)
+    .orderBy(asc(carriers.name))
+    .limit(limit)
+    .offset(offset);
 }
 
 export async function getCarrierById(id: string): Promise<Carrier | null> {

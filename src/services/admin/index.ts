@@ -85,6 +85,7 @@ export {
 // Carriers (synced from ShipsGo)
 export {
   getAllCarriers,
+  getCarriersPaginated,
   getCarrierById,
   syncCarriersFromShipsGo,
   type Carrier,
@@ -101,6 +102,20 @@ export {
   type CreateCurrencyExchangeBrokerData,
   type UpdateCurrencyExchangeBrokerData,
 } from './currency-exchange-brokers.service';
+
+// International Freights
+export {
+  getAllInternationalFreights,
+  getInternationalFreightById,
+  createInternationalFreight,
+  updateInternationalFreight,
+  deleteInternationalFreight,
+  type InternationalFreight,
+  type InternationalFreightWithPorts,
+  type PortSummary,
+  type CreateInternationalFreightData,
+  type UpdateInternationalFreightData,
+} from './international-freights.service';
 
 // Terminals & storage rules
 export {
