@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, Card } from '@heroui/react';
-import { Plus, Package, Layers } from 'lucide-react';
+import { Plus, Package, Layers, Container } from 'lucide-react';
 import { deleteStorageRuleAction } from '../actions';
 import { StorageRuleCard } from './storage-rule-card';
 import { StorageRuleFormModal } from './storage-rule-form-modal';
@@ -92,7 +92,7 @@ export function StorageRulesSection({ terminal, onRefresh }: StorageRulesSection
             {key === 'SEA_LCL' ? (
               <Layers size={18} />
             ) : (
-              <Package size={18} />
+              <Container size={18} />
             )}
             {t(key === 'SEA_FCL' ? 'StorageRules.fcl' : key === 'SEA_FCL_PARTIAL' ? 'StorageRules.fclPartial' : 'StorageRules.lcl')}
           </h4>

@@ -40,6 +40,15 @@ export function formatStorageFee(value: number, currency = 'BRL'): string {
   }).format(value);
 }
 
+/** Formata percentual em decimal (0.0038 → "0,38%") */
+export function formatStoragePercent(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 export function getFeeBasisLabel(basis: string): string {
   return FEE_BASIS_LABELS[basis] ?? basis;
 }

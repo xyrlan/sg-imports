@@ -455,7 +455,7 @@ export const storageRules = pgTable('storage_rules', {
   currency: currencyEnum('currency').default('BRL').notNull(),
   minValue: decimal('min_value', { precision: 10, scale: 2 }).default('0'),
   freeDays: integer('free_days').default(0),
-  cifInsurance: decimal('cif_insurance', { precision: 5, scale: 2 }).default('0'),
+  cifInsurance: decimal('cif_insurance', { precision: 10, scale: 6 }).default('0'),
   /** Array of additional fees (name, value, basis) for manual entry */
   additionalFees: jsonb('additional_fees').$type<StorageRuleAdditionalFee[]>().default([]),
 });

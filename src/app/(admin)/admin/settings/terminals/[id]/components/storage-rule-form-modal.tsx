@@ -15,7 +15,7 @@ import {
   Radio,
   Surface,
 } from '@heroui/react';
-import { Plus, X } from 'lucide-react';
+import { Copy, Edit, Plus, X } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionState, startTransition, useRef } from 'react';
 import {
@@ -100,7 +100,7 @@ export function StorageRuleFormModal({
         setShipmentType((sourceRule.shipmentType as 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'SEA_LCL') ?? 'SEA_FCL');
         setContainerType(sourceRule.containerType ?? 'GP_20');
         setMinValue(Number(sourceRule.minValue ?? 0));
-        setCifInsurance(Number(sourceRule.cifInsurance ?? 0));
+        setCifInsurance(Number(String(sourceRule.cifInsurance ?? 0).replace(',', '.')) || 0);
         setAdditionalFees(
           ((sourceRule.additionalFees ?? []) as StorageRuleAdditionalFee[]).map((f) => ({
             name: f.name,
@@ -198,13 +198,18 @@ export function StorageRuleFormModal({
       ? t('StorageRuleForm.duplicate')
       : t('StorageRuleForm.create');
 
+
+  const modalIcon = isEditing ? <Edit className="size-5" /> : isDuplicating ? <Copy className="size-5" /> : <Plus className="size-5" />;
   return (
     <Modal>
       <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => !open && onClose()} isDismissable={false}>
         <Modal.Container>
           <Modal.Dialog className="max-w-6xl overflow-y-auto">
             <Modal.CloseTrigger />
-            <Modal.Header className="mb-6">
+            <Modal.Header className="mb-6"> 
+              <Modal.Icon className="bg-default text-foreground">
+                {modalIcon}
+              </Modal.Icon>
               <Modal.Heading>{modalTitle}</Modal.Heading>
             </Modal.Header>
             <form onSubmit={handleSubmit}>

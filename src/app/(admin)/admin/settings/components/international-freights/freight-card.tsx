@@ -15,7 +15,7 @@ interface FreightCardProps {
 
 export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
   const t = useTranslations('Admin.Settings.InternationalFreights');
-
+  const totalValue = Number(freight.value) + (Number(freight.expectedProfit ?? 0) ?? 0);
   return (
     <Card key={freight.id} className="p-4">
       <div className="space-y-3">
@@ -28,8 +28,8 @@ export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
 
       </div>
           <div>
-          <span className="text-xl font-bold">
-            {Number(freight.value).toLocaleString('pt-BR', {
+          <span className="font-bold text-accent">
+            {Number(totalValue).toLocaleString('pt-BR', {
               style: 'currency',
               currency: freight.currency ?? 'USD',
             })}
@@ -60,11 +60,26 @@ export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
                 </Chip>
               )}
         </div>
+        <p className='text-xs text-muted'>
+        {Number(freight.value).toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: freight.currency ?? 'USD',
+            })} {t('value')}
+        </p> 
+        {freight.expectedProfit && (
+          <p className="text-xs text-muted">
+            {Number(freight.expectedProfit).toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: freight.currency ?? 'USD',
+            })} {t('expectedProfit')}
+          </p>
+        )}
         {(freight.freeTimeDays ?? 0) > 0 && (
           <p className="text-xs text-muted">
             {t('freeTimeDaysCount', { count: freight.freeTimeDays ?? 0 })}
           </p>
         )}
+
         <div className="flex justify-end gap-1 pt-2">
           <Button isIconOnly size="sm" variant="tertiary" onPress={onEdit}>
             <Edit className="size-4" />

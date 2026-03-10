@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { formatStorageFee } from '@/lib/storage-utils';
+import { formatStorageFee, formatStoragePercent } from '@/lib/storage-utils';
 import type { StorageRuleWithPeriods } from './types';
 
 interface StorageRuleMinValueSectionProps {
@@ -25,7 +25,7 @@ export function StorageRuleMinValueSection({ rule }: StorageRuleMinValueSectionP
         <div className="flex items-center justify-between text-xs">
           <span>{t('StorageRuleForm.cifInsurance')}:</span>
           <span className="font-medium">
-            {formatStorageFee(Number(rule.cifInsurance ?? 0), currency)}
+            {formatStoragePercent(Number(String(rule.cifInsurance ?? 0).replace(',', '.')))}
           </span>
         </div>
       )}
