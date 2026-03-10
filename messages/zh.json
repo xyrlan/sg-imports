@@ -1265,7 +1265,16 @@
       "productShare": "产品",
       "logisticsShare": "物流",
       "taxesShare": "税费",
-      "landedCostPerItem": "每件到岸成本"
+      "landedCostPerItem": "每件到岸成本",
+      "taxDetails": "更多详情",
+      "taxDetailsLess": "收起详情",
+      "taxII": "II（进口税）",
+      "taxIPI": "IPI",
+      "taxPIS": "PIS",
+      "taxCOFINS": "COFINS",
+      "taxSiscomex": "Siscomex",
+      "taxAFRMM": "AFRMM",
+      "taxICMS": "ICMS"
     },
     "SimulatedProduct": {
       "name": "产品名称",

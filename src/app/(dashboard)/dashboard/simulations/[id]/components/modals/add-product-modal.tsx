@@ -212,6 +212,7 @@ export function AddProductModal({
                       onSubmit={handleAddSimulated}
                       isSubmitting={isPending}
                       formId={formId}
+                      hideSubmitButton
                     />
                   </Tabs.Panel>
                 </Tabs>
@@ -220,6 +221,15 @@ export function AddProductModal({
                 <Modal.Footer>
                   <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)}>
                     {tForm('cancel')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    form={formId}
+                    variant="primary"
+                    isDisabled={isPending}
+                    isPending={isPending}
+                  >
+                    {t('add')}
                   </Button>
                 </Modal.Footer>
               )}

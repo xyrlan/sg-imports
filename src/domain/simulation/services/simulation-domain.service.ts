@@ -18,12 +18,7 @@ import type { ShippingMetadata } from '@/db/types';
 import { getSiscomexFeeConfig, getGlobalPlatformRates } from '@/services/admin/config.service';
 import { runLandedCostEngine } from '../engine/landed-cost-engine';
 import type { LandedCostEngineItemInput, LandedCostEngineContext } from '../engine/types';
-
-const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
-  'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
-  'SP', 'SE', 'TO',
-] as const;
+import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 
 export interface CalculateAndPersistResult {
   success: boolean;

@@ -1265,7 +1265,16 @@
       "productShare": "Produto",
       "logisticsShare": "Logística",
       "taxesShare": "Impostos",
-      "landedCostPerItem": "Custo posto unitário por item"
+      "landedCostPerItem": "Custo posto unitário por item",
+      "taxDetails": "Mais detalhes",
+      "taxDetailsLess": "Menos detalhes",
+      "taxII": "II (Imposto de Importação)",
+      "taxIPI": "IPI",
+      "taxPIS": "PIS",
+      "taxCOFINS": "COFINS",
+      "taxSiscomex": "Siscomex",
+      "taxAFRMM": "AFRMM",
+      "taxICMS": "ICMS"
     },
     "SimulatedProduct": {
       "name": "Nome do produto",

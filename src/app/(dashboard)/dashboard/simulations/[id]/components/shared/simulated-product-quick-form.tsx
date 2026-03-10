@@ -48,7 +48,7 @@ export function SimulatedProductQuickForm({
   const [name, setName] = useState('');
   const [hsCodeId, setHsCodeId] = useState<string | null>(null);
   const [priceUsd, setPriceUsd] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState('1');
   const [totalCbm, setTotalCbm] = useState('');
   const [totalWeight, setTotalWeight] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -64,7 +64,7 @@ export function SimulatedProductQuickForm({
     if (initialSnapshot) {
       setName(initialSnapshot.name ?? '');
       setPriceUsd((initialPriceUsd || initialSnapshot.priceUsd) ?? '');
-      setQuantity(initialQuantity);
+      setQuantity(String(initialQuantity));
       // totalCbm/totalWeight no snapshot são por unidade
       setTotalCbm(initialSnapshot.totalCbm != null ? String(initialSnapshot.totalCbm) : '');
       setTotalWeight(initialSnapshot.totalWeight != null ? String(initialSnapshot.totalWeight) : '');
@@ -124,7 +124,8 @@ export function SimulatedProductQuickForm({
       snapshot.totalWeight = weight > 0 ? weight : undefined;
     }
 
-    await onSubmit(snapshot, quantity, priceUsd.trim() || '0');
+    const quantityNum = Math.max(1, parseInt(quantity, 10) || 1);
+    await onSubmit(snapshot, quantityNum, priceUsd.trim() || '0');
   }
 
   return (
@@ -155,6 +156,7 @@ export function SimulatedProductQuickForm({
               if (k) setNcmSearch(hsCodes.find((hc) => hc.id === k)?.code ?? '');
             }}
             className="min-w-40"
+            isRequired
           >
             <Select.Trigger>
               <Select.Value />
@@ -181,20 +183,22 @@ export function SimulatedProductQuickForm({
         <TextField
           variant="primary"
           isRequired
-          value={String(quantity)}
-          onChange={(v) => setQuantity(Math.max(1, Number(v) || 1))}
+          value={quantity}
+          onChange={(v) => {
+            if (v === '' || /^\d+$/.test(v)) setQuantity(v);
+          }}
         >
           <Label>{tQuick('quantity')}</Label>
-          <Input type="number" min={1} />
+          <Input type="text" inputMode="numeric" placeholder="1" />
         </TextField>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <TextField variant="primary" value={totalCbm} onChange={setTotalCbm}>
+        <TextField variant="primary" value={totalCbm} onChange={setTotalCbm} isRequired>
           <Label>{tQuick('totalCbm')}</Label>
           <Input type="text" inputMode="decimal" placeholder="0.000" />
         </TextField>
-        <TextField variant="primary" value={totalWeight} onChange={setTotalWeight}>
+        <TextField variant="primary" value={totalWeight} onChange={setTotalWeight} isRequired>
           <Label>{tQuick('totalWeight')}</Label>
           <Input type="text" inputMode="decimal" placeholder="0.000" />
         </TextField>

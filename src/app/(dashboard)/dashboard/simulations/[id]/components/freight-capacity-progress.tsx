@@ -46,16 +46,16 @@ function ProgressBar({
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-xs">
         <span className="flex items-center gap-2">
           <Icon className="size-4" />
           {label}
         </span>
-        <span className={isOver ? 'text-danger' : 'text-muted-foreground'}>
+        <span className={isOver ? 'text-danger' : 'text-muted'}>
           {formatVal(value)} / {formatVal(max)}
         </span>
       </div>
-      <div className="h-2 w-full rounded-full bg-muted-foreground/20 overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-accent-soft-hover overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
@@ -106,7 +106,7 @@ export function FreightCapacityProgress({
     const weightSoft = weightExcessRatio > 1 && weightExcessRatio <= 1.02;
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h3 className="font-semibold flex items-center gap-2">
           <Ship className="size-5" />
           {containerType && (
