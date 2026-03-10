@@ -32,6 +32,7 @@ export {
 export {
   getAllOrganizations,
   getOrganizationByIdAsAdmin,
+  getOrganizationsForSelect,
   getOrganizationWithAddresses,
   getOrganizationMembers,
   updateOrganizationAsAdmin,
@@ -83,6 +84,26 @@ export {
   type CreatePortData,
   type UpdatePortData,
 } from './ports.service';
+
+// Suppliers & sub-suppliers
+export {
+  getAllSuppliers,
+  getSupplierById,
+  getSupplierWithSubSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+  createSubSupplier,
+  updateSubSupplier,
+  deleteSubSupplier,
+  type Supplier,
+  type SubSupplier,
+  type SupplierWithSubSuppliers,
+  type CreateSupplierData,
+  type UpdateSupplierData,
+  type CreateSubSupplierData,
+  type UpdateSubSupplierData,
+} from './suppliers.service';
 
 // Carriers (synced from ShipsGo)
 export {

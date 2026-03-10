@@ -28,6 +28,7 @@ export const SECTION_KEYS = [
   'impostos_taxas',
   'terminals',
   'ports',
+  'suppliers',
   'carriers',
   'currency_exchange_brokers',
   'audit_log',

@@ -11,6 +11,7 @@ import {
   Package,
   Receipt,
   Ship,
+  Truck,
 } from 'lucide-react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { SECTION_KEYS } from './constants';
@@ -65,6 +66,12 @@ export function SettingsContentShell({ children }: SettingsContentShellProps) {
       label: t('ports'),
       icon: <Anchor size={16} />,
       description: t('portsDescription'),
+    },
+    {
+      key: 'suppliers' as const,
+      label: t('suppliers'),
+      icon: <Truck size={16} />,
+      description: t('suppliersDescription'),
     },
     {
       key: 'carriers' as const,

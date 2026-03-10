@@ -7,8 +7,8 @@ import {
 } from './section-loaders';
 
 type SearchParams =
-  | Promise<{ activeSection?: string }>
-  | { activeSection?: string };
+  | Promise<{ activeSection?: string; organizationId?: string; supplierId?: string }>
+  | { activeSection?: string; organizationId?: string; supplierId?: string };
 
 export default async function AdminSettingsPage({
   searchParams,
@@ -20,14 +20,20 @@ export default async function AdminSettingsPage({
       ? await searchParams
       : searchParams;
   const activeSection = (params?.activeSection ?? 'honorarios') as SectionKey;
+  const organizationId = params?.organizationId ?? '';
+  const supplierId = params?.supplierId ?? '';
 
   return (
     <SettingsContentShell>
       <Suspense
-        key={activeSection}
+        key={`${activeSection}-${organizationId}-${supplierId}`}
         fallback={<SettingsSectionSkeleton />}
       >
-        <SectionContentLoader sectionKey={activeSection} />
+        <SectionContentLoader
+          sectionKey={activeSection}
+          organizationId={organizationId}
+          supplierId={supplierId}
+        />
       </Suspense>
     </SettingsContentShell>
   );

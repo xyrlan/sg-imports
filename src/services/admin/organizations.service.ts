@@ -112,6 +112,16 @@ export async function getOrganizationByIdAsAdmin(id: string): Promise<Organizati
   return result ?? null;
 }
 
+/**
+ * Fetch organizations for select/dropdown (id, name only).
+ */
+export async function getOrganizationsForSelect(): Promise<{ id: string; name: string }[]> {
+  return db
+    .select({ id: organizations.id, name: organizations.name })
+    .from(organizations)
+    .orderBy(asc(organizations.name));
+}
+
 export interface OrganizationAddress {
   id: string;
   street: string;

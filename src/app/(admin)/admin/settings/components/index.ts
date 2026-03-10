@@ -4,6 +4,7 @@ export { HonorariosSection } from './honorarios/honorarios-section';
 export { ImpostosTaxasSection } from './impostos-taxas/impostos-taxas-section';
 export { TerminalsSection } from './terminals/terminals-section';
 export { PortsSection } from './ports/ports-section';
+export { SuppliersSection } from './suppliers/suppliers-section';
 export { CarriersSection } from './carriers/carriers-section';
 export { CurrencyExchangeBrokersSection } from './currency-exchange-brokers/currency-exchange-brokers-section';
 export { InternationalFreightsSection } from './international-freights';

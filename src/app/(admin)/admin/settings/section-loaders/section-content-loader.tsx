@@ -5,16 +5,21 @@ import { InternationalFreightsLoader } from './international-freights-loader';
 import { FreightTaxasLoader } from './freight-taxas-loader';
 import { TerminalsLoader } from './terminals-loader';
 import { PortsLoader } from './ports-loader';
+import { SuppliersLoader } from './suppliers-loader';
 import { CarriersLoader } from './carriers-loader';
 import { CurrencyBrokersLoader } from './currency-brokers-loader';
 import { AuditLoader } from './audit-loader';
 
 interface SectionContentLoaderProps {
   sectionKey: SectionKey;
+  organizationId?: string;
+  supplierId?: string;
 }
 
 export async function SectionContentLoader({
   sectionKey,
+  organizationId = '',
+  supplierId = '',
 }: SectionContentLoaderProps) {
   switch (sectionKey) {
     case 'honorarios':
@@ -29,6 +34,8 @@ export async function SectionContentLoader({
       return <TerminalsLoader />;
     case 'ports':
       return <PortsLoader />;
+    case 'suppliers':
+      return <SuppliersLoader organizationId={organizationId} supplierId={supplierId} />;
     case 'carriers':
       return <CarriersLoader />;
     case 'currency_exchange_brokers':

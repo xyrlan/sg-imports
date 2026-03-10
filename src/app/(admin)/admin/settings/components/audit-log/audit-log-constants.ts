@@ -5,6 +5,8 @@ export const AUDIT_TABLE_KEYS = [
   'global_platform_rates',
   'terminals',
   'ports',
+  'suppliers',
+  'sub_suppliers',
   'currency_exchange_brokers',
   'international_freights',
   'pricing_rules',
