@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Button,
@@ -21,8 +21,9 @@ import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import { Ship } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { CarrierAutocomplete } from './carrier-autocomplete';
-import { CONTAINER_TYPE_LABELS } from './constants';
+import { CONTAINER_TYPE_LABELS, SHIPPING_MODALITY_LABELS } from './constants';
 import type { InternationalFreightWithPorts } from '@/services/admin';
+import type { ShippingModalityForFreight } from '@/services/admin';
 import type { Port } from '@/services/admin';
 
 interface FreightFormModalProps {
@@ -31,8 +32,9 @@ interface FreightFormModalProps {
   editingFreight: InternationalFreightWithPorts | null;
   ports: Port[];
   onSubmit: (data: {
-    carrierId: string;
-    containerType: string;
+    shippingModality: ShippingModalityForFreight;
+    carrierId: string | null;
+    containerType: string | null;
     value: string;
     currency: string;
     freeTimeDays: number;
@@ -53,6 +55,8 @@ export function FreightFormModal({
   onSuccess,
 }: FreightFormModalProps) {
   const t = useTranslations('Admin.Settings.InternationalFreights');
+  const SHIPPING_MODALITIES: ShippingModalityForFreight[] = ['AIR', 'SEA_LCL', 'SEA_FCL', 'EXPRESS'];
+  const [shippingModality, setShippingModality] = useState<ShippingModalityForFreight>('SEA_FCL');
   const [carrierId, setCarrierId] = useState('');
   const [containerType, setContainerType] = useState('');
   const [value, setValue] = useState('');
@@ -66,6 +70,11 @@ export function FreightFormModal({
   const [portOfDischargeSearch, setPortOfDischargeSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const portsByModality = useMemo(() => {
+    const targetType = shippingModality === 'AIR' ? 'AIRPORT' : 'PORT';
+    return ports.filter((p) => (p.type ?? 'PORT') === targetType);
+  }, [ports, shippingModality]);
+
   const filterPorts = (portsList: Port[], query: string) => {
     if (!query.trim()) return portsList;
     const q = query.toLowerCase().trim();
@@ -76,15 +85,20 @@ export function FreightFormModal({
     );
   };
 
-  const filteredPortsOfLoading = filterPorts(ports, portOfLoadingSearch);
-  const filteredPortsOfDischarge = filterPorts(ports, portOfDischargeSearch);
+  const filteredPortsOfLoading = filterPorts(portsByModality, portOfLoadingSearch);
+  const filteredPortsOfDischarge = filterPorts(portsByModality, portOfDischargeSearch);
   const [isPending, setIsPending] = useState(false);
+
+  const showCarrier = shippingModality === 'SEA_FCL' || shippingModality === 'AIR';
+  const showContainerType = shippingModality === 'SEA_FCL';
 
   useEffect(() => {
     if (isOpen) {
       if (editingFreight) {
+        const modality = (editingFreight.shippingModality ?? 'SEA_FCL') as ShippingModalityForFreight;
+        setShippingModality(SHIPPING_MODALITIES.includes(modality) ? modality : 'SEA_FCL');
         setCarrierId(editingFreight.carrierId ?? '');
-        setContainerType(editingFreight.containerType);
+        setContainerType(editingFreight.containerType ?? '');
         setValue(String(editingFreight.value ?? ''));
         setCurrency(editingFreight.currency ?? 'USD');
         setFreeTimeDays(editingFreight.freeTimeDays ?? 0);
@@ -97,6 +111,7 @@ export function FreightFormModal({
         setPortOfLoadingIds(new Set(editingFreight.portsOfLoading.map((p) => p.id)));
         setPortOfDischargeIds(new Set(editingFreight.portsOfDischarge.map((p) => p.id)));
       } else {
+        setShippingModality('SEA_FCL');
         setCarrierId('');
         setContainerType('');
         setValue('');
@@ -113,11 +128,31 @@ export function FreightFormModal({
     }
   }, [isOpen, editingFreight]);
 
+  const handleModalityChange = (modality: ShippingModalityForFreight) => {
+    setShippingModality(modality);
+    setPortOfLoadingIds(new Set());
+    setPortOfDischargeIds(new Set());
+    if (modality === 'SEA_LCL' || modality === 'EXPRESS') {
+      setCarrierId('');
+      setContainerType('');
+    } else if (modality === 'AIR') {
+      setContainerType('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!carrierId || !containerType || !value || portOfLoadingIds.size === 0 || portOfDischargeIds.size === 0) {
+    if (!value || portOfLoadingIds.size === 0 || portOfDischargeIds.size === 0) {
       setError(t('validationRequired'));
+      return;
+    }
+    if (showCarrier && !carrierId) {
+      setError(t('validationCarrierRequired'));
+      return;
+    }
+    if (showContainerType && !containerType) {
+      setError(t('validationContainerRequired'));
       return;
     }
     const numValue = parseFloat(value);
@@ -125,11 +160,14 @@ export function FreightFormModal({
       setError(t('validationValue'));
       return;
     }
+    const finalCarrierId = showCarrier ? carrierId : null;
+    const finalContainerType = showContainerType ? containerType : null;
     setIsPending(true);
     try {
       const result = await onSubmit({
-        carrierId,
-        containerType,
+        shippingModality,
+        carrierId: finalCarrierId || null,
+        containerType: finalContainerType || null,
         value,
         currency,
         freeTimeDays,
@@ -171,43 +209,73 @@ export function FreightFormModal({
             </Modal.Header>
             <form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4 p-2">
-                <TextField variant="primary" isRequired>
-                  <Label>{t('carrier')}</Label>
-                  <CarrierAutocomplete
-                    placeholder={t('carrierPlaceholder')}
-                    value={carrierId || null}
-                    onChange={(k) => setCarrierId(k ?? '')}
-                    fullWidth
-                    variant="primary"
-                    selectedCarrierId={carrierId || null}
-                  />
-                </TextField>
-
                 <div className="flex flex-col gap-2">
-                  <Label>{t('containerType')}</Label>
+                  <Label>{t('shippingModality')}</Label>
                   <Select
-                    placeholder={t('containerTypePlaceholder')}
-                    value={containerType || null}
-                    onChange={(k) => setContainerType(k ? String(k) : '')}
+                    placeholder={t('shippingModalityPlaceholder')}
+                    value={shippingModality}
+                    onChange={(k) => handleModalityChange((k as ShippingModalityForFreight) ?? 'SEA_FCL')}
                     variant="primary"
                     isRequired
                   >
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      {containerTypes.map((ct) => (
-                        <ListBox.Item key={ct} id={ct} textValue={CONTAINER_TYPE_LABELS[ct] ?? ct}>
-                          {CONTAINER_TYPE_LABELS[ct] ?? ct}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
+                    <Select.Trigger>
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox>
+                        {SHIPPING_MODALITIES.map((mod) => (
+                          <ListBox.Item key={mod} id={mod} textValue={SHIPPING_MODALITY_LABELS[mod] ?? mod}>
+                            {SHIPPING_MODALITY_LABELS[mod] ?? mod}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        ))}
+                      </ListBox>
+                    </Select.Popover>
+                  </Select>
                 </div>
+
+                {showCarrier && (
+                  <TextField variant="primary" isRequired>
+                    <Label>{t('carrier')}</Label>
+                    <CarrierAutocomplete
+                      placeholder={t('carrierPlaceholder')}
+                      value={carrierId || null}
+                      onChange={(k) => setCarrierId(k ?? '')}
+                      fullWidth
+                      variant="primary"
+                      selectedCarrierId={carrierId || null}
+                    />
+                  </TextField>
+                )}
+
+                {showContainerType && (
+                  <div className="flex flex-col gap-2">
+                    <Label>{t('containerType')}</Label>
+                    <Select
+                      placeholder={t('containerTypePlaceholder')}
+                      value={containerType || null}
+                      onChange={(k) => setContainerType(k ? String(k) : '')}
+                      variant="primary"
+                      isRequired
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          {containerTypes.map((ct) => (
+                            <ListBox.Item key={ct} id={ct} textValue={CONTAINER_TYPE_LABELS[ct] ?? ct}>
+                              {CONTAINER_TYPE_LABELS[ct] ?? ct}
+                              <ListBox.ItemIndicator />
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <TextField variant="primary" isRequired>
@@ -276,7 +344,7 @@ export function FreightFormModal({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>{t('portsOfLoading')}</Label>
+                  <Label>{shippingModality === 'AIR' ? t('airportsOfLoading') : t('portsOfLoading')}</Label>
                   <p className="text-xs text-muted">{t('portsSearchHint')}</p>
                   <Input
                     placeholder={t('portsSearchPlaceholder')}
@@ -310,7 +378,7 @@ export function FreightFormModal({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>{t('portsOfDischarge')}</Label>
+                  <Label>{shippingModality === 'AIR' ? t('airportsOfDischarge') : t('portsOfDischarge')}</Label>
                   <p className="text-xs text-muted">{t('portsSearchHint')}</p>
                   <Input
                     placeholder={t('portsSearchPlaceholder')}

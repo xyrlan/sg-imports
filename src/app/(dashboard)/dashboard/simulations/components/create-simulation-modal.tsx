@@ -6,18 +6,16 @@ import { useActionState } from 'react';
 import { Button, Modal, Input, TextField, Label, FieldError, Select, ListBox } from '@heroui/react';
 import { ClipboardPen } from 'lucide-react';
 import { createSimulationAction } from '../actions';
-import { getShipmentTypeLabel } from '@/lib/storage-utils';
-
-const SHIPPING_MODALITIES = ['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS'] as const;
+import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 
 interface CreateSimulationModalProps {
   organizationId: string;
   onMutate?: () => void;
 }
 
-export function CreateSimulationModal({ organizationId, onMutate }: CreateSimulationModalProps) {
+export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: CreateSimulationModalProps) {
   const [open, setOpen] = useState(false);
-  const [shippingModality, setShippingModality] = useState<string | null>(null);
+  const [destinationState, setDestinationState] = useState<string | null>(null);
   const t = useTranslations('Simulations.CreateSimulation');
 
   const [state, formAction, isPending] = useActionState(createSimulationAction, null);
@@ -26,8 +24,8 @@ export function CreateSimulationModal({ organizationId, onMutate }: CreateSimula
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
-    if (shippingModality && shippingModality !== '__none__') {
-      formData.set('shippingModality', shippingModality);
+    if (destinationState && destinationState !== '__none__') {
+      formData.set('destinationState', destinationState);
     }
     startTransition(() => {
       formAction(formData);
@@ -72,12 +70,12 @@ export function CreateSimulationModal({ organizationId, onMutate }: CreateSimula
                     <FieldError />
                   </TextField>
                   <div className="flex flex-col gap-2">
-                    <Label>{t('shippingModalityLabel')}</Label>
+                    <Label>{t('destinationStateLabel')}</Label>
                     <Select
                       variant="primary"
-                      placeholder={t('shippingModalityPlaceholder')}
-                      value={shippingModality ?? '__none__'}
-                      onChange={(k) => setShippingModality(k === '__none__' ? null : (k as string))}
+                      placeholder={t('destinationStatePlaceholder')}
+                      value={destinationState ?? '__none__'}
+                      onChange={(k) => setDestinationState(k === '__none__' ? null : (k as string))}
                       isDisabled={isPending}
                     >
                       <Select.Trigger>
@@ -86,13 +84,13 @@ export function CreateSimulationModal({ organizationId, onMutate }: CreateSimula
                       </Select.Trigger>
                       <Select.Popover>
                         <ListBox>
-                          <ListBox.Item key="__none__" id="__none__" textValue={t('none')}>
-                            {t('none')}
+                          <ListBox.Item key="__none__" id="__none__" textValue={t('destinationStatePlaceholder')}>
+                            {t('destinationStatePlaceholder')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
-                          {SHIPPING_MODALITIES.map((m) => (
-                            <ListBox.Item key={m} id={m} textValue={getShipmentTypeLabel(m)}>
-                              {getShipmentTypeLabel(m)}
+                          {BRAZILIAN_STATES.map((uf) => (
+                            <ListBox.Item key={uf} id={uf} textValue={uf}>
+                              {uf}
                               <ListBox.ItemIndicator />
                             </ListBox.Item>
                           ))}

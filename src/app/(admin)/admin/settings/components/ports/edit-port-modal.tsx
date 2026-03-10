@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, Modal, TextField } from '@heroui/react';
+import { Button, Input, Label, ListBox, Modal, Select, TextField } from '@heroui/react';
 import { Anchor } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionState } from 'react';
@@ -27,6 +27,7 @@ export function EditPortModal({
   const [name, setName] = useState(port.name);
   const [code, setCode] = useState(port.code);
   const [country, setCountry] = useState(port.country);
+  const [type, setType] = useState<'PORT' | 'AIRPORT'>((port.type as 'PORT' | 'AIRPORT') ?? 'PORT');
   const [state, formAction, isPending] = useActionState(
     updatePortAction.bind(null, port.id),
     null,
@@ -34,8 +35,10 @@ export function EditPortModal({
 
   const handleCodeChange = (value: string) => {
     setCode(value);
-    const autoCountry = getCountryFromCode(value);
-    if (autoCountry) setCountry(autoCountry);
+    if (type === 'PORT') {
+      const autoCountry = getCountryFromCode(value);
+      if (autoCountry) setCountry(autoCountry);
+    }
   };
 
   useEffect(() => {
@@ -44,9 +47,10 @@ export function EditPortModal({
         setName(port.name);
         setCode(port.code);
         setCountry(port.country);
+        setType((port.type as 'PORT' | 'AIRPORT') ?? 'PORT');
       });
     }
-  }, [isOpen, port.name, port.code, port.country]);
+  }, [isOpen, port.name, port.code, port.country, port.type]);
 
   useEffect(() => {
     if (state?.ok && !isPending) {
@@ -70,22 +74,48 @@ export function EditPortModal({
             <form action={formAction}>
               <Modal.Body className="p-2">
                 <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <Label>{t('Ports.type')}</Label>
+                    <input type="hidden" name="type" value={type} />
+                    <Select
+                      selectedKey={type}
+                      onSelectionChange={(k) => setType((k as 'PORT' | 'AIRPORT') ?? 'PORT')}
+                      variant="primary"
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          <ListBox.Item key="PORT" id="PORT" textValue={t('Ports.typePort')}>
+                            {t('Ports.typePort')}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                          <ListBox.Item key="AIRPORT" id="AIRPORT" textValue={t('Ports.typeAirport')}>
+                            {t('Ports.typeAirport')}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  </div>
                   <TextField variant="primary" isRequired>
                     <Label>{t('Ports.name')}</Label>
                     <Input
                       name="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder={t('Ports.namePlaceholder')}
+                      placeholder={type === 'AIRPORT' ? t('Ports.namePlaceholderAirport') : t('Ports.namePlaceholder')}
                     />
                   </TextField>
                   <TextField variant="primary" isRequired>
-                    <Label>{t('Ports.code')}</Label>
+                    <Label>{type === 'AIRPORT' ? t('Ports.codeIata') : t('Ports.code')}</Label>
                     <Input
                       name="code"
                       value={code}
                       onChange={(e) => handleCodeChange(e.target.value)}
-                      placeholder={t('Ports.codePlaceholder')}
+                      placeholder={type === 'AIRPORT' ? t('Ports.codePlaceholderIata') : t('Ports.codePlaceholder')}
                     />
                   </TextField>
                   <TextField variant="primary" isRequired>

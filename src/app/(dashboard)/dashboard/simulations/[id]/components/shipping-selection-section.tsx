@@ -13,12 +13,7 @@ import { validateFreightCapacity, shouldBlockConfirm } from '@/lib/freight-valid
 import { updateSimulationAction } from '../../actions';
 import type { Simulation } from '@/services/simulation.service';
 import type { ShippingMetadata } from '@/db/types';
-
-const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
-  'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
-  'SP', 'SE', 'TO',
-] as const;
+import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 
 interface ShippingSelectionSectionProps {
   simulation: Simulation;

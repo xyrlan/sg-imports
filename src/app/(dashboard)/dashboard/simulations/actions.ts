@@ -25,7 +25,7 @@ const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PAR
 const createSimulationSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required').max(200),
-  shippingModality: shippingModalitySchema.optional(),
+  destinationState: z.string().max(2).optional(),
 });
 
 const addCatalogItemSchema = z.object({
@@ -107,7 +107,7 @@ export async function createSimulationAction(
     const rawData = {
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
-      shippingModality: formData.get('shippingModality') as string | undefined,
+      destinationState: (formData.get('destinationState') as string)?.trim() || undefined,
     };
 
     const validated = createSimulationSchema.safeParse(rawData);
@@ -123,13 +123,16 @@ export async function createSimulationAction(
     }
 
     const targetDolar = String(await getDolarPTAX());
+    const metadata: ShippingMetadata | undefined = validated.data.destinationState
+      ? { destinationState: validated.data.destinationState }
+      : undefined;
 
     const created = await createSimulation({
       organizationId: validated.data.organizationId,
       userId: user.id,
       name: validated.data.name,
       targetDolar,
-      shippingModality: validated.data.shippingModality ?? null,
+      metadata,
     });
 
     if (!created) {

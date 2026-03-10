@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { AlertDialog, Button } from '@heroui/react';
-import { CONTAINER_TYPE_LABELS } from './constants';
+import { CONTAINER_TYPE_LABELS, SHIPPING_MODALITY_LABELS } from './constants';
 import type { InternationalFreightWithPorts } from '@/services/admin';
 
 interface DeleteFreightDialogProps {
@@ -35,7 +35,9 @@ export function DeleteFreightDialog({
                 {freight &&
                   t('deleteConfirm', {
                     carrier: freight.carrier?.name ?? t('noCarrier'),
-                    container: CONTAINER_TYPE_LABELS[freight.containerType],
+                    container: freight.containerType
+                      ? CONTAINER_TYPE_LABELS[freight.containerType]
+                      : (freight.shippingModality ? SHIPPING_MODALITY_LABELS[freight.shippingModality] : '-'),
                   })}
               </p>
             </AlertDialog.Body>

@@ -1,10 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Button } from '@heroui/react';
-import { ArrowLeft, PackageOpen } from 'lucide-react';
+import { ArrowLeft, PackageOpen, Settings } from 'lucide-react';
 import { SimulationItemsList } from './simulation-items-list';
 import type {
   Simulation,
@@ -14,6 +15,7 @@ import type {
 } from '@/services/simulation.service';
 import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
+import { SimulationSettingsModal } from './simulation-settings-modal';
 import { ShippingSelectionSection } from './shipping-selection-section';
 import { SimulationFinancialSummary } from './simulation-financial-summary';
 
@@ -39,6 +41,7 @@ export function SimulationDetailContent({
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
   const router = useRouter();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleMutate = () => {
     router.refresh();
@@ -61,13 +64,31 @@ export function SimulationDetailContent({
             </p>
           </div>
         </div>
-        <AddProductToSimulationModal
-          simulationId={simulation.id}
-          organizationId={organizationId}
-          products={products}
-          hsCodes={hsCodes}
-          onMutate={handleMutate}
-        />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onPress={() => setSettingsOpen(true)}
+            className="inline-flex items-center gap-2"
+          >
+            <Settings className="size-4" />
+            {t('settingsButton')}
+          </Button>
+          <SimulationSettingsModal
+            simulation={simulation}
+            defaultDestinationState={defaultDestinationState}
+            onMutate={handleMutate}
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+          />
+          <AddProductToSimulationModal
+            simulationId={simulation.id}
+            organizationId={organizationId}
+            products={products}
+            hsCodes={hsCodes}
+            onMutate={handleMutate}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">

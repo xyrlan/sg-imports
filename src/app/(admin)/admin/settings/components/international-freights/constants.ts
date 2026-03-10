@@ -1,5 +1,12 @@
 import type { InternationalFreightWithPorts } from '@/services/admin';
 
+export const SHIPPING_MODALITY_LABELS: Record<string, string> = {
+  AIR: 'Aéreo',
+  SEA_FCL: 'FCL',
+  SEA_LCL: 'LCL',
+  EXPRESS: 'Expresso',
+};
+
 export const CONTAINER_TYPE_LABELS: Record<string, string> = {
   GP_20: "GP 20'",
   GP_40: "GP 40'",
@@ -36,9 +43,10 @@ export function groupedByContainer(
 ): [string, InternationalFreightWithPorts[]][] {
   const map = new Map<string, InternationalFreightWithPorts[]>();
   for (const f of freights) {
-    const list = map.get(f.containerType) ?? [];
+    const key = f.containerType ?? (f.shippingModality ? SHIPPING_MODALITY_LABELS[f.shippingModality] ?? f.shippingModality : 'outros');
+    const list = map.get(key) ?? [];
     list.push(f);
-    map.set(f.containerType, list);
+    map.set(key, list);
   }
   return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 }

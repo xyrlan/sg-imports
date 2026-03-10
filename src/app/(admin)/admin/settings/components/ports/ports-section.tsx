@@ -44,6 +44,18 @@ function usePortColumns(
           <span className="text-sm text-muted">{info.getValue()}</span>
         ),
       }),
+      portColumnHelper.accessor('type', {
+        header: t('Ports.columns.type'),
+        filterFn: facetedFilterFn,
+        cell: (info) => {
+          const type = info.getValue() ?? 'PORT';
+          return (
+            <span className="text-sm text-muted">
+              {type === 'AIRPORT' ? t('Ports.typeAirport') : t('Ports.typePort')}
+            </span>
+          );
+        },
+      }),
       portColumnHelper.display({
         id: 'actions',
         header: '',
@@ -91,14 +103,23 @@ function usePortFilters(ports: Port[]): FacetedFilterDef[] {
 
   return useMemo(() => {
     const countries = [...new Set(ports.map((p) => p.country))].sort();
-    if (countries.length === 0) return [];
-    return [
-      {
+    const filters: FacetedFilterDef[] = [];
+    if (countries.length > 0) {
+      filters.push({
         columnId: 'country',
         title: t('Ports.columns.country'),
         options: countries.map((c) => ({ label: c, value: c })),
-      },
-    ];
+      });
+    }
+    filters.push({
+      columnId: 'type',
+      title: t('Ports.columns.type'),
+      options: [
+        { label: t('Ports.typePort'), value: 'PORT' },
+        { label: t('Ports.typeAirport'), value: 'AIRPORT' },
+      ],
+    });
+    return filters;
   }, [ports, t]);
 }
 

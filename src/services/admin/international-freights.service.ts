@@ -34,9 +34,12 @@ export interface InternationalFreightWithPorts extends InternationalFreight {
   portsOfDischarge: PortSummary[];
 }
 
+export type ShippingModalityForFreight = 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS';
+
 export interface CreateInternationalFreightData {
-  carrierId: string;
-  containerType: InternationalFreight['containerType'];
+  shippingModality: ShippingModalityForFreight;
+  carrierId: string | null;
+  containerType: InternationalFreight['containerType'] | null;
   value: string;
   currency?: 'BRL' | 'USD' | 'CNY' | 'EUR';
   freeTimeDays?: number;
@@ -47,8 +50,9 @@ export interface CreateInternationalFreightData {
 }
 
 export interface UpdateInternationalFreightData {
-  carrierId?: string;
-  containerType?: InternationalFreight['containerType'];
+  shippingModality?: ShippingModalityForFreight;
+  carrierId?: string | null;
+  containerType?: InternationalFreight['containerType'] | null;
   value?: string;
   currency?: 'BRL' | 'USD' | 'CNY' | 'EUR';
   freeTimeDays?: number;
@@ -131,13 +135,34 @@ export async function getAllInternationalFreights(): Promise<
 
 export async function getInternationalFreightByCarrierAndContainer(
   carrierId: string,
-  containerType: InternationalFreight['containerType'],
+  containerType: NonNullable<InternationalFreight['containerType']>,
   excludeId?: string,
   client: DbOrTx = db,
 ): Promise<InternationalFreight | null> {
   const conditions = [
     eq(internationalFreights.carrierId, carrierId),
     eq(internationalFreights.containerType, containerType),
+    eq(internationalFreights.shippingModality, 'SEA_FCL'),
+  ];
+  if (excludeId) {
+    conditions.push(ne(internationalFreights.id, excludeId));
+  }
+  const [row] = await client
+    .select()
+    .from(internationalFreights)
+    .where(and(...conditions))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function getInternationalFreightByCarrier(
+  carrierId: string,
+  excludeId?: string,
+  client: DbOrTx = db,
+): Promise<InternationalFreight | null> {
+  const conditions = [
+    eq(internationalFreights.carrierId, carrierId),
+    eq(internationalFreights.shippingModality, 'AIR'),
   ];
   if (excludeId) {
     conditions.push(ne(internationalFreights.id, excludeId));
@@ -212,8 +237,9 @@ export async function createInternationalFreight(
   const [row] = await client
     .insert(internationalFreights)
     .values({
-      carrierId: data.carrierId,
-      containerType: data.containerType,
+      shippingModality: data.shippingModality,
+      carrierId: data.carrierId ?? null,
+      containerType: data.containerType ?? null,
       value: data.value,
       currency: data.currency ?? 'USD',
       freeTimeDays: data.freeTimeDays ?? 0,
@@ -251,8 +277,9 @@ export async function updateInternationalFreight(
   client: DbOrTx = db,
 ): Promise<InternationalFreight | null> {
   const baseData: Partial<InferInsertModel<typeof internationalFreights>> = {};
-  if (data.carrierId !== undefined) baseData.carrierId = data.carrierId;
-  if (data.containerType !== undefined) baseData.containerType = data.containerType;
+  if (data.shippingModality !== undefined) baseData.shippingModality = data.shippingModality;
+  if (data.carrierId !== undefined) baseData.carrierId = data.carrierId ?? null;
+  if (data.containerType !== undefined) baseData.containerType = data.containerType ?? null;
   if (data.value !== undefined) baseData.value = data.value;
   if (data.currency !== undefined) baseData.currency = data.currency;
   if (data.freeTimeDays !== undefined) baseData.freeTimeDays = data.freeTimeDays;

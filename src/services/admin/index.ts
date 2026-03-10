@@ -74,10 +74,12 @@ export {
 export {
   getAllPorts,
   getPortById,
+  getPortsByType,
   createPort,
   updatePort,
   deletePort,
   type Port,
+  type PortType,
   type CreatePortData,
   type UpdatePortData,
 } from './ports.service';
@@ -108,12 +110,14 @@ export {
   getAllInternationalFreights,
   getInternationalFreightById,
   getInternationalFreightByCarrierAndContainer,
+  getInternationalFreightByCarrier,
   createInternationalFreight,
   updateInternationalFreight,
   deleteInternationalFreight,
   type InternationalFreight,
   type InternationalFreightWithPorts,
   type PortSummary,
+  type ShippingModalityForFreight,
   type CreateInternationalFreightData,
   type UpdateInternationalFreightData,
 } from './international-freights.service';

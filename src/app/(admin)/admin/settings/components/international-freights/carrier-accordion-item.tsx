@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Accordion, Chip } from '@heroui/react';
-import { Ship } from 'lucide-react';
+import { Package, Ship } from 'lucide-react';
 import { FreightCard } from './freight-card';
 import { getValidityStatus } from './constants';
 import type { InternationalFreightWithPorts } from '@/services/admin';
@@ -10,6 +10,7 @@ import type { InternationalFreightWithPorts } from '@/services/admin';
 interface CarrierAccordionItemProps {
   carrier: { id: string; name: string };
   freights: InternationalFreightWithPorts[];
+  groupType: 'carrier' | 'modality';
   onEdit: (freight: InternationalFreightWithPorts) => void;
   onDelete: (freight: InternationalFreightWithPorts) => void;
 }
@@ -17,6 +18,7 @@ interface CarrierAccordionItemProps {
 export function CarrierAccordionItem({
   carrier,
   freights,
+  groupType,
   onEdit,
   onDelete,
 }: CarrierAccordionItemProps) {
@@ -24,6 +26,7 @@ export function CarrierAccordionItem({
   const validCount = freights.filter(
     (f) => getValidityStatus(f.validTo) !== 'expired'
   ).length;
+  const Icon = groupType === 'modality' ? Package : Ship;
 
   return (
     <Accordion.Item key={carrier.id} id={carrier.id}>
@@ -31,7 +34,7 @@ export function CarrierAccordionItem({
         <Accordion.Trigger className="w-full flex items-center justify-between pr-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
-              <Ship className="size-5 text-primary" />
+              <Icon className="size-5 text-primary" />
             </div>
             <div className="flex items-center gap-2">
               <span className="font-semibold">{carrier.name}</span>

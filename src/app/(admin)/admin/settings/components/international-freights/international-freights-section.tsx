@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { SHIPPING_MODALITY_LABELS } from './constants';
 import { useRouter } from 'next/navigation';
 import { Accordion, Button, Card } from '@heroui/react';
 import { Plus } from 'lucide-react';
@@ -76,12 +77,17 @@ export function InternationalFreightsSection({
   }, [freights, searchQuery, carrierFilter, statusFilter]);
 
   const groupedByCarrier = useMemo(() => {
-    const map = new Map<string, { carrier: { id: string; name: string }; freights: InternationalFreightWithPorts[] }>();
+    const map = new Map<
+      string,
+      { carrier: { id: string; name: string }; freights: InternationalFreightWithPorts[]; groupType: 'carrier' | 'modality' }
+    >();
     for (const f of filteredFreights) {
-      const carrierId = f.carrierId ?? '__no_carrier__';
-      const carrierName = f.carrier?.name ?? t('noCarrier');
+      const isModality = f.carrierId == null;
+      const carrierId = f.carrierId ?? `__modality_${f.shippingModality ?? 'other'}__`;
+      const carrierName = f.carrier?.name ?? (f.shippingModality ? (SHIPPING_MODALITY_LABELS[f.shippingModality] ?? f.shippingModality) : t('noCarrier'));
+      const groupType: 'carrier' | 'modality' = isModality ? 'modality' : 'carrier';
       if (!map.has(carrierId)) {
-        map.set(carrierId, { carrier: { id: carrierId, name: carrierName }, freights: [] });
+        map.set(carrierId, { carrier: { id: carrierId, name: carrierName }, freights: [], groupType });
       }
       map.get(carrierId)!.freights.push(f);
     }
@@ -97,8 +103,9 @@ export function InternationalFreightsSection({
   };
 
   const handleSubmit = async (data: {
-    carrierId: string;
-    containerType: string;
+    shippingModality: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS';
+    carrierId: string | null;
+    containerType: string | null;
     value: string;
     currency: string;
     freeTimeDays: number;
@@ -160,11 +167,12 @@ export function InternationalFreightsSection({
         <FreightsEmptyState />
       ) : (
         <Accordion variant="default" className="px-0">
-          {groupedByCarrier.map(({ carrier, freights: carrierFreights }) => (
+          {groupedByCarrier.map(({ carrier, freights: carrierFreights, groupType }) => (
             <CarrierAccordionItem
               key={carrier.id}
               carrier={carrier}
               freights={carrierFreights}
+              groupType={groupType}
               onEdit={(freight) => {
                 setEditingFreight(freight);
                 setModalOpen(true);

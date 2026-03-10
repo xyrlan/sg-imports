@@ -169,7 +169,7 @@ export interface CreateSimulationInput {
   userId: string;
   name: string;
   targetDolar?: string | null;
-  shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
+  metadata?: ShippingMetadata | null;
 }
 
 export interface UpdateSimulationInput {
@@ -203,7 +203,7 @@ export async function createSimulation(
       name: input.name.trim(),
       targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
       incoterm: 'FOB',
-      shippingModality: input.shippingModality ?? null,
+      metadata: input.metadata ?? null,
     })
     .returning();
 

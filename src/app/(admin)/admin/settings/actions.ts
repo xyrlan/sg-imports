@@ -27,6 +27,7 @@ import {
   deleteCurrencyExchangeBroker,
   createInternationalFreight,
   getInternationalFreightByCarrierAndContainer,
+  getInternationalFreightByCarrier,
   getInternationalFreightById,
   updateInternationalFreight,
   deleteInternationalFreight,
@@ -336,6 +337,7 @@ const portSchema = z.object({
   name: z.string().min(1),
   code: z.string().min(1),
   country: z.string().min(1),
+  type: z.enum(['PORT', 'AIRPORT']).default('PORT'),
 });
 
 export async function createPortAction(prev: unknown, formData: FormData) {
@@ -344,6 +346,7 @@ export async function createPortAction(prev: unknown, formData: FormData) {
       name: formData.get('name'),
       code: formData.get('code'),
       country: formData.get('country'),
+      type: formData.get('type') || 'PORT',
     });
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
@@ -375,6 +378,7 @@ export async function updatePortAction(
       name: formData.get('name'),
       code: formData.get('code'),
       country: formData.get('country'),
+      type: formData.get('type') || 'PORT',
     });
     if (!parsed.success) {
       return { error: 'Dados inválidos', ok: false };
@@ -576,12 +580,14 @@ export async function getCarrierByIdAction(id: string) {
 // International Freights
 // ============================================
 
+const SHIPPING_MODALITIES = ['AIR', 'SEA_LCL', 'SEA_FCL', 'EXPRESS'] as const;
 const CONTAINER_TYPES = ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40'] as const;
 const CURRENCIES = ['BRL', 'USD', 'CNY', 'EUR'] as const;
 
-const createInternationalFreightSchema = z.object({
-  carrierId: z.string().uuid(),
-  containerType: z.enum(CONTAINER_TYPES),
+const internationalFreightBaseSchema = z.object({
+  shippingModality: z.enum(SHIPPING_MODALITIES),
+  carrierId: z.string().uuid().nullable().optional(),
+  containerType: z.enum(CONTAINER_TYPES).nullable().optional(),
   value: z.string().min(1).refine((v) => !Number.isNaN(parseFloat(v)), 'Valor inválido'),
   currency: z.enum(CURRENCIES).default('USD'),
   freeTimeDays: z.coerce.number().int().min(0).default(0),
@@ -601,7 +607,28 @@ const createInternationalFreightSchema = z.object({
   portOfDischargeIds: z.array(z.string().uuid()).min(1, 'Pelo menos um porto de destino'),
 });
 
-const updateInternationalFreightSchema = createInternationalFreightSchema.partial();
+const createInternationalFreightSchema = internationalFreightBaseSchema.superRefine((data, ctx) => {
+  if (data.shippingModality === 'SEA_FCL' || data.shippingModality === 'AIR') {
+    if (!data.carrierId || data.carrierId.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Armador é obrigatório para esta modalidade',
+        path: ['carrierId'],
+      });
+    }
+  }
+  if (data.shippingModality === 'SEA_FCL') {
+    if (!data.containerType) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Tipo de container é obrigatório para FCL',
+        path: ['containerType'],
+      });
+    }
+  }
+});
+
+const updateInternationalFreightSchema = internationalFreightBaseSchema.partial();
 
 function getDbErrorMessage(err: unknown): string {
   if (err && typeof err === 'object') {
@@ -629,28 +656,48 @@ export async function createInternationalFreightAction(data: unknown) {
     }
     const p = parsed.data;
 
-    const carrier = await getCarrierById(p.carrierId);
-    if (!carrier) {
-      return {
-        ok: false,
-        error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
-      };
+    const carrierId = p.shippingModality === 'SEA_FCL' || p.shippingModality === 'AIR'
+      ? (p.carrierId ?? '')
+      : null;
+    const containerType = p.shippingModality === 'SEA_FCL' ? (p.containerType ?? null) : null;
+
+    if (carrierId) {
+      const carrier = await getCarrierById(carrierId);
+      if (!carrier) {
+        return {
+          ok: false,
+          error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
+        };
+      }
     }
 
-    const existing = await getInternationalFreightByCarrierAndContainer(
-      p.carrierId,
-      p.containerType,
-    );
-    if (existing) {
-      return {
-        ok: false,
-        error: 'validationDuplicateCarrierContainer',
-      };
+    if (p.shippingModality === 'SEA_FCL' && carrierId && containerType) {
+      const existing = await getInternationalFreightByCarrierAndContainer(
+        carrierId,
+        containerType,
+      );
+      if (existing) {
+        return {
+          ok: false,
+          error: 'validationDuplicateCarrierContainer',
+        };
+      }
+    }
+
+    if (p.shippingModality === 'AIR' && carrierId) {
+      const existing = await getInternationalFreightByCarrier(carrierId);
+      if (existing) {
+        return {
+          ok: false,
+          error: 'validationDuplicateCarrierContainer',
+        };
+      }
     }
 
     const freightData = {
-      carrierId: p.carrierId,
-      containerType: p.containerType,
+      shippingModality: p.shippingModality,
+      carrierId,
+      containerType,
       value: p.value,
       currency: p.currency,
       freeTimeDays: p.freeTimeDays,
@@ -690,16 +737,6 @@ export async function updateInternationalFreightAction(id: string, data: unknown
     }
     const p = parsed.data;
 
-    if (p.carrierId) {
-      const carrier = await getCarrierById(p.carrierId);
-      if (!carrier) {
-        return {
-          ok: false,
-          error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
-        };
-      }
-    }
-
     const oldRow = await getInternationalFreightById(id);
     if (!oldRow) {
       return {
@@ -708,16 +745,26 @@ export async function updateInternationalFreightAction(id: string, data: unknown
       };
     }
 
-    const finalCarrierId = p.carrierId ?? oldRow.carrierId;
-    const finalContainerType = p.containerType ?? oldRow.containerType;
+    const finalModality = p.shippingModality ?? oldRow.shippingModality;
+    const finalCarrierId = p.carrierId !== undefined ? p.carrierId : oldRow.carrierId;
+    const finalContainerType = p.containerType !== undefined ? p.containerType : oldRow.containerType;
+
+    if (finalModality === 'SEA_FCL' || finalModality === 'AIR') {
+      if (finalCarrierId) {
+        const carrier = await getCarrierById(finalCarrierId);
+        if (!carrier) {
+          return {
+            ok: false,
+            error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
+          };
+        }
+      }
+    }
+
     const carrierOrContainerChanged =
       p.carrierId !== undefined || p.containerType !== undefined;
 
-    if (
-      carrierOrContainerChanged &&
-      finalCarrierId &&
-      finalContainerType
-    ) {
+    if (finalModality === 'SEA_FCL' && carrierOrContainerChanged && finalCarrierId && finalContainerType) {
       const existing = await getInternationalFreightByCarrierAndContainer(
         finalCarrierId,
         finalContainerType,
@@ -731,9 +778,19 @@ export async function updateInternationalFreightAction(id: string, data: unknown
       }
     }
 
-    const updateData = {
-      ...(p.carrierId && { carrierId: p.carrierId }),
-      ...(p.containerType && { containerType: p.containerType }),
+    if (finalModality === 'AIR' && carrierOrContainerChanged && finalCarrierId) {
+      const existing = await getInternationalFreightByCarrier(finalCarrierId, id);
+      if (existing) {
+        return {
+          ok: false,
+          error: 'validationDuplicateCarrierContainer',
+        };
+      }
+    }
+
+    const updateData: Record<string, unknown> = {
+      ...(p.carrierId !== undefined && { carrierId: p.carrierId ?? null }),
+      ...(p.containerType !== undefined && { containerType: p.containerType ?? null }),
       ...(p.value && { value: p.value }),
       ...(p.currency && { currency: p.currency }),
       ...(p.freeTimeDays !== undefined && { freeTimeDays: p.freeTimeDays }),
@@ -744,6 +801,9 @@ export async function updateInternationalFreightAction(id: string, data: unknown
       ...(p.portOfLoadingIds && { portOfLoadingIds: p.portOfLoadingIds }),
       ...(p.portOfDischargeIds && { portOfDischargeIds: p.portOfDischargeIds }),
     };
+    if (p.shippingModality !== undefined) {
+      updateData.shippingModality = p.shippingModality;
+    }
 
     await withAuditTransaction(async ({ tx, recordAudit }) => {
       const [oldRow] = await tx

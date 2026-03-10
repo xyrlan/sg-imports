@@ -100,6 +100,7 @@ export const rateTypeEnum = pgEnum('rate_type', [
 export const rateUnitEnum = pgEnum('rate_unit', ['PERCENT', 'FIXED_BRL', 'FIXED_USD', 'PER_CONTAINER_BRL']);
 export const webhookStatusEnum = pgEnum('webhook_status', ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']);
 export const freightProposalStatusEnum = pgEnum('freight_proposal_status', ['DRAFT', 'SENT', 'APPROVED', 'REJECTED']);
+export const portTypeEnum = pgEnum('port_type', ['PORT', 'AIRPORT']);
 export const pricingScopeEnum = pgEnum('pricing_scope', ['CARRIER', 'PORT', 'SPECIFIC']);
 export const auditActionEnum = pgEnum('audit_action', ['CREATE', 'UPDATE', 'DELETE']);
 
@@ -438,6 +439,7 @@ export const ports = pgTable('ports', {
   name: text('name').notNull(),
   code: text('code').unique().notNull(), // UN/LOCODE
   country: text('country').notNull(),
+  type: portTypeEnum('type').default('PORT').notNull(),
 });
 
 export const terminals = pgTable('terminals', {
@@ -735,8 +737,9 @@ export const internationalFreights = pgTable(
   'international_freights',
   {
     id: uuid('id').defaultRandom().primaryKey(),
+    shippingModality: shippingModalityEnum('shipping_modality').default('SEA_FCL').notNull(),
     carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'cascade' }),
-    containerType: containerTypeEnum('container_type').notNull(),
+    containerType: containerTypeEnum('container_type'),
     value: decimal('value', { precision: 10, scale: 2 }).notNull(),
     currency: currencyEnum('currency').default('USD').notNull(),
     freeTimeDays: integer('free_time_days').default(0),
@@ -746,9 +749,7 @@ export const internationalFreights = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (t) => [
-    unique('int_freight_carrier_container_unique').on(t.carrierId, t.containerType),
-  ],
+  (t) => [],
 );
 
 /** Junction: international freight ↔ ports of loading (many-to-many) */

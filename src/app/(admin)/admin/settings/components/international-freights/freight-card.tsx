@@ -6,6 +6,7 @@ import { Trash2, ArrowRight, Container, Edit } from 'lucide-react';
 import { ValidityChip } from './validity-chip';
 import type { InternationalFreightWithPorts } from '@/services/admin';
 import { CONTAINER_TYPE_LABELS } from '@/lib/storage-utils';
+import { SHIPPING_MODALITY_LABELS } from './constants';
 
 interface FreightCardProps {
   freight: InternationalFreightWithPorts;
@@ -22,7 +23,9 @@ export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
       <div className="flex items-start justify-between gap-2">
       <h4 className="text-sm font-semibold flex items-center gap-2">
                   <Container className="size-4" />
-                  {CONTAINER_TYPE_LABELS[freight.containerType] ?? freight.containerType}
+                  {freight.containerType
+                    ? (CONTAINER_TYPE_LABELS[freight.containerType] ?? freight.containerType)
+                    : (freight.shippingModality ? (SHIPPING_MODALITY_LABELS[freight.shippingModality] ?? freight.shippingModality) : '-')}
                 </h4>
           <ValidityChip freight={freight} />
 

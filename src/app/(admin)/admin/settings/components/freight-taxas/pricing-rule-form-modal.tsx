@@ -286,7 +286,7 @@ function PricingRuleFormContent({
                         </Select.Trigger>
                         <Select.Popover>
                           <ListBox>
-                            {ports.map((p) => (
+                            {ports.filter((p) => (p.type ?? 'PORT') === 'PORT').map((p) => (
                               <ListBox.Item key={p.id} id={p.id} textValue={p.code ? `${p.name} (${p.code})` : p.name}>
                                 {p.code ? `${p.name} (${p.code})` : p.name}
                                 <ListBox.ItemIndicator />
