@@ -50,6 +50,13 @@
       "when": 1773077172189,
       "tag": "0006_luxuriant_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773145545755,
+      "tag": "0007_pink_namor",
+      "breakpoints": true
     }
   ]
 }

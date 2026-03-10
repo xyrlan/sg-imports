@@ -202,7 +202,7 @@ export function StorageRuleFormModal({
     <Modal>
       <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => !open && onClose()} isDismissable={false}>
         <Modal.Container>
-          <Modal.Dialog className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <Modal.Dialog className="max-w-6xl overflow-y-auto">
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
               <Modal.Heading>{modalTitle}</Modal.Heading>
@@ -215,7 +215,7 @@ export function StorageRuleFormModal({
                 )}
 
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-default-700 border-b pb-2">
+                  <h4 className="text-sm font-semibold border-b pb-2">
                     {t('StorageRuleForm.generalConfig')}
                   </h4>
 
@@ -313,7 +313,7 @@ export function StorageRuleFormModal({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b pb-2">
                     <div>
-                      <h4 className="text-sm font-semibold text-default-700">{t('StorageRuleForm.periods')}</h4>
+                      <h4 className="text-sm font-semibold">{t('StorageRuleForm.periods')}</h4>
                     </div>
                     <Button size="sm" variant="outline" onPress={addPeriod}>
                       <Plus size={14} />
@@ -324,7 +324,7 @@ export function StorageRuleFormModal({
                     {periods.map((p, idx) => (
                       <Surface key={idx} className="p-3 space-y-3" variant='secondary'>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-default-600">
+                          <span className="text-xs font-semibold">
                             {t('StorageRuleForm.periods')} #{idx + 1}
                           </span>
                           {periods.length > 1 && (
@@ -402,13 +402,13 @@ export function StorageRuleFormModal({
                               minValue={0}
                               value={
                                 p.chargeType === 'PERCENTAGE'
-                                  ? parseFloat(p.rate) || 0
-                                  : parseFloat(p.rate) || 0
+                                  ? parseFloat(String(p.rate).replace(',', '.')) || 0
+                                  : parseFloat(String(p.rate).replace(',', '.')) || 0
                               }
                               onChange={(v) => updatePeriod(idx, 'rate', String(v ?? 0))}
                               formatOptions={
                                 p.chargeType === 'PERCENTAGE'
-                                  ? { style: 'percent', maximumFractionDigits: 2 }
+                                  ? { style: 'percent', maximumFractionDigits: 4 }
                                   : {
                                       style: 'decimal',
                                       minimumFractionDigits: 2,
@@ -454,14 +454,14 @@ export function StorageRuleFormModal({
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b pb-2">
-                    <h4 className="text-sm font-semibold text-default-700">{t('StorageRuleForm.additionalFees')}</h4>
+                    <h4 className="text-sm font-semibold">{t('StorageRuleForm.additionalFees')}</h4>
                     <Button size="sm" variant="outline" onPress={addFee}>
                       <Plus size={14} />
                       {t('StorageRuleForm.addFee')}
                     </Button>
                   </div>
                   {additionalFees.length === 0 ? (
-                    <p className="text-sm text-default-500 text-center py-4">
+                    <p className="text-sm text-center py-4">
                       {t('StorageRules.noAdditionalFees')}
                     </p>
                   ) : (

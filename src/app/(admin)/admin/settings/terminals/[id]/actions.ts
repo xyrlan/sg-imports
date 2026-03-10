@@ -41,25 +41,31 @@ const periodSchema = z.object({
 const containerTypeSchema = z.enum(['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40']);
 const shipmentTypeSchema = z.enum(['SEA_FCL', 'SEA_FCL_PARTIAL', 'SEA_LCL']);
 
-const createStorageRuleSchema = z
-  .object({
-    terminalId: z.string().uuid(),
-    containerType: z.string().optional(),
-    shipmentType: shipmentTypeSchema,
-    minValue: z.string().default('0'),
-    cifInsurance: z.string().default('0'),
-    additionalFees: z.array(additionalFeeSchema).default([]),
-    periods: z.array(periodSchema).min(1),
-  })
-  .refine(
-    (data) => {
-      if (data.shipmentType === 'SEA_FCL') {
-        return !!data.containerType && data.containerType !== '';
-      }
-      return true;
-    },
-    { message: 'Tipo de container é obrigatório para FCL', path: ['containerType'] },
-  );
+const baseStorageRuleSchema = z.object({
+  terminalId: z.string().uuid(),
+  containerType: z.string().optional(),
+  shipmentType: shipmentTypeSchema,
+  minValue: z.string().default('0'),
+  cifInsurance: z.string().default('0'),
+  additionalFees: z.array(additionalFeeSchema).default([]),
+  periods: z.array(periodSchema).min(1),
+});
+
+const containerRefinement = (
+  data: { shipmentType: string; containerType?: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (data.shipmentType === 'SEA_FCL') {
+    if (!data.containerType || data.containerType === '') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Tipo de container é obrigatório para FCL', path: ['containerType'] });
+    }
+  }
+};
+
+const createStorageRuleSchema = baseStorageRuleSchema.superRefine(containerRefinement);
+const updateStorageRuleSchema = baseStorageRuleSchema
+  .omit({ terminalId: true })
+  .superRefine(containerRefinement);
 
 function parseFormData(formData: FormData) {
   const parseDecimal = (s: string | null | undefined) => {
@@ -189,7 +195,7 @@ export async function updateStorageRuleAction(
     if (!ruleId) {
       return { error: 'ID da regra não informado', ok: false };
     }
-    const parsed = createStorageRuleSchema.omit({ terminalId: true }).safeParse({
+    const parsed = updateStorageRuleSchema.safeParse({
       ...raw,
       containerType: raw.containerType,
       shipmentType: raw.shipmentType as z.infer<typeof shipmentTypeSchema>,

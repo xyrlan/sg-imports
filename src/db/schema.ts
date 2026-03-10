@@ -466,7 +466,7 @@ export const storagePeriods = pgTable('storage_periods', {
   daysFrom: integer('days_from').notNull(),
   daysTo: integer('days_to'), // Nullable para "até infinito"
   chargeType: chargeTypeEnum('charge_type').default('PERCENTAGE').notNull(),
-  rate: decimal('rate', { precision: 12, scale: 2 }).notNull(),
+  rate: decimal('rate', { precision: 12, scale: 6 }).notNull(),
   isDailyRate: boolean('is_daily_rate').default(true),
 });
 
