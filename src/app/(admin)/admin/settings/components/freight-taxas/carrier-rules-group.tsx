@@ -41,15 +41,14 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
         <Accordion.Heading>
           <Accordion.Trigger className="w-full flex items-center justify-between pr-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <Ship className="size-6 text-primary" />
+              <div className="rounded-lg p-3">
+                <Ship className="size-5" />
               </div>
-              <div>
-                <span className="font-bold text-default-900">{carrier.name}</span>
-                {carrier.scacCode && (
-                  <p className="text-xs text-muted">SCAC: {carrier.scacCode}</p>
-                )}
-                <span className="text-muted text-xs">{rulesLabel}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">{carrier.name}</span>
+                <Chip size="sm" color="accent" variant="soft">
+                  {rulesLabel}
+                </Chip>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -67,7 +66,7 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
                 <div>
                   <div className="mb-3 flex items-center gap-2">
                     <div className="h-1 w-1 rounded-full bg-success-500" />
-                    <h4 className="text-sm font-semibold text-default-800">{t('generalRates')}</h4>
+                    <h4 className="text-sm font-semibold">{t('generalRates')}</h4>
                     <Chip size="sm" color="success" variant="soft">
                       {t('generalRatesHint')}
                     </Chip>
@@ -90,8 +89,8 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
               {portRules.length > 0 && (
                 <div>
                   <div className="mb-3 flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-primary-500" />
-                    <h4 className="text-sm font-semibold text-default-800">{t('portRates')}</h4>
+                    <div className="h-1 w-1 rounded-full" />
+                    <h4 className="text-sm font-semibold">{t('portRates')}</h4>
                     <Chip size="sm" color="accent" variant="soft">
                       {t('portRatesHint')}
                     </Chip>
@@ -115,8 +114,8 @@ export const CarrierRulesGroup = memo(function CarrierRulesGroup({
               {specificRules.length > 0 && (
                 <div>
                   <div className="mb-3 flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-default-500" />
-                    <h4 className="text-sm font-semibold text-default-800">{t('specificRates')}</h4>
+                    <div className="h-1 w-1 rounded-full" />
+                    <h4 className="text-sm font-semibold">{t('specificRates')}</h4>
                     <Chip size="sm" color="default" variant="soft">
                       {t('specificRatesHint')}
                     </Chip>

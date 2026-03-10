@@ -10,18 +10,16 @@ import { PricingRuleFormModal } from './pricing-rule-form-modal';
 import { CarrierRulesGroup } from './carrier-rules-group';
 import { DeletePricingRuleDialog } from './delete-pricing-rule-dialog';
 import { deletePricingRuleAction } from '../../actions';
-import type { PricingRuleWithRelations, Port, Carrier } from './types';
+import type { PricingRuleWithRelations, Port } from './types';
 
 interface FreightTaxasSectionProps {
   pricingRules: PricingRuleWithRelations[];
   ports: Port[];
-  carriers: Carrier[];
 }
 
 export function FreightTaxasSection({
   pricingRules,
   ports,
-  carriers,
 }: FreightTaxasSectionProps) {
   const t = useTranslations('Admin.Settings.FreightTaxas');
   const router = useRouter();

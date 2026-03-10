@@ -1,54 +1,34 @@
+import { Suspense } from 'react';
+import type { SectionKey } from './constants';
+import { SettingsContentShell } from './settings-content-shell';
 import {
-  getGlobalServiceFeeConfig,
-  getStateIcmsRates,
-  getSiscomexFeeConfig,
-  getGlobalPlatformRates,
-  getAllTerminals,
-  getAllPorts,
-  getAllCarriers,
-  getAllCurrencyExchangeBrokers,
-  getAllInternationalFreights,
-  getAllPricingRules,
-} from '@/services/admin';
-import { SettingsContent } from './settings-content';
+  SectionContentLoader,
+  SettingsSectionSkeleton,
+} from './section-loaders';
 
-export default async function AdminSettingsPage() {
-  const [
-    honorarios,
-    stateIcms,
-    siscomexFee,
-    platformRates,
-    terminalsList,
-    portsList,
-    carriersList,
-    currencyExchangeBrokersList,
-    internationalFreightsList,
-    pricingRulesList,
-  ] = await Promise.all([
-    getGlobalServiceFeeConfig(),
-    getStateIcmsRates(),
-    getSiscomexFeeConfig(),
-    getGlobalPlatformRates(),
-    getAllTerminals(),
-    getAllPorts(),
-    getAllCarriers(),
-    getAllCurrencyExchangeBrokers(),
-    getAllInternationalFreights(),
-    getAllPricingRules(),
-  ]);
+type SearchParams =
+  | Promise<{ activeSection?: string }>
+  | { activeSection?: string };
+
+export default async function AdminSettingsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params =
+    typeof searchParams === 'object' && 'then' in searchParams
+      ? await searchParams
+      : searchParams;
+  const activeSection = (params?.activeSection ?? 'honorarios') as SectionKey;
 
   return (
-    <SettingsContent
-      honorarios={honorarios}
-      stateIcmsRates={stateIcms}
-      siscomexFee={siscomexFee}
-      platformRates={platformRates}
-      terminals={terminalsList}
-      ports={portsList}
-      carriers={carriersList}
-      currencyExchangeBrokers={currencyExchangeBrokersList}
-      internationalFreights={internationalFreightsList}
-      pricingRules={pricingRulesList}
-    />
+    <SettingsContentShell>
+      <Suspense
+        key={activeSection}
+        fallback={<SettingsSectionSkeleton />}
+      >
+        <SectionContentLoader sectionKey={activeSection} />
+      </Suspense>
+    </SettingsContentShell>
   );
 }

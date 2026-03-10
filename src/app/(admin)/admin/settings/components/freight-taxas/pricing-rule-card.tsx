@@ -68,7 +68,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
 
   return (
     <Card className={`border ${colors.border} ${colors.bg}`}>
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-4">
         {(rule.port || rule.containerType) && (
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-sm font-semibold text-default-800">{rule.port?.name ?? '-'}</p>
@@ -168,7 +168,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
           </>
         )}
 
-        <div className={`flex gap-1 justify-end pt-1 border-t ${colors.border}`}>
+        <div className={`flex gap-1 justify-end pt-2 border-t ${colors.border}`}>
           <Button isIconOnly size="sm" variant="ghost" onPress={() => onEdit(rule)} aria-label={t('ariaEdit')}>
             <Edit size={14} />
           </Button>
