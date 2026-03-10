@@ -1010,7 +1010,7 @@
       "descriptionPlaceholder": "Product description (optional)",
       "productPhotos": "Product photos",
       "photosHelp": "JPG, PNG, WebP, GIF (max 5MB each)",
-      "hsCodePlaceholder": "HS Code / NCM (optional)",
+      "hsCodePlaceholder": "Select NCM",
       "hsCodeLabel": "HS Code / NCM",
       "supplierPlaceholder": "Supplier (optional)",
       "supplierNameLabel": "Supplier name",

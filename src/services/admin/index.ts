@@ -140,6 +140,24 @@ export {
   type PricingScope,
 } from './pricing-rules.service';
 
+// Products (admin-level, all orgs)
+export {
+  getAllProducts,
+  getProductByIdAsAdmin,
+  deleteProductAsAdmin,
+  type ProductWithOrgAndNcm,
+} from './products.service';
+
+// HS Codes (NCMs)
+export {
+  getAllHsCodes,
+  getHsCodeById,
+  updateHsCode,
+  deleteHsCode,
+  type HsCode,
+  type UpdateHsCodeData,
+} from './hs-codes.service';
+
 // Audit log
 export {
   recordAuditInternal,

@@ -10,6 +10,7 @@ import {
   LogOut,
   ShieldCheck,
   Settings,
+  Package,
 } from 'lucide-react';
 
 interface NavItem {
@@ -33,6 +34,11 @@ export function AdminSidebar() {
       labelKey: 'management',
       href: '/admin/users-organizations',
       icon: <Users className="size-5 shrink-0" />,
+    },
+    {
+      labelKey: 'products',
+      href: '/admin/products',
+      icon: <Package className="size-5 shrink-0" />,
     },
     {
       labelKey: 'settings',

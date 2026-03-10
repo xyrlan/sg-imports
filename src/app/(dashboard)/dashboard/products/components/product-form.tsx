@@ -21,6 +21,7 @@ import {
   createProductAction,
   updateProductAction,
   type CreateProductSubmittedData,
+  type CreateProductState,
   getProductFormOptions,
 } from '../actions';
 import type { ProductWithVariants } from '@/services/product.service';
@@ -75,6 +76,11 @@ interface ProductFormProps {
   formId?: string;
   onPendingChange?: (isPending: boolean) => void;
   initialSimulatedSnapshot?: { snapshot: ProductSnapshot; quantity: number } | null;
+  /** When provided, used instead of updateProductAction for edit mode (e.g. admin) */
+  updateAction?: (
+    prev: CreateProductState | null,
+    formData: FormData
+  ) => Promise<CreateProductState>;
 }
 
 function productToFormData(p: ProductWithVariants): CreateProductSubmittedData & { variants: FormVariant[] } {
@@ -149,12 +155,13 @@ export function ProductForm({
   formId,
   onPendingChange,
   initialSimulatedSnapshot,
+  updateAction,
 }: ProductFormProps) {
   const t = useTranslations('Products.Form');
   const isSimulated = mode === 'simulated';
   const isEdit = !!initialProduct && !isSimulated;
   const [state, formAction, isCatalogPending] = useActionState(
-    isEdit ? updateProductAction : createProductAction,
+    isEdit ? (updateAction ?? updateProductAction) : createProductAction,
     null
   );
   const isPending = isSimulated ? isSubmitting : isCatalogPending;
@@ -376,36 +383,37 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         {options && (
           <>
-            <Select
-              name="hsCodeId"
-              variant="primary"
-              isDisabled={isPending}
-              isInvalid={!!getError('hsCodeId')}
-              placeholder={t('hsCodePlaceholder')}
-              className="w-full"
-              value={formData.hsCodeId || null}
-              onChange={(key) =>
-                setFormData((prev) => ({ ...prev, hsCodeId: (key as string) ?? '' }))
-              }
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBox.Item key="__none__" id="__none__" textValue={t('none')} />
-                  {options.hsCodes.map((hc) => (
-                    <ListBox.Item
-                      key={hc.id}
-                      id={hc.id}
-                      textValue={hc.code}
-                    />
-                  ))}
-                </ListBox>
-              </Select.Popover>
+            <TextField variant="primary" isRequired isInvalid={!!getError('hsCodeId')}>
+              <Label>{t('hsCodeLabel')}</Label>
+              <Select
+                name="hsCodeId"
+                variant="primary"
+                isDisabled={isPending}
+                placeholder={t('hsCodePlaceholder')}
+                className="w-full"
+                value={formData.hsCodeId || null}
+                onChange={(key) =>
+                  setFormData((prev) => ({ ...prev, hsCodeId: (key as string) ?? '' }))
+                }
+              >
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    {options.hsCodes.map((hc) => (
+                      <ListBox.Item
+                        key={hc.id}
+                        id={hc.id}
+                        textValue={hc.code}
+                      />
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
               <FieldError>{getError('hsCodeId')}</FieldError>
-            </Select>
+            </TextField>
             <Select
               name="supplierId"
               variant="primary"
@@ -612,17 +620,20 @@ export function ProductForm({
                                   type="number"
                                   min={1}
                                   placeholder={t('minQty')}
-                                  value={String(row.beginAmount)}
-                                  onChange={(e) =>
+                                  value={row.beginAmount === 0 ? '' : String(row.beginAmount)}
+                                  onChange={(e) => {
+                                    const raw = e.target.value;
+                                    const next =
+                                      raw === ''
+                                        ? 0
+                                        : Math.max(1, parseInt(raw, 10) || 1);
                                     setTieredPriceRows((prev) => ({
                                       ...prev,
                                       [key]: (prev[key] ?? [{ beginAmount: 1, price: '' }]).map((r, idx) =>
-                                        idx === rowIdx
-                                          ? { ...r, beginAmount: Math.max(1, Number(e.target.value) || 1) }
-                                          : r
+                                        idx === rowIdx ? { ...r, beginAmount: next } : r
                                       ),
-                                    }))
-                                  }
+                                    }));
+                                  }}
                                 />
                               </TextField>
                               <TextField variant="primary" isDisabled={isPending} className="flex-1">

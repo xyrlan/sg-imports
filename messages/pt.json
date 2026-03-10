@@ -382,6 +382,7 @@
       "brand": "Admin",
       "dashboard": "Painel",
       "management": "Usuários e Organizações",
+      "products": "Produtos",
       "settings": "Configurações",
       "backToDashboard": "Voltar ao Dashboard"
     },
@@ -422,6 +423,43 @@
         "edit": "Editar",
         "editRole": "Editar Papel"
       }
+    },
+    "Products": {
+      "title": "Produtos e NCMs",
+      "description": "Gerencie produtos e códigos NCM do sistema",
+      "productsTab": "Produtos",
+      "ncmsTab": "NCMs",
+      "searchProducts": "Buscar por nome, organização ou NCM...",
+      "searchNcms": "Buscar por código ou descrição...",
+      "columns": {
+        "name": "Nome",
+        "organization": "Organização",
+        "ncmCode": "Código NCM",
+        "sku": "SKU",
+        "price": "Preço",
+        "createdAt": "Criado em",
+        "description": "Descrição",
+        "updatedAt": "Atualizado em"
+      },
+      "actions": {
+        "label": "Ações",
+        "edit": "Editar",
+        "delete": "Excluir"
+      },
+      "deleteProductTitle": "Excluir produto",
+      "deleteProductConfirm": "Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.",
+      "deleteNcmTitle": "Excluir NCM",
+      "deleteNcmConfirm": "Tem certeza que deseja excluir este NCM? Não será possível excluir se houver produtos vinculados.",
+      "cancel": "Cancelar",
+      "delete": "Excluir",
+      "editNcm": "Editar NCM",
+      "descriptionPlaceholder": "Descrição do NCM",
+      "antidumping": "Antidumping (%)",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "backToProducts": "Voltar aos Produtos",
+      "editProduct": "Editar Produto",
+      "editProductDescription": "Altere os dados do produto e suas variantes."
     },
     "UserEdit": {
       "title": "Editar Usuário",
@@ -1010,7 +1048,7 @@
       "descriptionPlaceholder": "Descrição do produto (opcional)",
       "productPhotos": "Fotos do produto",
       "photosHelp": "JPG, PNG, WebP, GIF (máx. 5MB cada)",
-      "hsCodePlaceholder": "HS Code / NCM (opcional)",
+      "hsCodePlaceholder": "Selecione o NCM",
       "hsCodeLabel": "HS Code / NCM",
       "supplierPlaceholder": "Fornecedor (opcional)",
       "supplierNameLabel": "Nome do fornecedor",

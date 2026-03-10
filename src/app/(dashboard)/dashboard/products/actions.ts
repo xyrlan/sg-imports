@@ -46,7 +46,7 @@ const createProductSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   styleCode: z.string().optional(),
   description: z.string().optional(),
-  hsCodeId: z.union([z.string().uuid(), z.literal('')]).optional(),
+  hsCodeId: z.string().uuid('NCM é obrigatório'),
   supplierId: z.union([z.string().uuid(), z.literal('')]).optional(),
   variants: z.array(variantSchema),
 });
