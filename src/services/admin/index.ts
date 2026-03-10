@@ -107,6 +107,7 @@ export {
 export {
   getAllInternationalFreights,
   getInternationalFreightById,
+  getInternationalFreightByCarrierAndContainer,
   createInternationalFreight,
   updateInternationalFreight,
   deleteInternationalFreight,

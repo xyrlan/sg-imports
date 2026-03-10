@@ -77,14 +77,9 @@ export function ShippingSelectionSection({
   const [destinationState, setDestinationState] = useState(
     () => existingMetadata.destinationState ?? defaultDestinationState ?? '',
   );
-  const [targetDolar, setTargetDolar] = useState(
-    () => simulation.targetDolar?.toString() ?? '',
-  );
 
-  const isTargetDolarInvalid =
-    !targetDolar.trim() || Number(targetDolar.replace(',', '.')) <= 0;
-  const isBlocked =
-    shouldBlockConfirm(validationResult) || isTargetDolarInvalid;
+  const targetDolar = simulation.targetDolar?.toString()?.trim() ?? '0';
+  const isBlocked = shouldBlockConfirm(validationResult);
 
   useEffect(() => {
     if (
@@ -102,10 +97,6 @@ export function ShippingSelectionSection({
   }, [isPending, state, router, onMutate]);
 
   function handleConfirm() {
-    if (isTargetDolarInvalid) {
-      toast.danger(t('targetDolarRequired'));
-      return;
-    }
     if (shouldBlockConfirm(validationResult)) {
       toast.danger(t('hardBlockToast'));
       return;
@@ -160,15 +151,6 @@ export function ShippingSelectionSection({
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <TextField
-            variant="primary"
-            value={targetDolar}
-            onChange={setTargetDolar}
-            isDisabled={isPending}
-          >
-            <Label>{t('targetDolar')}</Label>
-            <Input type="text" inputMode="decimal" placeholder={t('targetDolarPlaceholder')} />
-          </TextField>
           <TextField
             variant="primary"
             value={totalFreightUsd}

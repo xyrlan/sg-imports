@@ -11,7 +11,7 @@ import {
   ports,
 } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { eq, asc } from 'drizzle-orm';
+import { and, asc, eq, ne } from 'drizzle-orm';
 import type { DbTransaction } from './audit.service';
 
 type DbOrTx = typeof db | DbTransaction;
@@ -127,6 +127,27 @@ export async function getAllInternationalFreights(): Promise<
     portsOfLoading: loadingByFreight.get(f.id) ?? [],
     portsOfDischarge: dischargeByFreight.get(f.id) ?? [],
   }));
+}
+
+export async function getInternationalFreightByCarrierAndContainer(
+  carrierId: string,
+  containerType: InternationalFreight['containerType'],
+  excludeId?: string,
+  client: DbOrTx = db,
+): Promise<InternationalFreight | null> {
+  const conditions = [
+    eq(internationalFreights.carrierId, carrierId),
+    eq(internationalFreights.containerType, containerType),
+  ];
+  if (excludeId) {
+    conditions.push(ne(internationalFreights.id, excludeId));
+  }
+  const [row] = await client
+    .select()
+    .from(internationalFreights)
+    .where(and(...conditions))
+    .limit(1);
+  return row ?? null;
 }
 
 export async function getInternationalFreightById(

@@ -2,11 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { startTransition, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button, Input, Label, TextField, FieldError } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { ArrowLeft, PackageOpen } from 'lucide-react';
-import { useActionState } from 'react';
 import { SimulationItemsList } from './simulation-items-list';
 import type {
   Simulation,
@@ -18,7 +16,6 @@ import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
 import { ShippingSelectionSection } from './shipping-selection-section';
 import { SimulationFinancialSummary } from './simulation-financial-summary';
-import { updateSimulationAction } from '../../actions';
 
 interface SimulationDetailContentProps {
   simulation: Simulation;
@@ -43,41 +40,9 @@ export function SimulationDetailContent({
   const tStatus = useTranslations('Simulations.Status');
   const router = useRouter();
 
-  const [updateState, updateAction, isUpdatePending] = useActionState(updateSimulationAction, null);
-  const [targetDolar, setTargetDolar] = useState(simulation.targetDolar ?? '');
-  const [exchangeRateIof, setExchangeRateIof] = useState(simulation.exchangeRateIof ?? '');
-  const didRefreshRef = useRef(false);
-
   const handleMutate = () => {
     router.refresh();
   };
-
-  const handleSettingsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    formData.set('simulationId', simulation.id);
-    formData.set('organizationId', organizationId);
-    startTransition(() => {
-      updateAction(formData);
-    });
-  };
-
-  useEffect(() => {
-    if (
-      !isUpdatePending &&
-      updateState &&
-      !updateState.error &&
-      Object.keys(updateState.fieldErrors ?? {}).length === 0 &&
-      !didRefreshRef.current
-    ) {
-      didRefreshRef.current = true;
-      router.refresh();
-    }
-    if (isUpdatePending) {
-      didRefreshRef.current = false;
-    }
-  }, [isUpdatePending, updateState, router]);
 
   return (
     <div key={simulation.id} className="space-y-6">
@@ -114,60 +79,6 @@ export function SimulationDetailContent({
               onMutate={handleMutate}
             />
           )}
-
-          <form onSubmit={handleSettingsSubmit} className="rounded-lg border p-4 space-y-4">
-            <h3 className="text-sm font-semibold">{t('settings')}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <TextField
-                  variant="primary"
-                  name="targetDolar"
-                  value={targetDolar}
-                  onChange={setTargetDolar}
-                  isInvalid={!!updateState?.fieldErrors?.targetDolar}
-                  isDisabled={isUpdatePending}
-                  validate={() => updateState?.fieldErrors?.targetDolar ?? null}
-                >
-                  <Label>{t('targetDolar')}</Label>
-                  <Input
-                    name="targetDolar"
-                    placeholder={t('targetDolarPlaceholder')}
-                    value={targetDolar}
-                    type="text"
-                    inputMode="decimal"
-                  />
-                  <FieldError />
-                </TextField>
-              </div>
-              <div className="flex flex-col gap-2">
-                <TextField
-                  variant="primary"
-                  name="exchangeRateIof"
-                  value={exchangeRateIof}
-                  onChange={setExchangeRateIof}
-                  isInvalid={!!updateState?.fieldErrors?.exchangeRateIof}
-                  isDisabled={isUpdatePending}
-                  validate={() => updateState?.fieldErrors?.exchangeRateIof ?? null}
-                >
-                  <Label>{t('exchangeRateIof')}</Label>
-                  <Input
-                    name="exchangeRateIof"
-                    placeholder="e.g. 0.38"
-                    value={exchangeRateIof}
-                    type="text"
-                    inputMode="decimal"
-                  />
-                  <FieldError />
-                </TextField>
-              </div>
-            </div>
-            {updateState?.error && (
-              <p className="text-sm text-danger">{updateState.error}</p>
-            )}
-            <Button type="submit" variant="primary" size="sm" isDisabled={isUpdatePending}>
-              {t('saveSettings')}
-            </Button>
-          </form>
 
           {items.length > 0 ? (
             <SimulationItemsList

@@ -17,6 +17,7 @@ import {
   updateSimulationItem,
 } from '@/services/simulation.service';
 import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
+import { getDolarPTAX } from '@/lib/fetch-dolar';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 
 const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS']);
@@ -24,9 +25,7 @@ const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PAR
 const createSimulationSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required').max(200),
-  targetDolar: z.string().optional(),
   shippingModality: shippingModalitySchema.optional(),
-  exchangeRateIof: z.string().optional(),
 });
 
 const addCatalogItemSchema = z.object({
@@ -108,9 +107,7 @@ export async function createSimulationAction(
     const rawData = {
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
-      targetDolar: (formData.get('targetDolar') as string)?.trim(),
       shippingModality: formData.get('shippingModality') as string | undefined,
-      exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim(),
     };
 
     const validated = createSimulationSchema.safeParse(rawData);
@@ -125,13 +122,14 @@ export async function createSimulationAction(
       return { fieldErrors, error: validated.error.issues[0]?.message };
     }
 
+    const targetDolar = String(await getDolarPTAX());
+
     const created = await createSimulation({
       organizationId: validated.data.organizationId,
       userId: user.id,
       name: validated.data.name,
-      targetDolar: validated.data.targetDolar?.trim() || null,
+      targetDolar,
       shippingModality: validated.data.shippingModality ?? null,
-      exchangeRateIof: validated.data.exchangeRateIof?.trim() || null,
     });
 
     if (!created) {
@@ -166,7 +164,6 @@ const updateSimulationSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   targetDolar: z.string().nullable().optional(),
   shippingModality: shippingModalitySchema.nullable().optional(),
-  exchangeRateIof: z.string().nullable().optional(),
   metadata: z
     .string()
     .optional()
@@ -199,7 +196,6 @@ export async function updateSimulationAction(
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
       targetDolar: (formData.get('targetDolar') as string)?.trim() || null,
-      exchangeRateIof: (formData.get('exchangeRateIof') as string)?.trim() || null,
     };
     if (formData.has('shippingModality')) {
       const v = (formData.get('shippingModality') as string)?.trim();
@@ -237,9 +233,6 @@ export async function updateSimulationAction(
         }),
         ...(validated.data.shippingModality !== undefined && {
           shippingModality: validated.data.shippingModality,
-        }),
-        ...(validated.data.exchangeRateIof !== undefined && {
-          exchangeRateIof: validated.data.exchangeRateIof,
         }),
         ...(validated.data.metadata !== undefined && { metadata: validated.data.metadata }),
       }

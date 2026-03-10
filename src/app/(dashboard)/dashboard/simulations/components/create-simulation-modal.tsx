@@ -100,28 +100,6 @@ export function CreateSimulationModal({ organizationId, onMutate }: CreateSimula
                       </Select.Popover>
                     </Select>
                   </div>
-                  <TextField
-                    variant="primary"
-                    name="targetDolar"
-                    isInvalid={!!state?.fieldErrors?.targetDolar}
-                    isDisabled={isPending}
-                    validate={() => state?.fieldErrors?.targetDolar ?? null}
-                  >
-                    <Label>{t('targetDolarLabel')}</Label>
-                    <Input name="targetDolar" placeholder={t('targetDolarPlaceholder')} type="text" inputMode="decimal" />
-                    <FieldError />
-                  </TextField>
-                  <TextField
-                    variant="primary"
-                    name="exchangeRateIof"
-                    isInvalid={!!state?.fieldErrors?.exchangeRateIof}
-                    isDisabled={isPending}
-                    validate={() => state?.fieldErrors?.exchangeRateIof ?? null}
-                  >
-                    <Label>{t('exchangeRateIofLabel')}</Label>
-                    <Input name="exchangeRateIof" placeholder={t('exchangeRateIofPlaceholder')} type="text" inputMode="decimal" />
-                    <FieldError />
-                  </TextField>
                   {state?.error && (
                     <p className="text-sm text-danger mt-2">{state.error}</p>
                   )}

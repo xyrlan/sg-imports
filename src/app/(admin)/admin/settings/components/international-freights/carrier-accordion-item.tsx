@@ -1,10 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Accordion } from '@heroui/react';
-import { Ship, Package } from 'lucide-react';
+import { Accordion, Chip } from '@heroui/react';
+import { Ship } from 'lucide-react';
 import { FreightCard } from './freight-card';
-import { CONTAINER_TYPE_LABELS, getValidityStatus, groupedByContainer } from './constants';
+import { getValidityStatus } from './constants';
 import type { InternationalFreightWithPorts } from '@/services/admin';
 
 interface CarrierAccordionItemProps {
@@ -33,11 +33,11 @@ export function CarrierAccordionItem({
             <div className="p-2 bg-primary/10 rounded-lg">
               <Ship className="size-5 text-primary" />
             </div>
-            <div>
+            <div className="flex items-center gap-2">
               <span className="font-semibold">{carrier.name}</span>
-              <span className="text-muted text-sm ml-2">
-                — {validCount} {t('tariffsActive', { count: validCount })}
-              </span>
+              <Chip size="sm" color="accent" variant="soft">
+                {validCount} {validCount === 1 ? t('tariffActive') : t('tariffsActive', { count: validCount })}
+              </Chip>
             </div>
           </div>
           <Accordion.Indicator />
@@ -45,24 +45,14 @@ export function CarrierAccordionItem({
       </Accordion.Heading>
       <Accordion.Panel>
         <Accordion.Body>
-          <div className="space-y-6 pt-2">
-            {groupedByContainer(freights).map(([containerType, typeFreights]) => (
-              <div key={containerType} className="space-y-3">
-                <h4 className="text-sm font-medium text-muted flex items-center gap-2">
-                  <Package className="size-4" />
-                  {CONTAINER_TYPE_LABELS[containerType] ?? containerType}
-                </h4>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {typeFreights.map((freight) => (
-                    <FreightCard
-                      key={freight.id}
-                      freight={freight}
-                      onEdit={() => onEdit(freight)}
-                      onDelete={() => onDelete(freight)}
-                    />
-                  ))}
-                </div>
-              </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {freights.map((freight) => (
+                  <FreightCard
+                    key={freight.id}
+                    freight={freight}
+                    onEdit={() => onEdit(freight)}
+                    onDelete={() => onDelete(freight)}
+                  />
             ))}
           </div>
         </Accordion.Body>

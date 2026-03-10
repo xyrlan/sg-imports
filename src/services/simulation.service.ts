@@ -170,14 +170,12 @@ export interface CreateSimulationInput {
   name: string;
   targetDolar?: string | null;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
-  exchangeRateIof?: string | null;
 }
 
 export interface UpdateSimulationInput {
   name?: string;
   targetDolar?: string | null;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
-  exchangeRateIof?: string | null;
   metadata?: ShippingMetadata | null;
 }
 
@@ -206,9 +204,6 @@ export async function createSimulation(
       targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
       incoterm: 'FOB',
       shippingModality: input.shippingModality ?? null,
-      exchangeRateIof: input.exchangeRateIof
-        ? input.exchangeRateIof.trim().replace(',', '.')
-        : null,
     })
     .returning();
 
@@ -235,9 +230,6 @@ export async function updateSimulation(
         targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
       }),
       ...(input.shippingModality !== undefined && { shippingModality: input.shippingModality }),
-      ...(input.exchangeRateIof !== undefined && {
-        exchangeRateIof: (input.exchangeRateIof?.trim() || '0').replace(',', '.'),
-      }),
       ...(input.metadata !== undefined && { metadata: input.metadata }),
       updatedAt: new Date(),
     })

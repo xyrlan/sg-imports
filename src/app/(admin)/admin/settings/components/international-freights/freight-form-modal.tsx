@@ -142,7 +142,11 @@ export function FreightFormModal({
         onSuccess();
         onOpenChange(false);
       } else {
-        setError(result.error ?? t('errorSave'));
+        setError(
+          result.error === 'validationDuplicateCarrierContainer'
+            ? t('validationDuplicateCarrierContainer')
+            : (result.error ?? t('errorSave'))
+        );
       }
     } finally {
       setIsPending(false);
@@ -245,18 +249,7 @@ export function FreightFormModal({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <NumberField
-                    variant="primary"
-                    value={freeTimeDays}
-                    onChange={(v) => setFreeTimeDays(v ?? 0)}
-                    minValue={0}
-                  >
-                    <Label>{t('freeTimeDays')}</Label>
-                    <NumberField.Group>
-                      <NumberField.Input />
-                    </NumberField.Group>
-                  </NumberField>
-                  <TextField variant="primary">
+                <TextField variant="primary">
                     <Label>{t('expectedProfit')}</Label>
                     <Input
                       type="number"
@@ -269,6 +262,17 @@ export function FreightFormModal({
                       placeholder={t('expectedProfitPlaceholder')}
                     />
                   </TextField>
+                  <NumberField
+                    variant="primary"
+                    value={freeTimeDays}
+                    onChange={(v) => setFreeTimeDays(v ?? 0)}
+                    minValue={0}
+                  >
+                    <Label>{t('freeTimeDays')}</Label>
+                    <NumberField.Group>
+                      <NumberField.Input />
+                    </NumberField.Group>
+                  </NumberField>
                 </div>
 
                 <div className="flex flex-col gap-2">

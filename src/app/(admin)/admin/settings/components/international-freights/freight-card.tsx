@@ -2,9 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { Button, Card, Chip } from '@heroui/react';
-import { Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { Trash2, ArrowRight, Container, Edit } from 'lucide-react';
 import { ValidityChip } from './validity-chip';
 import type { InternationalFreightWithPorts } from '@/services/admin';
+import { CONTAINER_TYPE_LABELS } from '@/lib/storage-utils';
 
 interface FreightCardProps {
   freight: InternationalFreightWithPorts;
@@ -18,15 +19,22 @@ export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
   return (
     <Card key={freight.id} className="p-4">
       <div className="space-y-3">
-        <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
+      <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <Container className="size-4" />
+                  {CONTAINER_TYPE_LABELS[freight.containerType] ?? freight.containerType}
+                </h4>
+          <ValidityChip freight={freight} />
+
+      </div>
+          <div>
           <span className="text-xl font-bold">
             {Number(freight.value).toLocaleString('pt-BR', {
               style: 'currency',
               currency: freight.currency ?? 'USD',
             })}
           </span>
-          <ValidityChip freight={freight} />
-        </div>
+          </div>
         <div className="flex flex-wrap items-center gap-1 text-sm text-muted">
           {freight.portsOfLoading.length <= 2
             ? freight.portsOfLoading.map((p) => (
@@ -58,13 +66,11 @@ export function FreightCard({ freight, onEdit, onDelete }: FreightCardProps) {
           </p>
         )}
         <div className="flex justify-end gap-1 pt-2">
-          <Button size="sm" variant="tertiary" onPress={onEdit}>
-            <Pencil className="size-4" />
-            {t('edit')}
+          <Button isIconOnly size="sm" variant="tertiary" onPress={onEdit}>
+            <Edit className="size-4" />
           </Button>
-          <Button size="sm" variant="danger-soft" onPress={onDelete}>
+          <Button isIconOnly size="sm" variant="danger-soft" onPress={onDelete}>
             <Trash2 className="size-4" />
-            {t('delete')}
           </Button>
         </div>
       </div>

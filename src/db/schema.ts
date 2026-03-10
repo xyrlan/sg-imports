@@ -731,19 +731,25 @@ export const auditLogs = pgTable(
 // ==========================================
 
 /** Base freight rates by carrier, container type, and ports */
-export const internationalFreights = pgTable('international_freights', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'cascade' }),
-  containerType: containerTypeEnum('container_type').notNull(),
-  value: decimal('value', { precision: 10, scale: 2 }).notNull(),
-  currency: currencyEnum('currency').default('USD').notNull(),
-  freeTimeDays: integer('free_time_days').default(0),
-  expectedProfit: decimal('expected_profit', { precision: 10, scale: 2 }),
-  validFrom: timestamp('valid_from').defaultNow().notNull(),
-  validTo: timestamp('valid_to'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const internationalFreights = pgTable(
+  'international_freights',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    carrierId: uuid('carrier_id').references(() => carriers.id, { onDelete: 'cascade' }),
+    containerType: containerTypeEnum('container_type').notNull(),
+    value: decimal('value', { precision: 10, scale: 2 }).notNull(),
+    currency: currencyEnum('currency').default('USD').notNull(),
+    freeTimeDays: integer('free_time_days').default(0),
+    expectedProfit: decimal('expected_profit', { precision: 10, scale: 2 }),
+    validFrom: timestamp('valid_from').defaultNow().notNull(),
+    validTo: timestamp('valid_to'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [
+    unique('int_freight_carrier_container_unique').on(t.carrierId, t.containerType),
+  ],
+);
 
 /** Junction: international freight ↔ ports of loading (many-to-many) */
 export const internationalFreightPortsOfLoading = pgTable(

@@ -55,14 +55,14 @@ export function getSimulationItemColumns(
     columnHelper.accessor('quantity', {
       header: t('itemQuantity'),
       cell: (info) => (
-        <span className="block text-right">{info.getValue()}</span>
+        <span className="block">{info.getValue()}</span>
       ),
     }),
     columnHelper.accessor((row) => String(row.priceUsd ?? '0'), {
       id: 'price',
       header: t('itemPrice'),
       cell: (info) => (
-        <span className="block text-right">
+        <span className="block">
           {formatCurrency(info.getValue(), 'en-US', 'USD')}
         </span>
       ),
@@ -73,7 +73,7 @@ export function getSimulationItemColumns(
         id: 'total',
         header: t('itemTotal'),
         cell: (info) => (
-          <span className="block text-right font-medium">
+          <span className="block font-medium">
             {formatCurrency(info.getValue(), 'en-US', 'USD')}
           </span>
         ),

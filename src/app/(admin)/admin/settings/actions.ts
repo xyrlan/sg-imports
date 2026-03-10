@@ -26,6 +26,8 @@ import {
   updateCurrencyExchangeBroker,
   deleteCurrencyExchangeBroker,
   createInternationalFreight,
+  getInternationalFreightByCarrierAndContainer,
+  getInternationalFreightById,
   updateInternationalFreight,
   deleteInternationalFreight,
   createPricingRule,
@@ -635,6 +637,17 @@ export async function createInternationalFreightAction(data: unknown) {
       };
     }
 
+    const existing = await getInternationalFreightByCarrierAndContainer(
+      p.carrierId,
+      p.containerType,
+    );
+    if (existing) {
+      return {
+        ok: false,
+        error: 'validationDuplicateCarrierContainer',
+      };
+    }
+
     const freightData = {
       carrierId: p.carrierId,
       containerType: p.containerType,
@@ -683,6 +696,37 @@ export async function updateInternationalFreightAction(id: string, data: unknown
         return {
           ok: false,
           error: 'Transportadora não encontrada. Selecione uma transportadora válida.',
+        };
+      }
+    }
+
+    const oldRow = await getInternationalFreightById(id);
+    if (!oldRow) {
+      return {
+        ok: false,
+        error: 'Frete internacional não encontrado.',
+      };
+    }
+
+    const finalCarrierId = p.carrierId ?? oldRow.carrierId;
+    const finalContainerType = p.containerType ?? oldRow.containerType;
+    const carrierOrContainerChanged =
+      p.carrierId !== undefined || p.containerType !== undefined;
+
+    if (
+      carrierOrContainerChanged &&
+      finalCarrierId &&
+      finalContainerType
+    ) {
+      const existing = await getInternationalFreightByCarrierAndContainer(
+        finalCarrierId,
+        finalContainerType,
+        id,
+      );
+      if (existing) {
+        return {
+          ok: false,
+          error: 'validationDuplicateCarrierContainer',
         };
       }
     }

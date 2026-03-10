@@ -7,6 +7,7 @@ import { getSimulationItemColumns } from './simulation-item-columns';
 import { EditSimulationItemModal } from './edit-simulation-item-modal';
 import { removeSimulationItemAction } from '../../actions';
 import type { HsCodeOption, SimulationItem } from '@/services/simulation.service';
+import { Card } from '@heroui/react';
 
 interface SimulationItemsListProps {
   items: SimulationItem[];
@@ -48,7 +49,12 @@ export function SimulationItemsList({
   );
 
   return (
-    <>
+    <Card>
+      <Card.Header>
+        <Card.Title>
+          {t('itemName')}
+        </Card.Title>
+      </Card.Header>
       <DataTable<SimulationItem>
         columns={columns}
         data={items}
@@ -62,6 +68,6 @@ export function SimulationItemsList({
         onOpenChange={(open) => !open && setEditingItem(null)}
         onMutate={onMutate}
       />
-    </>
+    </Card>
   );
 }

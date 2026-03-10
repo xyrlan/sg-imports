@@ -5,9 +5,12 @@ import {
   getSimulationById,
   getQuoteFinancialSummary,
   getHsCodesForSimulation,
+  updateSimulation,
 } from '@/services/simulation.service';
+import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
 import { getProductsByOrganization } from '@/services/product.service';
 import { getOrganizationDeliveryState } from '@/services/organization.service';
+import { getDolarPTAX } from '@/lib/fetch-dolar';
 
 export default async function SimulationDetailPage({
   params,
@@ -29,14 +32,35 @@ export default async function SimulationDetailPage({
     notFound();
   }
 
+  let simulationData = data;
+  let financialSummary = summary;
+
+  try {
+    const ptax = await getDolarPTAX();
+    const ptaxStr = ptax.toFixed(4);
+    const currentTarget = data.simulation.targetDolar?.toString()?.trim();
+    if (!currentTarget || currentTarget !== ptaxStr) {
+      await updateSimulation(id, activeOrgId, user.id, { targetDolar: ptaxStr });
+      const taxResult = await calculateAndPersistLandedCost(id, activeOrgId, user.id);
+      const [fresh, newSummary] = await Promise.all([
+        getSimulationById(id, activeOrgId, user.id),
+        taxResult.success ? getQuoteFinancialSummary(id, activeOrgId, user.id) : null,
+      ]);
+      if (fresh) simulationData = fresh;
+      if (newSummary) financialSummary = newSummary;
+    }
+  } catch {
+    // PTAX fetch failed; keep existing targetDolar
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <SimulationDetailContent
-        simulation={data.simulation}
-        items={data.items}
+        simulation={simulationData.simulation}
+        items={simulationData.items}
         organizationId={activeOrgId}
         products={productsResult.data}
-        financialSummary={summary}
+        financialSummary={financialSummary}
         hsCodes={hsCodes}
         defaultDestinationState={defaultDestinationState}
       />
