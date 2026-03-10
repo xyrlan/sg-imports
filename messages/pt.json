@@ -1075,6 +1075,8 @@
   "Products": {
     "title": "Produtos",
     "description": "Gerencie seu catálogo de produtos",
+    "productsTab": "Produtos",
+    "suppliersTab": "Fornecedores",
     "Table": {
       "searchPlaceholder": "Buscar produtos..."
     },
@@ -1092,6 +1094,35 @@
       "cancel": "Cancelar",
       "deleteTitle": "Excluir produto",
       "deleteConfirm": "Tem certeza que deseja excluir este produto?"
+    },
+    "Suppliers": {
+      "addSupplier": "Novo Fornecedor",
+      "actionsLabel": "Ações",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "noSuppliers": "Nenhum fornecedor cadastrado.",
+      "searchPlaceholder": "Buscar fornecedores...",
+      "deleteConfirmTitle": "Excluir fornecedor?",
+      "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita.",
+      "name": "Nome",
+      "namePlaceholder": "Nome do fornecedor",
+      "taxId": "TIN / Documento",
+      "taxIdPlaceholder": "Ex: 123456789",
+      "countryCode": "País",
+      "countryCodePlaceholder": "Ex: CN",
+      "email": "E-mail",
+      "emailPlaceholder": "Ex: contato@fornecedor.com",
+      "address": "Endereço",
+      "addressPlaceholder": "Endereço completo",
+      "cancel": "Cancelar",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "columns": {
+        "name": "Nome",
+        "taxId": "TIN",
+        "countryCode": "País",
+        "email": "E-mail"
+      }
     },
     "CreateProduct": {
       "addNew": "Adicionar produto",

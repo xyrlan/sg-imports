@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { requireAuthAndOrg } from '@/services/auth.service';
+import { getAllSuppliers } from '@/services/admin';
 import { getProductsByOrganization } from '@/services/product.service';
 import { ProductsPageContent } from './components/products-page-content';
 
@@ -7,10 +8,10 @@ export default async function ProductsPage() {
   const t = await getTranslations('Products');
   const { activeOrgId } = await requireAuthAndOrg();
 
-  const { data: initialProducts, paging } = await getProductsByOrganization(activeOrgId, {
-    page: 1,
-    pageSize: 100,
-  });
+  const [{ data: initialProducts, paging }, initialSuppliers] = await Promise.all([
+    getProductsByOrganization(activeOrgId, { page: 1, pageSize: 100 }),
+    getAllSuppliers(activeOrgId),
+  ]);
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
@@ -23,6 +24,7 @@ export default async function ProductsPage() {
 
       <ProductsPageContent
         initialProducts={initialProducts}
+        initialSuppliers={initialSuppliers}
         organizationId={activeOrgId}
         initialPaging={paging}
       />
