@@ -13,9 +13,16 @@ interface CreateSimulationModalProps {
   onMutate?: () => void;
 }
 
+const MODALITY_OPTIONS = [
+  { id: 'SEA_LCL' as const, labelKey: 'MARITIME' },
+  { id: 'AIR' as const, labelKey: 'AIR' },
+  { id: 'EXPRESS' as const, labelKey: 'EXPRESS' },
+] as const;
+
 export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: CreateSimulationModalProps) {
   const [open, setOpen] = useState(false);
   const [destinationState, setDestinationState] = useState<string | null>(null);
+  const [shippingModality, setShippingModality] = useState<'SEA_LCL' | 'AIR' | 'EXPRESS'>('SEA_LCL');
   const t = useTranslations('Simulations.CreateSimulation');
 
   const [state, formAction, isPending] = useActionState(createSimulationAction, null);
@@ -27,6 +34,7 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
     if (destinationState && destinationState !== '__none__') {
       formData.set('destinationState', destinationState);
     }
+    formData.set('shippingModality', shippingModality);
     startTransition(() => {
       formAction(formData);
     });
@@ -69,6 +77,31 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
                     <Input name="name" placeholder={t('namePlaceholder')} autoFocus />
                     <FieldError />
                   </TextField>
+                  <div className="flex flex-col gap-2">
+                    <Label>{t('modalityLabel')}</Label>
+                    <Select
+                      variant="primary"
+                      placeholder={t('modalityPlaceholder')}
+                      value={shippingModality}
+                      onChange={(k) => setShippingModality((k as 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_LCL')}
+                      isDisabled={isPending}
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          {MODALITY_OPTIONS.map(({ id, labelKey }) => (
+                            <ListBox.Item key={id} id={id} textValue={t(labelKey)}>
+                              {t(labelKey)}
+                              <ListBox.ItemIndicator />
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  </div>
                   <div className="flex flex-col gap-2">
                     <Label>{t('destinationStateLabel')}</Label>
                     <Select

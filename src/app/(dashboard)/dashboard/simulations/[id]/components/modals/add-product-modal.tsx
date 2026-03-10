@@ -1,18 +1,18 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Modal, Tabs, Input, TextField, Label } from '@heroui/react';
+import { Button, Modal, Tabs, Input, TextField, Label, toast } from '@heroui/react';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../actions';
+import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../../actions';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductWithVariants } from '@/services/product.service';
 import type { HsCodeOption } from '@/services/simulation.service';
-import { SimulatedProductQuickForm } from './simulated-product-quick-form';
-import { ProductSnapshot } from '@/db/types';
+import { SimulatedProductQuickForm } from '../shared/simulated-product-quick-form';
+import type { ProductSnapshot } from '@/db/types';
 
-interface AddProductToSimulationModalProps {
+interface AddProductModalProps {
   simulationId: string;
   organizationId: string;
   products: ProductWithVariants[];
@@ -21,22 +21,21 @@ interface AddProductToSimulationModalProps {
   triggerLabel?: string;
 }
 
-export function AddProductToSimulationModal({
+export function AddProductModal({
   simulationId,
   organizationId,
   products,
   hsCodes,
   onMutate,
   triggerLabel,
-}: AddProductToSimulationModalProps) {
+}: AddProductModalProps) {
   const [open, setOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<string>('catalog');
   const [search, setSearch] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [catalogQuantity, setCatalogQuantity] = useState(1);
   const [catalogPrice, setCatalogPrice] = useState('');
-  const [isSubmittingCatalog, setIsSubmittingCatalog] = useState(false);
-  const [isSubmittingSimulated, setIsSubmittingSimulated] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const formId = useId();
 
   const t = useTranslations('Simulations.AddProduct');
@@ -64,43 +63,48 @@ export function AddProductToSimulationModal({
     .flatMap((p) => (p.variants ?? []).map((v) => ({ ...v, product: p })))
     .find((v) => v.id === selectedVariantId);
 
-  async function handleAddFromCatalog() {
+  function handleAddFromCatalog() {
     if (!selectedVariantId || !catalogPrice) return;
-    setIsSubmittingCatalog(true);
-    const result = await addSimulationItemFromCatalogAction(
-      simulationId,
-      organizationId,
-      selectedVariantId,
-      catalogQuantity,
-      catalogPrice
-    );
-    setIsSubmittingCatalog(false);
-    if (result.success) {
-      handleOpenChange(false);
-      onMutate?.();
-      router.refresh();
-    } else if (result.error) {
-      alert(result.error);
-    }
+    startTransition(async () => {
+      const result = await addSimulationItemFromCatalogAction(
+        simulationId,
+        organizationId,
+        selectedVariantId,
+        catalogQuantity,
+        catalogPrice
+      );
+      if (result.success) {
+        handleOpenChange(false);
+        onMutate?.();
+        router.refresh();
+        toast.success(t('addSuccess'));
+      } else if (result.error) {
+        toast.danger(result.error);
+      }
+    });
   }
 
   async function handleAddSimulated(snapshot: ProductSnapshot, quantity: number, priceUsd: string) {
-    setIsSubmittingSimulated(true);
-    const result = await addSimulatedProductAction(
-      simulationId,
-      organizationId,
-      snapshot,
-      quantity,
-      priceUsd
-    );
-    setIsSubmittingSimulated(false);
-    if (result.success) {
-      handleOpenChange(false);
-      onMutate?.();
-      router.refresh();
-    } else if (result.error) {
-      alert(result.error);
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await addSimulatedProductAction(
+          simulationId,
+          organizationId,
+          snapshot,
+          quantity,
+          priceUsd
+        );
+        if (result.success) {
+          handleOpenChange(false);
+          onMutate?.();
+          router.refresh();
+          toast.success(t('addSuccess'));
+        } else if (result.error) {
+          toast.danger(result.error);
+        }
+        resolve();
+      });
+    });
   }
 
   return (
@@ -115,7 +119,7 @@ export function AddProductToSimulationModal({
           <Plus size={18} />
           {triggerLabel ?? t('addProduct')}
         </Button>
-        <Modal.Backdrop isOpen={open} onOpenChange={handleOpenChange} isDismissable={false}>
+        <Modal.Backdrop isOpen={open} onOpenChange={handleOpenChange} isDismissable={!isPending}>
           <Modal.Container>
             <Modal.Dialog className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
               <Modal.CloseTrigger />
@@ -194,7 +198,7 @@ export function AddProductToSimulationModal({
                           <Button
                             variant="primary"
                             onPress={handleAddFromCatalog}
-                            isPending={isSubmittingCatalog}
+                            isPending={isPending}
                           >
                             {t('add')}
                           </Button>
@@ -206,7 +210,7 @@ export function AddProductToSimulationModal({
                     <SimulatedProductQuickForm
                       hsCodes={hsCodes}
                       onSubmit={handleAddSimulated}
-                      isSubmitting={isSubmittingSimulated}
+                      isSubmitting={isPending}
                       formId={formId}
                     />
                   </Tabs.Panel>

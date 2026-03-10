@@ -1,17 +1,17 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Button, Modal } from '@heroui/react';
+import { Button, Modal, toast } from '@heroui/react';
 import { Box } from 'lucide-react';
-import { SimulatedProductQuickForm } from './simulated-product-quick-form';
-import { updateSimulationItemAction } from '../../actions';
+import { SimulatedProductQuickForm } from '../shared/simulated-product-quick-form';
+import { updateSimulationItemAction } from '../../../actions';
 import type { ProductSnapshot } from '@/db/types';
 import type { HsCodeOption } from '@/services/simulation.service';
 import type { SimulationItem } from '@/services/simulation.service';
 
-interface EditSimulationItemModalProps {
+interface EditItemModalProps {
   item: SimulationItem | null;
   organizationId: string;
   hsCodes: HsCodeOption[];
@@ -20,15 +20,15 @@ interface EditSimulationItemModalProps {
   onMutate?: () => void;
 }
 
-export function EditSimulationItemModal({
+export function EditItemModal({
   item,
   organizationId,
   hsCodes,
   open,
   onOpenChange,
   onMutate,
-}: EditSimulationItemModalProps) {
-  const [isPending, setIsPending] = useState(false);
+}: EditItemModalProps) {
+  const [isPending, startTransition] = useTransition();
   const formId = useId();
   const t = useTranslations('Simulations.Detail');
   const tForm = useTranslations('Products.Form');
@@ -43,27 +43,34 @@ export function EditSimulationItemModal({
     priceUsd: string
   ) {
     if (!item) return;
-    setIsPending(true);
-    const result = await updateSimulationItemAction(item.id, organizationId, {
-      simulatedProductSnapshot: updatedSnapshot,
-      quantity,
-      priceUsd,
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        try {
+          const result = await updateSimulationItemAction(item.id, organizationId, {
+            simulatedProductSnapshot: updatedSnapshot,
+            quantity,
+            priceUsd,
+          });
+          if (result.success) {
+            onOpenChange(false);
+            onMutate?.();
+            router.refresh();
+            toast.success(t('saveItem'));
+          } else if (result.error) {
+            toast.danger(result.error);
+          }
+        } finally {
+          resolve();
+        }
+      });
     });
-    setIsPending(false);
-    if (result.success) {
-      onOpenChange(false);
-      onMutate?.();
-      router.refresh();
-    } else if (result.error) {
-      alert(result.error);
-    }
   }
 
   if (!item || !isSimulatedItem) return null;
 
   return (
     <Modal>
-      <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange} isDismissable={false}>
+      <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange} isDismissable={!isPending}>
         <Modal.Container>
           <Modal.Dialog className="max-w-5xl">
             <Modal.CloseTrigger />
@@ -73,8 +80,8 @@ export function EditSimulationItemModal({
               </Modal.Icon>
               <Modal.Heading>{t('editItem')}</Modal.Heading>
             </Modal.Header>
-            <Modal.Body className='overflow-visible'>
-             <SimulatedProductQuickForm
+            <Modal.Body className="overflow-visible">
+              <SimulatedProductQuickForm
                 hsCodes={hsCodes}
                 onSubmit={handleUpdate}
                 isSubmitting={isPending}

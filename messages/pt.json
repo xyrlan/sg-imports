@@ -972,7 +972,8 @@
     "title": "Algo deu errado",
     "description": "Ocorreu um erro inesperado. Tente novamente.",
     "tryAgain": "Tentar novamente",
-    "backHome": "Voltar ao início"
+    "backHome": "Voltar ao início",
+    "backToSimulations": "Voltar às simulações"
   },
   "Products": {
     "title": "Produtos",
@@ -1134,6 +1135,11 @@
       "heading": "Criar simulação",
       "nameLabel": "Nome",
       "namePlaceholder": "ex: Estimativa custos Q1 2025",
+      "modalityLabel": "Modalidade de transporte",
+      "modalityPlaceholder": "Selecione a modalidade",
+      "MARITIME": "Marítimo",
+      "AIR": "Aéreo",
+      "EXPRESS": "Expresso",
       "destinationStateLabel": "Estado de Destino (ICMS)",
       "destinationStatePlaceholder": "Selecione o estado",
       "create": "Criar",
@@ -1163,6 +1169,7 @@
     },
     "AddProduct": {
       "addProduct": "Adicionar produto",
+      "addSuccess": "Produto adicionado com sucesso",
       "heading": "Adicionar produto à simulação",
       "tabCatalog": "Do catálogo",
       "tabSimulated": "Produto simulado",
@@ -1193,6 +1200,15 @@
       "suggested": "Sugerido",
       "containerSize": "Tamanho do container"
     },
+    "FreightStatusCard": {
+      "modality": "Modalidade",
+      "maritimeLcl": "Marítimo (LCL)",
+      "maritimeFcl": "Marítimo (FCL - {type})",
+      "maritimeFclPlural": "Marítimo (FCL - {count}×{type})",
+      "air": "Aéreo",
+      "express": "Expresso",
+      "none": "Não definida"
+    },
     "FreightCapacityProgress": {
       "fclTitle": "Capacidade do container",
       "fclTitlePlural": "Capacidade dos containers",
@@ -1204,13 +1220,18 @@
       "lclTitle": "Métricas LCL",
       "totalCbm": "Total CBM",
       "chargeableWeight": "Peso taxável",
-      "lclViabilityAlert": "Volume próximo do limite de viabilidade LCL (15 m³). Considere FCL.",
+      "lclViabilityAlert": "Volume próximo do limite de viabilidade LCL (25 m³). Considere FCL.",
       "airTitle": "Métricas Aéreo",
       "expressTitle": "Métricas Expresso",
       "volumetricNote": "Peso taxável = máximo entre peso bruto e peso volumétrico (fator 1:6 para aéreo)."
     },
     "SimulationSettings": {
       "heading": "Configurações da simulação",
+      "modalityLabel": "Modalidade de transporte",
+      "modalityPlaceholder": "Selecione a modalidade",
+      "MARITIME": "Marítimo",
+      "AIR": "Aéreo",
+      "EXPRESS": "Expresso",
       "destinationState": "Estado de Destino (ICMS)",
       "destinationStatePlaceholder": "Selecione o estado",
       "save": "Salvar",
@@ -1224,6 +1245,10 @@
       "targetDolarPlaceholder": "ex: 5,50",
       "targetDolarRequired": "Taxa de câmbio (dólar alvo) é obrigatória",
       "totalFreightUsd": "Frete Internacional (USD)",
+      "totalFreightUsdCalculated": "Frete Internacional (calculado)",
+      "loading": "Carregando...",
+      "freightFallbackWarning": "Nenhum frete padrão encontrado para esta modalidade. Simulação pode estar imprecisa.",
+      "freightFallbackBadge": "Estimativa",
       "totalInsuranceUsd": "Seguro (USD)",
       "capataziaUsd": "Capatazia (USD)",
       "destinationState": "Estado de Destino (ICMS)",

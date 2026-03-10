@@ -6,12 +6,26 @@ import { useActionState, useEffect, useRef, useState } from 'react';
 import { startTransition } from 'react';
 import { Button, Modal, Label, Select, ListBox } from '@heroui/react';
 import { Settings } from 'lucide-react';
-import { updateSimulationAction } from '../../actions';
+import { updateSimulationAction } from '../../../actions';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 import type { Simulation } from '@/services/simulation.service';
 import type { ShippingMetadata } from '@/db/types';
 
-interface SimulationSettingsModalProps {
+/** Maps stored modality to UI category: Marítimo (SEA_LCL/SEA_FCL), AIR, EXPRESS */
+function modalityToUiValue(modality: string | null): 'SEA_LCL' | 'AIR' | 'EXPRESS' {
+  if (modality === 'SEA_LCL' || modality === 'SEA_FCL') return 'SEA_LCL';
+  if (modality === 'AIR') return 'AIR';
+  if (modality === 'EXPRESS') return 'EXPRESS';
+  return 'SEA_LCL';
+}
+
+const MODALITY_OPTIONS = [
+  { id: 'SEA_LCL' as const, labelKey: 'MARITIME' },
+  { id: 'AIR' as const, labelKey: 'AIR' },
+  { id: 'EXPRESS' as const, labelKey: 'EXPRESS' },
+] as const;
+
+interface SettingsModalProps {
   simulation: Simulation;
   defaultDestinationState?: string | null;
   onMutate?: () => void;
@@ -19,13 +33,13 @@ interface SimulationSettingsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function SimulationSettingsModal({
+export function SettingsModal({
   simulation,
   defaultDestinationState,
   onMutate,
   open,
   onOpenChange,
-}: SimulationSettingsModalProps) {
+}: SettingsModalProps) {
   const t = useTranslations('Simulations.SimulationSettings');
   const router = useRouter();
   const didRefreshRef = useRef(false);
@@ -34,15 +48,21 @@ export function SimulationSettingsModal({
   const [destinationState, setDestinationState] = useState(
     () => existingMetadata.destinationState ?? defaultDestinationState ?? '',
   );
+  const [shippingModality, setShippingModality] = useState<'SEA_LCL' | 'AIR' | 'EXPRESS'>(() =>
+    modalityToUiValue(simulation.shippingModality),
+  );
 
   const [state, formAction, isPending] = useActionState(updateSimulationAction, null);
 
   useEffect(() => {
     if (open) {
       const meta = (simulation.metadata as ShippingMetadata | null) ?? {};
-      setDestinationState(meta.destinationState ?? defaultDestinationState ?? '');
+      queueMicrotask(() => {
+        setDestinationState(meta.destinationState ?? defaultDestinationState ?? '');
+      setShippingModality(modalityToUiValue(simulation.shippingModality));
+      });
     }
-  }, [open, simulation.metadata, defaultDestinationState]);
+  }, [open, simulation.metadata, simulation.shippingModality, defaultDestinationState]);
 
   useEffect(() => {
     if (
@@ -70,6 +90,7 @@ export function SimulationSettingsModal({
     formData.set('simulationId', simulation.id);
     formData.set('organizationId', simulation.organizationId);
     formData.set('metadata', JSON.stringify(metadata));
+    formData.set('shippingModality', shippingModality);
     startTransition(() => {
       formAction(formData);
     });
@@ -90,6 +111,30 @@ export function SimulationSettingsModal({
             <form onSubmit={handleSubmit}>
               <Modal.Body className="p-2">
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>{t('modalityLabel')}</Label>
+                    <Select
+                      variant="primary"
+                      placeholder={t('modalityPlaceholder')}
+                      value={shippingModality}
+                      onChange={(k) => setShippingModality((k as 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_LCL')}
+                      isDisabled={isPending}
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          {MODALITY_OPTIONS.map(({ id, labelKey }) => (
+                            <ListBox.Item key={id} id={id} textValue={t(labelKey)}>
+                              {t(labelKey)}
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label>{t('destinationState')}</Label>
                     <Select

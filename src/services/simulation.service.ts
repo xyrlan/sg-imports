@@ -12,6 +12,7 @@ import {
   getChargeableWeight,
   getVolumetricWeightAir,
   getVolumetricWeightSeaLCL,
+  calculateOptimalFreightProfile,
 } from '@/lib/logistics';
 import { computeImportTaxes } from '@/lib/import-taxes';
 
@@ -169,6 +170,7 @@ export interface CreateSimulationInput {
   userId: string;
   name: string;
   targetDolar?: string | null;
+  shippingModality?: 'SEA_LCL' | 'AIR' | 'EXPRESS';
   metadata?: ShippingMetadata | null;
 }
 
@@ -203,6 +205,7 @@ export async function createSimulation(
       name: input.name.trim(),
       targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
       incoterm: 'FOB',
+      shippingModality: input.shippingModality ?? 'SEA_LCL',
       metadata: input.metadata ?? null,
     })
     .returning();
@@ -272,6 +275,15 @@ export interface AddSimulationItemInput {
   priceUsd: string;
 }
 
+function equipmentEqual(
+  a: { type: string; quantity: number } | null,
+  b: { type: string; quantity: number } | null,
+): boolean {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return a.type === b.type && a.quantity === b.quantity;
+}
+
 async function recalculateQuoteTotals(quoteId: string): Promise<void> {
   const items = await db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
   const quote = await db.query.quotes.findFirst({ where: eq(quotes.id, quoteId) });
@@ -286,7 +298,40 @@ async function recalculateQuoteTotals(quoteId: string): Promise<void> {
     new Decimal(0),
   );
 
-  const modality = quote.shippingModality;
+  let modality = quote.shippingModality;
+  let metadata: ShippingMetadata = (quote.metadata as ShippingMetadata | null) ?? {};
+  let maritimeChanged = false;
+
+  // Maritime watch: auto-derive LCL vs FCL and equipment from CBM/weight
+  if (modality === 'SEA_LCL' || modality === 'SEA_FCL') {
+    const profile = calculateOptimalFreightProfile(
+      totalCbm.toNumber(),
+      totalWeight.toNumber(),
+    );
+    const newModality = profile.suggestedModality;
+    const newEquipment = profile.equipment ?? null;
+    const currentEq =
+      metadata.equipmentType && metadata.equipmentQuantity != null
+        ? { type: metadata.equipmentType, quantity: metadata.equipmentQuantity }
+        : null;
+
+    const modalityChanged = newModality !== modality;
+    const equipmentChanged = !equipmentEqual(newEquipment, currentEq);
+
+    if (modalityChanged || equipmentChanged) {
+      maritimeChanged = true;
+      modality = newModality;
+      metadata = { ...metadata };
+      if (newModality === 'SEA_FCL' && newEquipment) {
+        metadata.equipmentType = newEquipment.type;
+        metadata.equipmentQuantity = newEquipment.quantity;
+      } else {
+        delete metadata.equipmentType;
+        delete metadata.equipmentQuantity;
+      }
+    }
+  }
+
   const useVolumetric =
     modality === 'AIR' || modality === 'SEA_LCL' || modality === 'EXPRESS';
   const volumetricWeight = useVolumetric
@@ -304,6 +349,8 @@ async function recalculateQuoteTotals(quoteId: string): Promise<void> {
       totalCbm: totalCbm.toFixed(6),
       totalWeight: totalWeight.toFixed(3),
       totalChargeableWeight: totalChargeableWeight.toFixed(3),
+      ...(modality !== quote.shippingModality && { shippingModality: modality }),
+      ...(maritimeChanged && { metadata }),
     })
     .where(eq(quotes.id, quoteId));
 }
@@ -726,7 +773,7 @@ export interface QuoteFinancialSummary {
 
 /**
  * Agrega os valores dos itens calculados e retorna o breakdown financeiro.
- * Usa totalFreightUsd e totalInsuranceUsd do metadata quando disponíveis.
+ * totalFreightUsd vem do metadata; totalInsuranceUsd é calculado via INTL_INSURANCE.
  */
 export async function getQuoteFinancialSummary(
   quoteId: string,
@@ -739,7 +786,6 @@ export async function getQuoteFinancialSummary(
   const { simulation, items } = data;
   const metadata = (simulation.metadata as ShippingMetadata | null) ?? {};
   const totalFreightUsd = metadata.totalFreightUsd ?? 0;
-  const totalInsuranceUsd = metadata.totalInsuranceUsd ?? 0;
 
   const targetDolar = Number(simulation.targetDolar ?? 0);
   const exchangeRateIof = Number(simulation.exchangeRateIof ?? 0);
@@ -761,6 +807,17 @@ export async function getQuoteFinancialSummary(
       Number(i.afrmmValueSnapshot ?? 0) +
       Number(i.icmsValueSnapshot ?? 0);
   }
+
+  const { getGlobalPlatformRates } = await import('@/services/admin/config.service');
+  const platformRates = await getGlobalPlatformRates();
+  const insuranceRateRow = platformRates.find((r) => r.rateType === 'INTL_INSURANCE');
+  const insuranceRatePct = insuranceRateRow?.unit === 'PERCENT'
+    ? Number(insuranceRateRow.value ?? 0) / 100
+    : 0;
+  const totalInsuranceUsd =
+    insuranceRatePct > 0 && insuranceRatePct < 1
+      ? ((totalFobUsd + totalFreightUsd) * insuranceRatePct) / (1 - insuranceRatePct)
+      : 0;
 
   const totalCifBrl =
     (totalFobUsd + totalFreightUsd + totalInsuranceUsd) * effectiveDolar;

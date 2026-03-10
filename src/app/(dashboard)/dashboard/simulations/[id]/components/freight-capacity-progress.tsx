@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Boxes, Weight, Info, CircleAlert, Plane, Ship } from 'lucide-react';
+import { Boxes, Weight, Info, CircleAlert, Plane, Ship, Box } from 'lucide-react';
 import { LCL_VIABILITY_THRESHOLDS } from '@/lib/logistics';
 
 type Modality = 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS';
@@ -109,9 +109,8 @@ export function FreightCapacityProgress({
       <div className="space-y-4">
         <h3 className="font-semibold flex items-center gap-2">
           <Ship className="size-5" />
-          {containerQuantity > 1 ? t('fclTitlePlural') : t('fclTitle')}
           {containerType && (
-            <span className="text-sm font-normal">
+            <span className="text-sm font-semibold text-accent">
               {containerType} {containerQuantity > 1 && `× ${containerQuantity}`}
             </span>
           )}
@@ -141,7 +140,7 @@ export function FreightCapacityProgress({
             value={totalCbm}
             max={effectiveCapacity.maxVolume}
             formatVal={formatVolume}
-            icon={Boxes}
+            icon={Box}
             isOver={volOver}
             isSoftWarning={volSoft}
           />
@@ -170,7 +169,7 @@ export function FreightCapacityProgress({
           {t('lclTitle')}
         </h3>
         <div className="grid grid-cols-2 gap-3">
-          <MetricCard label={t('totalCbm')} value={formatVolume(totalCbm)} icon={Boxes} />
+          <MetricCard label={t('totalCbm')} value={formatVolume(totalCbm)} icon={Box} />
           <MetricCard
             label={t('chargeableWeight')}
             value={formatWeight(totalChargeableWeight)}
@@ -195,7 +194,7 @@ export function FreightCapacityProgress({
           {t(modality === 'AIR' ? 'airTitle' : 'expressTitle')}
         </h3>
         <div className="grid grid-cols-2 gap-3">
-          <MetricCard label={t('totalCbm')} value={formatVolume(totalCbm)} icon={Boxes} />
+          <MetricCard label={t('totalCbm')} value={formatVolume(totalCbm)} icon={Box} />
           <MetricCard
             label={t('chargeableWeight')}
             value={formatWeight(totalChargeableWeight)}

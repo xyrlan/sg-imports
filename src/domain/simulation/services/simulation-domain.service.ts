@@ -128,8 +128,6 @@ export async function calculateAndPersistLandedCost(
 
   const metadata = (simulation.metadata as ShippingMetadata | null) ?? {};
   const totalFreightUsd = metadata.totalFreightUsd ?? 0;
-  const totalInsuranceUsd = metadata.totalInsuranceUsd ?? 0;
-  const capataziaUsd = metadata.capataziaUsd ?? 0;
   const destinationState = metadata.destinationState;
 
   const uniqueNcms = new Set<string>();
@@ -202,6 +200,19 @@ export async function calculateAndPersistLandedCost(
     ? Number(afrmmRateRow.value ?? 0)
     : 0;
 
+  const totalFobUsd = engineInputs.reduce(
+    (sum, i) => sum + Number(i.fobUsd ?? Number(i.priceUsd) * i.quantity),
+    0,
+  );
+  const insuranceRateRow = platformRates.find((r) => r.rateType === 'INTL_INSURANCE');
+  const insuranceRatePct = insuranceRateRow?.unit === 'PERCENT'
+    ? Number(insuranceRateRow.value ?? 0) / 100
+    : 0;
+  const totalInsuranceUsd =
+    insuranceRatePct > 0 && insuranceRatePct < 1
+      ? ((totalFobUsd + totalFreightUsd) * insuranceRatePct) / (1 - insuranceRatePct)
+      : 0;
+
   let icmsRate = 0;
   let stateForIcms = destinationState;
 
@@ -235,7 +246,6 @@ export async function calculateAndPersistLandedCost(
     shippingModality,
     totalFreightUsd,
     totalInsuranceUsd,
-    totalCapataziaUsd: capataziaUsd > 0 ? capataziaUsd : undefined,
     totalSiscomexBrl: totalSiscomexBrl.toNumber(),
     afrmmRate: afrmmRate > 0 ? afrmmRate : undefined,
     icmsRate: icmsRate > 0 ? icmsRate : undefined,

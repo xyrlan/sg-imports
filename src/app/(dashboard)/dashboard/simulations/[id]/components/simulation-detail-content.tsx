@@ -14,10 +14,9 @@ import type {
   HsCodeOption,
 } from '@/services/simulation.service';
 import type { ProductWithVariants } from '@/services/product.service';
-import { AddProductToSimulationModal } from './add-product-to-simulation-modal';
-import { SimulationSettingsModal } from './simulation-settings-modal';
-import { ShippingSelectionSection } from './shipping-selection-section';
-import { SimulationFinancialSummary } from './simulation-financial-summary';
+import { AddProductModal } from './modals/add-product-modal';
+import { SettingsModal } from './modals/settings-modal';
+import { SimulationFinancialSummary } from './cards/simulation-financial-summary';
 
 interface SimulationDetailContentProps {
   simulation: Simulation;
@@ -27,6 +26,7 @@ interface SimulationDetailContentProps {
   hsCodes: HsCodeOption[];
   financialSummary?: QuoteFinancialSummary | null;
   defaultDestinationState?: string | null;
+  freightCard?: React.ReactNode;
 }
 
 export function SimulationDetailContent({
@@ -37,6 +37,7 @@ export function SimulationDetailContent({
   hsCodes,
   financialSummary = null,
   defaultDestinationState = null,
+  freightCard = null,
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
@@ -74,14 +75,14 @@ export function SimulationDetailContent({
             <Settings className="size-4" />
             {t('settingsButton')}
           </Button>
-          <SimulationSettingsModal
+          <SettingsModal
             simulation={simulation}
             defaultDestinationState={defaultDestinationState}
             onMutate={handleMutate}
             open={settingsOpen}
             onOpenChange={setSettingsOpen}
           />
-          <AddProductToSimulationModal
+          <AddProductModal
             simulationId={simulation.id}
             organizationId={organizationId}
             products={products}
@@ -93,13 +94,7 @@ export function SimulationDetailContent({
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
         <div className="space-y-6 min-w-0">
-          {items.length > 0 && (
-            <ShippingSelectionSection
-              simulation={simulation}
-              defaultDestinationState={defaultDestinationState}
-              onMutate={handleMutate}
-            />
-          )}
+          {items.length > 0 && freightCard}
 
           {items.length > 0 ? (
             <SimulationItemsList
@@ -115,7 +110,7 @@ export function SimulationDetailContent({
               <p className="text-muted text-center max-w-sm mb-4">
                 {t('emptyMessage')}
               </p>
-              <AddProductToSimulationModal
+              <AddProductModal
                 simulationId={simulation.id}
                 organizationId={organizationId}
                 products={products}

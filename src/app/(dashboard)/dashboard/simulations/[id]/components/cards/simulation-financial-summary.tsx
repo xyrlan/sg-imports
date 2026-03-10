@@ -3,8 +3,8 @@
 import { useTranslations } from 'next-intl';
 import { Card } from '@heroui/react';
 import { DollarSign, Package, Truck, Receipt } from 'lucide-react';
-import { useFreightModality } from '@/hooks/useFreightModality';
-import { FreightCapacityProgress } from './freight-capacity-progress';
+import { computeFreightDisplayFromQuote } from '@/lib/simulation/freight-display';
+import { FreightCapacityProgress } from '../freight-capacity-progress';
 import type {
   QuoteFinancialSummary,
   Simulation,
@@ -66,7 +66,7 @@ export function SimulationFinancialSummary({
     totalWeight,
     totalChargeableWeight,
     effectiveCapacity,
-  } = useFreightModality(quote ?? { totalCbm: null, totalWeight: null });
+  } = computeFreightDisplayFromQuote(quote ?? { totalCbm: null, totalWeight: null });
 
   if (!summary) {
     return null;

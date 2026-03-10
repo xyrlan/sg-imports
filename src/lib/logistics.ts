@@ -9,18 +9,18 @@ import type { FreightProfile } from '@/types/freight';
 /** Capacidades reais de mercado (m³, kg) — Single Source of Truth */
 export const CONTAINER_CAPACITIES = {
   '20GP': { maxCbm: 33, maxWeight: 28_000 },
-  '40NOR': { maxCbm: 67, maxWeight: 28_000 },
-  '40HC': { maxCbm: 76, maxWeight: 28_000 },
+  '40NOR': { maxCbm: 56, maxWeight: 28_000 },
+  '40HC': { maxCbm: 67, maxWeight: 28_000 },
 } as const;
 
-export const LCL_VIABILITY_THRESHOLDS = { maxCbm: 15, maxWeight: 10_000 };
+export const LCL_VIABILITY_THRESHOLDS = { maxCbm: 25, maxWeight: 10_000 };
 
 /** AIR: fator de estiva 1:6 (volume_cm³ / 6000 = peso vol. kg) */
 export const AIR_VOLUMETRIC_DIVISOR = 6000;
 
 /**
  * Calcula o perfil ótimo de frete com base em CBM e peso.
- * LCL: < 15 CBM e < 10.000 kg. Caso contrário: SEA_FCL com containers otimizados.
+ * LCL: < 25 m³ e < 10.000 kg. Caso contrário: SEA_FCL com containers otimizados.
  */
 export function calculateOptimalFreightProfile(
   totalCbm: number,

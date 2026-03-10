@@ -17,15 +17,64 @@ import {
   updateSimulationItem,
 } from '@/services/simulation.service';
 import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
+import { getSimulationById } from '@/services/simulation.service';
+import { getFreightValueForSimulation } from '@/services/admin/international-freights.service';
+import { calculateOptimalFreightProfile } from '@/lib/logistics';
 import { getDolarPTAX } from '@/lib/fetch-dolar';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 
+export interface GetFreightForSimulationResult {
+  value: number;
+  usedFallback?: boolean;
+  error?: string;
+}
+
+export async function getFreightForSimulationAction(
+  simulationId: string,
+  organizationId: string,
+  shippingModality: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS',
+  containerType?: '20GP' | '40NOR' | '40HC',
+  containerQuantity?: number,
+): Promise<GetFreightForSimulationResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+    const data = await getSimulationById(simulationId, organizationId, user.id);
+    if (!data) {
+      return { value: 0, error: 'Simulation not found' };
+    }
+
+    const totalCbm = Number(data.simulation.totalCbm ?? 0);
+    const totalWeightKg = Number(data.simulation.totalWeight ?? 0);
+
+    const result = await getFreightValueForSimulation({
+      shippingModality,
+      containerType,
+      containerQuantity,
+      totalCbm,
+      totalWeightKg,
+    });
+
+    return result;
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) {
+      throw err;
+    }
+    return {
+      value: 0,
+      error: err instanceof Error ? err.message : 'Failed to get freight',
+    };
+  }
+}
+
 const shippingModalitySchema = z.enum(['AIR', 'SEA_LCL', 'SEA_FCL', 'SEA_FCL_PARTIAL', 'EXPRESS']);
+
+const createSimulationModalitySchema = z.enum(['SEA_LCL', 'AIR', 'EXPRESS']);
 
 const createSimulationSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required').max(200),
   destinationState: z.string().max(2).optional(),
+  shippingModality: createSimulationModalitySchema.default('SEA_LCL'),
 });
 
 const addCatalogItemSchema = z.object({
@@ -108,6 +157,7 @@ export async function createSimulationAction(
       organizationId: formData.get('organizationId') as string,
       name: (formData.get('name') as string)?.trim(),
       destinationState: (formData.get('destinationState') as string)?.trim() || undefined,
+      shippingModality: (formData.get('shippingModality') as string)?.trim() || 'SEA_LCL',
     };
 
     const validated = createSimulationSchema.safeParse(rawData);
@@ -132,6 +182,7 @@ export async function createSimulationAction(
       userId: user.id,
       name: validated.data.name,
       targetDolar,
+      shippingModality: validated.data.shippingModality,
       metadata,
     });
 
@@ -225,6 +276,83 @@ export async function updateSimulationAction(
       return { error: 'Forbidden' };
     }
 
+    let modalityToSave = validated.data.shippingModality;
+    let metadataToSave = validated.data.metadata;
+
+    // When user selects Marítimo (SEA_LCL), compute optimal profile from current totals
+    if (modalityToSave === 'SEA_LCL') {
+      const simData = await getSimulationById(
+        validated.data.simulationId,
+        validated.data.organizationId,
+        user.id,
+      );
+      if (simData) {
+        let totalCbm: number;
+        let totalWeightKg: number;
+
+        if (simData.items.length > 0) {
+          totalCbm = simData.items.reduce(
+            (s, i) => s + Number(i.cbmSnapshot ?? 0),
+            0,
+          );
+          totalWeightKg = simData.items.reduce(
+            (s, i) => s + Number(i.weightSnapshot ?? 0),
+            0,
+          );
+        } else {
+          totalCbm = Number(simData.simulation.totalCbm ?? 0);
+          totalWeightKg = Number(simData.simulation.totalWeight ?? 0);
+        }
+
+        const profile = calculateOptimalFreightProfile(totalCbm, totalWeightKg);
+        modalityToSave = profile.suggestedModality;
+        metadataToSave = {
+          ...(metadataToSave ?? (simData.simulation.metadata as ShippingMetadata) ?? {}),
+          ...(profile.suggestedModality === 'SEA_FCL' && profile.equipment
+            ? {
+                equipmentType: profile.equipment.type,
+                equipmentQuantity: profile.equipment.quantity,
+              }
+            : {}),
+        };
+        if (profile.suggestedModality !== 'SEA_FCL') {
+          const m = metadataToSave as Record<string, unknown>;
+          delete m.equipmentType;
+          delete m.equipmentQuantity;
+        }
+      }
+    }
+
+    if (
+      metadataToSave !== undefined &&
+      modalityToSave &&
+      ['AIR', 'SEA_LCL', 'SEA_FCL', 'EXPRESS'].includes(modalityToSave)
+    ) {
+      const simData = await getSimulationById(
+        validated.data.simulationId,
+        validated.data.organizationId,
+        user.id,
+      );
+      if (simData) {
+        const totalCbm = Number(simData.simulation.totalCbm ?? 0);
+        const totalWeightKg = Number(simData.simulation.totalWeight ?? 0);
+        const freightResult = await getFreightValueForSimulation({
+          shippingModality: modalityToSave as 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS',
+          containerType: metadataToSave.equipmentType,
+          containerQuantity: metadataToSave.equipmentQuantity,
+          totalCbm,
+          totalWeightKg,
+        });
+
+        metadataToSave = {
+          ...metadataToSave,
+          totalFreightUsd: freightResult.value,
+          totalInsuranceUsd: undefined,
+          capataziaUsd: undefined,
+        };
+      }
+    }
+
     const updated = await updateSimulation(
       validated.data.simulationId,
       validated.data.organizationId,
@@ -234,10 +362,10 @@ export async function updateSimulationAction(
         ...(validated.data.targetDolar !== undefined && {
           targetDolar: validated.data.targetDolar?.trim() || '0',
         }),
-        ...(validated.data.shippingModality !== undefined && {
-          shippingModality: validated.data.shippingModality,
+        ...(modalityToSave !== undefined && {
+          shippingModality: modalityToSave,
         }),
-        ...(validated.data.metadata !== undefined && { metadata: validated.data.metadata }),
+        ...(metadataToSave !== undefined && { metadata: metadataToSave }),
       }
     );
 
@@ -246,6 +374,22 @@ export async function updateSimulationAction(
     }
 
     if (validated.data.metadata !== undefined) {
+      // Ensure targetDolar is set before landed cost calc (fetch PTAX if missing/invalid)
+      const currentTarget = Number(updated.targetDolar ?? 0);
+      if (currentTarget <= 0) {
+        try {
+          const ptaxStr = (await getDolarPTAX()).toFixed(4);
+          await updateSimulation(
+            validated.data.simulationId,
+            validated.data.organizationId,
+            user.id,
+            { targetDolar: ptaxStr },
+          );
+        } catch {
+          return { error: 'Não foi possível obter a taxa de câmbio. Tente novamente.' };
+        }
+      }
+
       const taxResult = await calculateAndPersistLandedCost(
         validated.data.simulationId,
         validated.data.organizationId,

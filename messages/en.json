@@ -972,7 +972,8 @@
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try again.",
     "tryAgain": "Try again",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "backToSimulations": "Back to simulations"
   },
   "Products": {
     "title": "Products",
@@ -1134,6 +1135,11 @@
       "heading": "Create simulation",
       "nameLabel": "Name",
       "namePlaceholder": "e.g. Q1 2025 cost estimate",
+      "modalityLabel": "Transport modality",
+      "modalityPlaceholder": "Select modality",
+      "MARITIME": "Maritime",
+      "AIR": "Air",
+      "EXPRESS": "Express",
       "destinationStateLabel": "Destination State (ICMS)",
       "destinationStatePlaceholder": "Select state",
       "create": "Create",
@@ -1163,6 +1169,7 @@
     },
     "AddProduct": {
       "addProduct": "Add product",
+      "addSuccess": "Product added successfully",
       "heading": "Add product to simulation",
       "tabCatalog": "From catalog",
       "tabSimulated": "Simulated product",
@@ -1193,6 +1200,15 @@
       "suggested": "Suggested",
       "containerSize": "Container size"
     },
+    "FreightStatusCard": {
+      "modality": "Modality",
+      "maritimeLcl": "Maritime (LCL)",
+      "maritimeFcl": "Maritime (FCL - {type})",
+      "maritimeFclPlural": "Maritime (FCL - {count}×{type})",
+      "air": "Air",
+      "express": "Express",
+      "none": "Not set"
+    },
     "FreightCapacityProgress": {
       "fclTitle": "Container capacity",
       "fclTitlePlural": "Containers capacity",
@@ -1204,13 +1220,18 @@
       "lclTitle": "LCL metrics",
       "totalCbm": "Total CBM",
       "chargeableWeight": "Chargeable weight",
-      "lclViabilityAlert": "Volume near LCL viability limit (15 m³). Consider FCL.",
+      "lclViabilityAlert": "Volume near LCL viability limit (25 m³). Consider FCL.",
       "airTitle": "Air metrics",
       "expressTitle": "Express metrics",
       "volumetricNote": "Chargeable weight = max of gross weight and volumetric weight (1:6 factor for air)."
     },
     "SimulationSettings": {
       "heading": "Simulation settings",
+      "modalityLabel": "Transport modality",
+      "modalityPlaceholder": "Select modality",
+      "MARITIME": "Maritime",
+      "AIR": "Air",
+      "EXPRESS": "Express",
       "destinationState": "Destination State (ICMS)",
       "destinationStatePlaceholder": "Select state",
       "save": "Save",
@@ -1224,6 +1245,10 @@
       "targetDolarPlaceholder": "e.g. 5.50",
       "targetDolarRequired": "Exchange rate (USD target) is required",
       "totalFreightUsd": "International Freight (USD)",
+      "totalFreightUsdCalculated": "International Freight (calculated)",
+      "loading": "Loading...",
+      "freightFallbackWarning": "No default freight found for this modality. Simulation may be inaccurate.",
+      "freightFallbackBadge": "Estimate",
       "totalInsuranceUsd": "Insurance (USD)",
       "capataziaUsd": "Capatazia (USD)",
       "destinationState": "Destination State (ICMS)",

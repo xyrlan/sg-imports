@@ -4,10 +4,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/ui/data-table';
 import { getSimulationItemColumns } from './simulation-item-columns';
-import { EditSimulationItemModal } from './edit-simulation-item-modal';
+import { EditItemModal } from './modals/edit-item-modal';
 import { removeSimulationItemAction } from '../../actions';
 import type { HsCodeOption, SimulationItem } from '@/services/simulation.service';
-import { Card } from '@heroui/react';
+import { Card, toast } from '@heroui/react';
 
 interface SimulationItemsListProps {
   items: SimulationItem[];
@@ -33,7 +33,7 @@ export function SimulationItemsList({
       if (result.success) {
         onMutate?.();
       } else if (result.error) {
-        alert(result.error);
+        toast.danger(result.error);
       }
     },
     [organizationId, onMutate]
@@ -60,7 +60,7 @@ export function SimulationItemsList({
         data={items}
         searchPlaceholder={t('searchItems')}
       />
-      <EditSimulationItemModal
+      <EditItemModal
         item={editingItem}
         organizationId={organizationId}
         hsCodes={hsCodes}

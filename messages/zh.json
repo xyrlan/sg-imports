@@ -970,6 +970,7 @@
   },
   "Error": {
     "title": "出错了",
+    "backToSimulations": "返回模拟",
     "description": "发生意外错误。请重试。",
     "tryAgain": "重试",
     "backHome": "返回首页"
@@ -1134,6 +1135,11 @@
       "heading": "创建模拟",
       "nameLabel": "名称",
       "namePlaceholder": "例如：2025年第一季度成本估算",
+      "modalityLabel": "运输方式",
+      "modalityPlaceholder": "选择运输方式",
+      "MARITIME": "海运",
+      "AIR": "空运",
+      "EXPRESS": "快递",
       "destinationStateLabel": "目的地州 (ICMS)",
       "destinationStatePlaceholder": "选择州",
       "create": "创建",
@@ -1163,6 +1169,7 @@
     },
     "AddProduct": {
       "addProduct": "添加产品",
+      "addSuccess": "产品添加成功",
       "heading": "添加产品到模拟",
       "tabCatalog": "从目录",
       "tabSimulated": "模拟产品",
@@ -1193,6 +1200,15 @@
       "suggested": "推荐",
       "containerSize": "集装箱尺寸"
     },
+    "FreightStatusCard": {
+      "modality": "运输方式",
+      "maritimeLcl": "海运 (LCL)",
+      "maritimeFcl": "海运 (FCL - {type})",
+      "maritimeFclPlural": "海运 (FCL - {count}×{type})",
+      "air": "空运",
+      "express": "快递",
+      "none": "未设置"
+    },
     "FreightCapacityProgress": {
       "fclTitle": "集装箱容量",
       "fclTitlePlural": "集装箱容量",
@@ -1204,13 +1220,18 @@
       "lclTitle": "LCL 指标",
       "totalCbm": "总 CBM",
       "chargeableWeight": "计费重量",
-      "lclViabilityAlert": "体积接近 LCL 可行上限（15 m³）。建议考虑 FCL。",
+      "lclViabilityAlert": "体积接近 LCL 可行上限（25 m³）。建议考虑 FCL。",
       "airTitle": "空运指标",
       "expressTitle": "快递指标",
       "volumetricNote": "计费重量 = 毛重与体积重量（空运 1:6）取大值。"
     },
     "SimulationSettings": {
       "heading": "模拟设置",
+      "modalityLabel": "运输方式",
+      "modalityPlaceholder": "选择运输方式",
+      "MARITIME": "海运",
+      "AIR": "空运",
+      "EXPRESS": "快递",
       "destinationState": "目的地州 (ICMS)",
       "destinationStatePlaceholder": "选择州",
       "save": "保存",
@@ -1224,6 +1245,10 @@
       "targetDolarPlaceholder": "例如：5.50",
       "targetDolarRequired": "汇率（美元目标）为必填项",
       "totalFreightUsd": "国际运费 (USD)",
+      "totalFreightUsdCalculated": "国际运费（已计算）",
+      "loading": "加载中...",
+      "freightFallbackWarning": "未找到此运输方式的默认运费。模拟可能不准确。",
+      "freightFallbackBadge": "估算",
       "totalInsuranceUsd": "保险费 (USD)",
       "capataziaUsd": "码头费 (USD)",
       "destinationState": "目的地州 (ICMS)",

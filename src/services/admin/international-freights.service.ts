@@ -11,7 +11,7 @@ import {
   ports,
 } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { and, asc, eq, ne } from 'drizzle-orm';
+import { and, asc, eq, ne, or, isNull, gte } from 'drizzle-orm';
 import type { DbTransaction } from './audit.service';
 
 type DbOrTx = typeof db | DbTransaction;
@@ -336,4 +336,134 @@ export async function deleteInternationalFreight(id: string, client: DbOrTx = db
     .where(eq(internationalFreights.id, id))
     .returning();
   return deleted.length > 0;
+}
+
+// ============================================
+// Simulation Freight Calculation (W/M rules)
+// ============================================
+
+const EQUIPMENT_TO_CONTAINER: Record<string, 'GP_20' | 'GP_40' | 'HC_40'> = {
+  '20GP': 'GP_20',
+  '40NOR': 'GP_40',
+  '40HC': 'HC_40',
+};
+
+const FALLBACK_USD_PER_CBM = 50;
+
+export interface GetFreightValueForSimulationParams {
+  shippingModality: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS';
+  containerType?: '20GP' | '40NOR' | '40HC';
+  containerQuantity?: number;
+  totalCbm: number;
+  totalWeightKg: number;
+}
+
+export interface GetFreightValueForSimulationResult {
+  value: number;
+  usedFallback?: boolean;
+  error?: string;
+}
+
+export async function getFreightValueForSimulation(
+  params: GetFreightValueForSimulationParams,
+  client: DbOrTx = db,
+): Promise<GetFreightValueForSimulationResult> {
+  const now = new Date();
+  const validCondition = or(
+    isNull(internationalFreights.validTo),
+    gte(internationalFreights.validTo, now),
+  );
+
+  if (params.shippingModality === 'SEA_FCL') {
+    const containerType = params.containerType
+      ? EQUIPMENT_TO_CONTAINER[params.containerType]
+      : null;
+    const qty = params.containerQuantity ?? 1;
+
+    if (!containerType) {
+      return {
+        value: 0,
+        usedFallback: true,
+        error: 'Nenhum frete padrão encontrado para esta modalidade. Simulação pode estar imprecisa.',
+      };
+    }
+
+    const [freight] = await client
+      .select()
+      .from(internationalFreights)
+      .where(
+        and(
+          eq(internationalFreights.shippingModality, 'SEA_FCL'),
+          eq(internationalFreights.containerType, containerType),
+          validCondition,
+        ),
+      )
+      .limit(1);
+
+    if (!freight) {
+      return {
+        value: 0,
+        usedFallback: true,
+        error: 'Nenhum frete padrão encontrado para esta modalidade. Simulação pode estar imprecisa.',
+      };
+    }
+
+    const baseValue = Number(freight.value ?? 0) + Number(freight.expectedProfit ?? 0);
+    return { value: baseValue * qty };
+  }
+
+  if (params.shippingModality === 'SEA_LCL') {
+    const [freight] = await client
+      .select()
+      .from(internationalFreights)
+      .where(
+        and(
+          eq(internationalFreights.shippingModality, 'SEA_LCL'),
+          validCondition,
+        ),
+      )
+      .limit(1);
+
+    const fatorLcl = Math.max(params.totalWeightKg / 1000, params.totalCbm);
+    const fator = Math.max(1, fatorLcl);
+
+    if (!freight) {
+      return {
+        value: FALLBACK_USD_PER_CBM * fator,
+        usedFallback: true,
+        error: 'Nenhum frete padrão encontrado para esta modalidade. Simulação pode estar imprecisa.',
+      };
+    }
+
+    const baseValue = Number(freight.value ?? 0) + Number(freight.expectedProfit ?? 0);
+    return { value: baseValue * fator };
+  }
+
+  if (params.shippingModality === 'AIR' || params.shippingModality === 'EXPRESS') {
+    const [freight] = await client
+      .select()
+      .from(internationalFreights)
+      .where(
+        and(
+          eq(internationalFreights.shippingModality, params.shippingModality),
+          validCondition,
+        ),
+      )
+      .limit(1);
+
+    const fatorAereo = Math.max(params.totalWeightKg, params.totalCbm * 167);
+
+    if (!freight) {
+      return {
+        value: 0,
+        usedFallback: true,
+        error: 'Nenhum frete padrão encontrado para esta modalidade. Simulação pode estar imprecisa.',
+      };
+    }
+
+    const baseValue = Number(freight.value ?? 0) + Number(freight.expectedProfit ?? 0);
+    return { value: baseValue * fatorAereo };
+  }
+
+  return { value: 0 };
 }
