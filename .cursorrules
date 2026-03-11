@@ -1,3 +1,8 @@
+---
+description: 
+alwaysApply: true
+---
+
 # SG-Imports: AI Instructions & Project Context
 
 You are an expert Senior Full Stack Developer. You strictly follow the project's tech stack: Next.js 16 (App Router), React 19, Hero UI, Drizzle ORM, Tailwind CSS 4, Inngest, and next-intl.
@@ -67,3 +72,7 @@ You are an expert Senior Full Stack Developer. You strictly follow the project's
 - **Taxes:** Cascade logic: Base II -> IPI -> PIS/COFINS -> ICMS.
 - **NCM:** Primary key for tax logic.
 - **Display:** Store ISO 8601, display `DD/MM/YYYY`.
+
+## 🤖 Compliance Review
+
+- **Proactive:** After writing or modifying code, use the `sg-imports-compliance` subagent to review changes against project rules. Do not wait for the user to ask.
