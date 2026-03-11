@@ -143,6 +143,7 @@ export function LogisticsFields({
           <Input name="variantUnitsPerCarton" type="number" min={1} placeholder="1" />
         </TextField>
         <Select
+          key={`packaging-${variantIndex}-${variantData.packagingType ?? 'empty'}`}
           name="variantPackagingType"
           variant="primary"
           isDisabled={isPending}

@@ -229,6 +229,32 @@ export function ProductForm({
     }
   }, [state?.fieldErrors, state?.submittedData]);
 
+  // Sync form data when opening for edit (ensures modal shows latest product data)
+  useEffect(() => {
+    if (isEdit && initialProduct) {
+      const data = productToFormData(initialProduct);
+      const n = data.variants.length;
+      const keys = Array.from({ length: n }, (_, i) => i + 1);
+      const tp: Record<number, TieredPriceRow[]> = {};
+      const ap: Record<number, AttributePair[]> = {};
+      initialProduct.variants?.forEach((v, i) => {
+        const k = keys[i] ?? i + 1;
+        const tiered = (v.tieredPriceInfo as TieredPriceRow[] | null) ?? [];
+        tp[k] = tiered.length > 0 ? tiered : [{ beginAmount: 1, price: '' }];
+        const attrs = v.attributes as Record<string, string> | null;
+        ap[k] = attrs
+          ? Object.entries(attrs).map(([attrKey, value]) => ({ key: attrKey, value }))
+          : [];
+      });
+      queueMicrotask(() => {
+      setFormData(data);
+        setVariantKeys(keys);
+        setTieredPriceRows(tp);
+        setAttributePairs(ap);
+      });
+    }
+  }, [isEdit, initialProduct?.id]);
+
   useEffect(() => {
     if (!isSimulated) {
       getProductFormOptions(organizationId).then(setOptions);

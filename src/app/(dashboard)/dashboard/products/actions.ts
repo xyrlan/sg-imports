@@ -260,6 +260,7 @@ export async function createProductAction(
         length: v.length?.replace(',', '.') || undefined,
         netWeight: v.netWeight?.replace(',', '.') || undefined,
         unitWeight: v.unitWeight?.replace(',', '.') || undefined,
+        packagingType: v.packagingType || undefined,
         tieredPriceInfo: v.tieredPriceInfo,
         attributes: v.attributes,
       })),
@@ -496,6 +497,7 @@ export async function updateProductAction(
       length: v.length?.replace(',', '.') || undefined,
       netWeight: v.netWeight?.replace(',', '.') || undefined,
       unitWeight: v.unitWeight?.replace(',', '.') || undefined,
+      packagingType: (v.packagingType as 'BOX' | 'PALLET' | 'BAG') || undefined,
       tieredPriceInfo: v.tieredPriceInfo,
       attributes: v.attributes,
     }));

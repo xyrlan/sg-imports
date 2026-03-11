@@ -431,6 +431,7 @@
       "ncmsTab": "NCMs",
       "searchProducts": "Buscar por nome, organização ou NCM...",
       "searchNcms": "Buscar por código ou descrição...",
+      "searchNcm": "Buscar NCM...",
       "columns": {
         "name": "Nome",
         "organization": "Organização",
