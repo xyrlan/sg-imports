@@ -2,9 +2,8 @@
 
 import { useId, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Modal, Tabs, Input, TextField, Label, toast } from '@heroui/react';
-import { Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Button, Modal, Tabs, Input, TextField, Label, toast, ListBox, Description } from '@heroui/react';
+import { Plus, Check } from 'lucide-react';
 import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../../actions';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductWithVariants } from '@/services/product.service';
@@ -33,14 +32,13 @@ export function AddProductModal({
   const [selectedTab, setSelectedTab] = useState<string>('catalog');
   const [search, setSearch] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
-  const [catalogQuantity, setCatalogQuantity] = useState(1);
+  const [catalogQuantity, setCatalogQuantity] = useState('1');
   const [catalogPrice, setCatalogPrice] = useState('');
   const [isPending, startTransition] = useTransition();
   const formId = useId();
 
   const t = useTranslations('Simulations.AddProduct');
   const tForm = useTranslations('Products.Form');
-  const router = useRouter();
 
   function handleOpenChange(isOpen: boolean) {
     setOpen(isOpen);
@@ -48,7 +46,7 @@ export function AddProductModal({
       setSelectedTab('catalog');
       setSearch('');
       setSelectedVariantId(null);
-      setCatalogQuantity(1);
+      setCatalogQuantity('1');
       setCatalogPrice('');
     }
   }
@@ -70,14 +68,14 @@ export function AddProductModal({
         simulationId,
         organizationId,
         selectedVariantId,
-        catalogQuantity,
+        Number(catalogQuantity) || 1,
         catalogPrice
       );
       if (result.success) {
         handleOpenChange(false);
-        onMutate?.();
-        router.refresh();
         toast.success(t('addSuccess'));
+        // Defer refresh outside startTransition to avoid Next.js 15+ stuck "Rendering..." state
+        setTimeout(() => onMutate?.(), 0);
       } else if (result.error) {
         toast.danger(result.error);
       }
@@ -96,9 +94,9 @@ export function AddProductModal({
         );
         if (result.success) {
           handleOpenChange(false);
-          onMutate?.();
-          router.refresh();
           toast.success(t('addSuccess'));
+          // Defer refresh outside startTransition to avoid Next.js 15+ stuck "Rendering..." state
+          setTimeout(() => onMutate?.(), 0);
         } else if (result.error) {
           toast.danger(result.error);
         }
@@ -150,58 +148,87 @@ export function AddProductModal({
                         <Label className="sr-only">{t('searchProducts')}</Label>
                         <Input placeholder={t('searchProducts')} />
                       </TextField>
-                      <div className="max-h-48 overflow-y-auto border rounded-lg">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">{t('selectProduct')}</Label>
                         {filteredProducts.length === 0 ? (
-                          <p className="p-4 text-muted text-sm">{t('noProducts')}</p>
+                          <div className="rounded-lg border border-border p-4">
+                            <p className="text-muted text-sm">{t('noProducts')}</p>
+                          </div>
                         ) : (
-                          <div className="divide-y">
-                            {filteredProducts.map((product) =>
+                          <ListBox
+                            aria-label={t('selectProduct')}
+                            className="max-h-48 overflow-y-auto rounded-lg border border-border"
+                            selectionMode="single"
+                            selectedKeys={selectedVariantId ? new Set([selectedVariantId]) : new Set()}
+                            onSelectionChange={(keys) => {
+                              const id = typeof keys === 'string' ? null : [...keys][0] as string | undefined;
+                              setSelectedVariantId(id ?? null);
+                              if (id) {
+                                const v = products
+                                  .flatMap((p) => (p.variants ?? []).map((v) => ({ ...v, product: p })))
+                                  .find((x) => x.id === id);
+                                if (v) setCatalogPrice(String(v.priceUsd ?? ''));
+                              }
+                            }}
+                          >
+                            {filteredProducts.flatMap((product) =>
                               (product.variants ?? []).map((variant) => (
-                                <button
+                                <ListBox.Item
                                   key={variant.id}
-                                  type="button"
-                                  className={`w-full text-left p-3 hover:bg-muted/50 ${
-                                    selectedVariantId === variant.id ? 'bg-primary/10' : ''
-                                  }`}
-                                  onClick={() => {
-                                    setSelectedVariantId(variant.id);
-                                    setCatalogPrice(String(variant.priceUsd ?? ''));
-                                  }}
+                                  id={variant.id}
+                                  textValue={`${product.name} — ${variant.name}`}
+                                  className="py-3"
                                 >
-                                  <span className="font-medium">{product.name} - {variant.name}</span>
-                                  <span className="block text-sm text-muted font-mono">{variant.sku}</span>
-                                  <span className="text-sm">{formatCurrency(String(variant.priceUsd ?? '0'), 'en-US', 'USD')}</span>
-                                </button>
+                                  <div className="flex flex-col gap-0.5">
+                                    <Label className="font-medium">{product.name} — {variant.name}</Label>
+                                    <Description className="font-mono text-xs">
+                                      {variant.sku} · {formatCurrency(String(variant.priceUsd ?? '0'), 'en-US', 'USD')}
+                                    </Description>
+                                  </div>
+                                  <ListBox.ItemIndicator>
+                                    {({ isSelected }) =>
+                                      isSelected ? <Check className="size-4 shrink-0 text-primary" /> : null
+                                    }
+                                  </ListBox.ItemIndicator>
+                                </ListBox.Item>
                               ))
                             )}
-                          </div>
+                          </ListBox>
                         )}
                       </div>
                       {selectedVariant && (
-                        <div className="flex gap-4 items-end flex-wrap">
-                          <TextField
-                            variant="primary"
-                            value={String(catalogQuantity)}
-                            onChange={(v) => setCatalogQuantity(Number(v) || 1)}
-                          >
-                            <Label>{t('quantity')}</Label>
-                            <Input type="number" min={1} />
-                          </TextField>
-                          <TextField
-                            variant="primary"
-                            value={catalogPrice}
-                            onChange={setCatalogPrice}
-                          >
-                            <Label>{t('priceUsd')}</Label>
-                            <Input type="text" placeholder="0.00" />
-                          </TextField>
-                          <Button
-                            variant="primary"
-                            onPress={handleAddFromCatalog}
-                            isPending={isPending}
-                          >
-                            {t('add')}
-                          </Button>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+                            <Check className="size-4 shrink-0 text-primary" />
+                            <span className="text-sm font-medium">{selectedVariant.product.name} — {selectedVariant.name}</span>
+                          </div>
+                          <div className="flex gap-4 items-end flex-wrap">
+                            <TextField
+                              variant="primary"
+                              value={catalogQuantity}
+                              onChange={(v) => setCatalogQuantity(v)}
+                            >
+                              <Label>{t('quantity')}</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                onBlur={() => {
+                                  const n = Number(catalogQuantity);
+                                  if (catalogQuantity === '' || Number.isNaN(n) || n < 1) {
+                                    setCatalogQuantity('1');
+                                  }
+                                }}
+                              />
+                            </TextField>
+                            <TextField
+                              variant="primary"
+                              value={catalogPrice}
+                              onChange={setCatalogPrice}
+                            >
+                              <Label>{t('priceUsd')}</Label>
+                              <Input type="text" placeholder={tForm('priceUsdPlaceholder')} />
+                            </TextField>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -217,11 +244,20 @@ export function AddProductModal({
                   </Tabs.Panel>
                 </Tabs>
               </Modal.Body>
-              {selectedTab === 'simulated' && (
-                <Modal.Footer>
-                  <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)}>
-                    {tForm('cancel')}
+              <Modal.Footer>
+                <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)}>
+                  {tForm('cancel')}
+                </Button>
+                {selectedTab === 'catalog' ? (
+                  <Button
+                    variant="primary"
+                    onPress={handleAddFromCatalog}
+                    isDisabled={!selectedVariantId || !catalogPrice}
+                    isPending={isPending}
+                  >
+                    {t('add')}
                   </Button>
+                ) : (
                   <Button
                     type="submit"
                     form={formId}
@@ -231,8 +267,8 @@ export function AddProductModal({
                   >
                     {t('add')}
                   </Button>
-                </Modal.Footer>
-              )}
+                )}
+              </Modal.Footer>
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>

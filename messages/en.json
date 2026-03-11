@@ -1172,6 +1172,7 @@
     },
     "AddProduct": {
       "addProduct": "Add product",
+      "selectProduct": "Select product",
       "addSuccess": "Product added successfully",
       "heading": "Add product to simulation",
       "tabCatalog": "From catalog",

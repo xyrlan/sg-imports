@@ -1172,6 +1172,7 @@
     },
     "AddProduct": {
       "addProduct": "添加产品",
+      "selectProduct": "选择产品",
       "addSuccess": "产品添加成功",
       "heading": "添加产品到模拟",
       "tabCatalog": "从目录",
