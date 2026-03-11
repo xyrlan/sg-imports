@@ -261,9 +261,12 @@ export async function updateProductAsAdminAction(
         length?: string;
         netWeight?: string;
         unitWeight?: string;
+        packagingType?: string;
         tieredPriceInfo?: { beginAmount: number; price: string }[];
         attributes?: Record<string, string>;
       };
+      const pt = vv.packagingType as 'BOX' | 'PALLET' | 'BAG' | undefined;
+      const validPt = pt && ['BOX', 'PALLET', 'BAG'].includes(pt) ? pt : null;
       return {
         id: vv.id,
         sku: vv.sku,
@@ -279,6 +282,7 @@ export async function updateProductAsAdminAction(
         length: vv.length?.replace(',', '.') || undefined,
         netWeight: vv.netWeight?.replace(',', '.') || undefined,
         unitWeight: vv.unitWeight?.replace(',', '.') || undefined,
+        packagingType: validPt,
         tieredPriceInfo: vv.tieredPriceInfo,
         attributes: vv.attributes,
       };

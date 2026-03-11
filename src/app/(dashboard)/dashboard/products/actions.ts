@@ -367,7 +367,6 @@ export async function updateProductAction(
       tieredPriceInfo: parseTieredPriceInfo(tieredPriceInfos[i] ?? ''),
       attributes: parseAttributes(attributesList[i] ?? ''),
     }));
-
     const variants =
       rawVariants.filter((v) => v.sku || v.name || v.priceUsd).length > 0
         ? rawVariants.filter((v) => v.sku || v.name || v.priceUsd)
@@ -416,7 +415,7 @@ export async function updateProductAction(
         cartonLength: v.cartonLength ?? '0',
         cartonWeight: v.cartonWeight ?? '0',
         unitsPerCarton: v.unitsPerCarton ?? 1,
-        packagingType: v.packagingType as 'BOX' | 'PALLET' | 'BAG' | undefined,
+        packagingType: v.packagingType,
         tieredPriceInfo: v.tieredPriceInfo,
         attributes: v.attributes,
       })),
@@ -482,25 +481,29 @@ export async function updateProductAction(
         ? rawSupplierId
         : undefined;
 
-    const variantInputs: UpdateProductVariantInput[] = variants.map((v) => ({
-      id: v.id,
-      sku: v.sku,
-      name: v.name,
-      priceUsd: v.priceUsd.replace(',', '.'),
-      cartonHeight: (v.cartonHeight ?? '0').replace(',', '.'),
-      cartonWidth: (v.cartonWidth ?? '0').replace(',', '.'),
-      cartonLength: (v.cartonLength ?? '0').replace(',', '.'),
-      cartonWeight: (v.cartonWeight ?? '0').replace(',', '.'),
-      unitsPerCarton: v.unitsPerCarton ?? 1,
-      height: v.height?.replace(',', '.') || undefined,
-      width: v.width?.replace(',', '.') || undefined,
-      length: v.length?.replace(',', '.') || undefined,
-      netWeight: v.netWeight?.replace(',', '.') || undefined,
-      unitWeight: v.unitWeight?.replace(',', '.') || undefined,
-      packagingType: (v.packagingType as 'BOX' | 'PALLET' | 'BAG') || undefined,
-      tieredPriceInfo: v.tieredPriceInfo,
-      attributes: v.attributes,
-    }));
+    const variantInputs = variants.map((v) => {
+      const pt = v.packagingType as 'BOX' | 'PALLET' | 'BAG' | undefined;
+      const validPt = pt && ['BOX', 'PALLET', 'BAG'].includes(pt) ? pt : null;
+      return {
+        id: v.id,
+        sku: v.sku,
+        name: v.name,
+        priceUsd: v.priceUsd.replace(',', '.'),
+        cartonHeight: (v.cartonHeight ?? '0').replace(',', '.'),
+        cartonWidth: (v.cartonWidth ?? '0').replace(',', '.'),
+        cartonLength: (v.cartonLength ?? '0').replace(',', '.'),
+        cartonWeight: (v.cartonWeight ?? '0').replace(',', '.'),
+        unitsPerCarton: v.unitsPerCarton ?? 1,
+        height: v.height?.replace(',', '.') || undefined,
+        width: v.width?.replace(',', '.') || undefined,
+        length: v.length?.replace(',', '.') || undefined,
+        netWeight: v.netWeight?.replace(',', '.') || undefined,
+        unitWeight: v.unitWeight?.replace(',', '.') || undefined,
+        packagingType: validPt,
+        tieredPriceInfo: v.tieredPriceInfo,
+        attributes: v.attributes,
+      };
+    }) as UpdateProductVariantInput[];
 
     await updateProduct(productId, validated.data.organizationId, {
       name: validated.data.name,

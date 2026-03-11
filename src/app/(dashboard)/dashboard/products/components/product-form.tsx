@@ -272,6 +272,7 @@ export function ProductForm({
     : undefined;
 
     async function handleSubmit(e: { preventDefault: () => void; target: EventTarget | null }) {
+      console.log('handleSubmit formData', formData);
       e.preventDefault();
       if (isSimulated && onSimulatedSubmit) {
         if (!formData.name?.trim() || !formData.variants[0]?.priceUsd?.trim() || !simulatedHsCode.trim()) {
@@ -619,6 +620,11 @@ export function ProductForm({
                 };
                 return (
                   <>
+                    <input
+                      type="hidden"
+                      name="variantPackagingType"
+                      value={formData.variants[i]?.packagingType ?? ''}
+                    />
                     <input
                       type="hidden"
                       name="variantTieredPriceInfo"

@@ -144,7 +144,6 @@ export function LogisticsFields({
         </TextField>
         <Select
           key={`packaging-${variantIndex}-${variantData.packagingType ?? 'empty'}`}
-          name="variantPackagingType"
           variant="primary"
           isDisabled={isPending}
           placeholder={t('packagingTypePlaceholder')}

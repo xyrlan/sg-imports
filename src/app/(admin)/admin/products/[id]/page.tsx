@@ -10,7 +10,6 @@ export default async function AdminProductEditPage({ params }: AdminProductEditP
   const { id } = await params;
 
   const product = await getProductByIdAsAdmin(id);
-
   if (!product) {
     notFound();
   }

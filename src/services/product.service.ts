@@ -95,7 +95,7 @@ export interface CreateProductVariantInput {
   cartonLength?: string;
   cartonWeight?: string;
   unitsPerCarton?: number;
-  packagingType?: 'BOX' | 'PALLET' | 'BAG';
+  packagingType?: 'BOX' | 'PALLET' | 'BAG' | null;
   attributes?: VariantAttributes;
   tieredPriceInfo?: TieredPriceInfo;
 }
@@ -191,6 +191,9 @@ export async function updateProduct(
   orgId: string,
   data: UpdateProductInput
 ): Promise<ProductWithVariants> {
+
+  console.log('updateProduct data', data);
+  
   const rawHsCodeId = data.hsCodeId && data.hsCodeId !== '' ? data.hsCodeId : null;
   const rawSupplierId = data.supplierId && data.supplierId !== '' ? data.supplierId : null;
 
