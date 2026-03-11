@@ -350,7 +350,7 @@ export function ProductsContent({
         isOpen={editNcmOpen}
         onOpenChange={(open) => {
           setEditNcmOpen(open);
-          if (!open) setEditNcmTarget(null);
+          // Don't clear editNcmTarget on close so the modal stays mounted and can reopen for another NCM
         }}
         trigger={null}
       />
