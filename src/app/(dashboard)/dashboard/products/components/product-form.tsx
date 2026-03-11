@@ -13,6 +13,7 @@ import {
   TextArea,
   TextField,
 } from '@heroui/react';
+import { HsCodeAutocomplete } from '@/components/ui/hs-code-autocomplete';
 import { PlusIcon, Trash2Icon } from 'lucide-react';
 
 import { LogisticsFields } from '@/components/ui/logistics-fields';
@@ -204,16 +205,18 @@ export function ProductForm({
 
   useEffect(() => {
     if (state?.success) {
-      startTransition(() => {
-        setFormData(defaultFormData);
-        setVariantKeys([1]);
-        setTieredPriceRows({ 1: [{ beginAmount: 1, price: '' }] });
-        setAttributePairs({});
-      });
+      if (!isEdit) {
+        startTransition(() => {
+          setFormData(defaultFormData);
+          setVariantKeys([1]);
+          setTieredPriceRows({ 1: [{ beginAmount: 1, price: '' }] });
+          setAttributePairs({});
+        });
+      }
       onMutate?.();
       onClose?.();
     }
-  }, [state?.success, onMutate, onClose]);
+  }, [state?.success, onMutate, onClose, isEdit]);
 
   useEffect(() => {
     if (state?.fieldErrors && state?.submittedData) {
@@ -383,37 +386,23 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         {options && (
           <>
-            <TextField variant="primary" isRequired isInvalid={!!getError('hsCodeId')}>
-              <Label>{t('hsCodeLabel')}</Label>
-              <Select
-                name="hsCodeId"
-                variant="primary"
-                isDisabled={isPending}
-                placeholder={t('hsCodePlaceholder')}
-                className="w-full"
-                value={formData.hsCodeId || null}
-                onChange={(key) =>
-                  setFormData((prev) => ({ ...prev, hsCodeId: (key as string) ?? '' }))
-                }
-              >
-                <Select.Trigger>
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox>
-                    {options.hsCodes.map((hc) => (
-                      <ListBox.Item
-                        key={hc.id}
-                        id={hc.id}
-                        textValue={hc.code}
-                      />
-                    ))}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
-              <FieldError>{getError('hsCodeId')}</FieldError>
-            </TextField>
+            <HsCodeAutocomplete
+              hsCodes={options.hsCodes}
+              value={formData.hsCodeId || null}
+              onChange={(id) =>
+                setFormData((prev) => ({ ...prev, hsCodeId: id ?? '' }))
+              }
+              name="hsCodeId"
+              label={t('hsCodeLabel')}
+              placeholder={t('hsCodePlaceholder')}
+              isRequired
+              isDisabled={isPending}
+              isInvalid={!!getError('hsCodeId')}
+              errorMessage={getError('hsCodeId')}
+              fullWidth
+            />
+            <TextField variant="primary" isRequired isInvalid={!!getError('supplierId')}>
+            <Label>{t('supplierPlaceholder')}</Label>
             <Select
               name="supplierId"
               variant="primary"
@@ -432,18 +421,24 @@ export function ProductForm({
               </Select.Trigger>
               <Select.Popover>
                 <ListBox>
-                  <ListBox.Item key="__none__" id="__none__" textValue={t('none')} />
+                  <ListBox.Item key="__none__" id="__none__" textValue={t('none')}>
+                    {t('none')}
+                  </ListBox.Item>
                   {options.suppliers.map((s) => (
                     <ListBox.Item
                       key={s.id}
                       id={s.id}
                       textValue={s.name}
-                    />
+                    >
+                      {s.name}
+                    </ListBox.Item>
                   ))}
                 </ListBox>
               </Select.Popover>
               <FieldError>{getError('supplierId')}</FieldError>
             </Select>
+            </TextField>
+
           </>
         )}
       </div>

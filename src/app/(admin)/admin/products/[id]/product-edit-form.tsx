@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@heroui/react';
@@ -17,6 +18,7 @@ interface ProductEditFormProps {
 export function ProductEditForm({ product, organizationId }: ProductEditFormProps) {
   const t = useTranslations('Admin.Products');
   const router = useRouter();
+  const handleMutate = useCallback(() => router.refresh(), [router]);
 
   return (
     <div className="space-y-6">
@@ -38,7 +40,7 @@ export function ProductEditForm({ product, organizationId }: ProductEditFormProp
         organizationId={organizationId}
         initialProduct={product}
         updateAction={updateProductAsAdminAction}
-        onMutate={() => router.refresh()}
+        onMutate={handleMutate}
       />
     </div>
   );

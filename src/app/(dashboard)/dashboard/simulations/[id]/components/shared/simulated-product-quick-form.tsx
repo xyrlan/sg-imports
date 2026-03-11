@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Accordion,
   Button,
   Input,
   Label,
-  ListBox,
-  Select,
   TextField,
 } from '@heroui/react';
+import { HsCodeAutocomplete } from '@/components/ui/hs-code-autocomplete';
 import type { ProductSnapshot } from '@/db/types';
 import type { HsCodeOption } from '@/services/simulation.service';
 
@@ -47,6 +46,7 @@ export function SimulatedProductQuickForm({
 
   const [name, setName] = useState('');
   const [hsCodeId, setHsCodeId] = useState<string | null>(null);
+  const [hsCodeCode, setHsCodeCode] = useState('');
   const [priceUsd, setPriceUsd] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [totalCbm, setTotalCbm] = useState('');
@@ -57,7 +57,6 @@ export function SimulatedProductQuickForm({
   const [cartonLength, setCartonLength] = useState('');
   const [unitsPerCarton, setUnitsPerCarton] = useState('1');
   const [cartonWeight, setCartonWeight] = useState('');
-  const [ncmSearch, setNcmSearch] = useState('');
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -79,20 +78,12 @@ export function SimulatedProductQuickForm({
       setCartonLength(initialSnapshot.cartonLength != null ? String(initialSnapshot.cartonLength) : '');
       setCartonWeight(initialSnapshot.cartonWeight != null ? String(initialSnapshot.cartonWeight) : '');
       const code = initialSnapshot.hsCode ?? '';
-      setNcmSearch(code);
+      setHsCodeCode(code);
       const matched = hsCodes.find((hc) => hc.code === code);
-      setHsCodeId(matched?.id ?? null);
+      setHsCodeId(matched ? matched.id : (code ? '__custom__' : null));
       }
     });
   }, [initialSnapshot, initialQuantity, initialPriceUsd, hsCodes]);
-
-  const filteredHsCodes = useMemo(() => {
-    if (!ncmSearch.trim()) return hsCodes;
-    const q = ncmSearch.toLowerCase();
-    return hsCodes.filter((hc) => hc.code.toLowerCase().includes(q));
-  }, [hsCodes, ncmSearch]);
-
-  const selectedHsCode = hsCodes.find((hc) => hc.id === hsCodeId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -109,7 +100,7 @@ export function SimulatedProductQuickForm({
 
     const snapshot: ProductSnapshot = {
       name: name.trim() || tQuick('defaultName'),
-      hsCode: (selectedHsCode?.code ?? ncmSearch.trim()) || '0000.00.00',
+      hsCode: hsCodeCode.trim() || '0000.00.00',
       priceUsd: priceUsd.trim() || '0',
       unitsPerCarton: parseInt(unitsPerCarton, 10) || 1,
     };
@@ -135,45 +126,20 @@ export function SimulatedProductQuickForm({
         <Input placeholder={t('productNamePlaceholder')} />
       </TextField>
 
-      <div className="space-y-2">
-        <Label>{t('hsCodeLabel')}</Label>
-        <div className="flex gap-2">
-          <Input
-            placeholder="8504.40.10"
-            value={hsCodeId ? (selectedHsCode?.code ?? '') : ncmSearch}
-            onChange={(v) => {
-              setHsCodeId(null);
-              setNcmSearch(typeof v === 'string' ? v : '');
-            }}
-            onFocus={() => setNcmSearch(ncmSearch || (selectedHsCode?.code ?? ''))}
-          />
-          <Select
-            variant="primary"
-            placeholder={tQuick('selectNcm')}
-            value={hsCodeId}
-            onChange={(k) => {
-              setHsCodeId(k as string | null);
-              if (k) setNcmSearch(hsCodes.find((hc) => hc.id === k)?.code ?? '');
-            }}
-            className="min-w-40"
-            isRequired
-          >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {filteredHsCodes.slice(0, 50).map((hc) => (
-                  <ListBox.Item key={hc.id} id={hc.id} textValue={hc.code}>
-                    {hc.code}
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        </div>
-      </div>
+      <HsCodeAutocomplete
+        hsCodes={hsCodes}
+        value={hsCodeId}
+        onChange={(id, code) => {
+          setHsCodeId(id);
+          setHsCodeCode(code);
+        }}
+        allowCustomCode
+        customCodeWhenSelected={hsCodeId === '__custom__' ? hsCodeCode : undefined}
+        label={t('hsCodeLabel')}
+        placeholder={tQuick('selectNcm')}
+        isRequired
+        fullWidth
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <TextField variant="primary" isRequired value={priceUsd} onChange={setPriceUsd}>

@@ -156,6 +156,14 @@ export async function calculateAndPersistLandedCost(
         ipiRate = String(tax.ipi ?? 0);
         pisRate = String(tax.pis ?? 0);
         cofinsRate = String(tax.cofins ?? 0);
+      } else if (ncmCode) {
+        const [hc] = await db.select().from(hsCodes).where(eq(hsCodes.code, ncmCode));
+        if (hc) {
+          iiRate = String(hc.ii ?? 0);
+          ipiRate = String(hc.ipi ?? 0);
+          pisRate = String(hc.pis ?? 0);
+          cofinsRate = String(hc.cofins ?? 0);
+        }
       }
     }
 
