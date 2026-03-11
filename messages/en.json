@@ -1204,15 +1204,6 @@
       "suggested": "Suggested",
       "containerSize": "Container size"
     },
-    "FreightStatusCard": {
-      "modality": "Modality",
-      "maritimeLcl": "Maritime (LCL)",
-      "maritimeFcl": "Maritime (FCL - {type})",
-      "maritimeFclPlural": "Maritime (FCL - {count}×{type})",
-      "air": "Air",
-      "express": "Express",
-      "none": "Not set"
-    },
     "FreightCapacityProgress": {
       "fclTitle": "Container capacity",
       "fclTitlePlural": "Containers capacity",

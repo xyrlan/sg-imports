@@ -1313,7 +1313,9 @@
       "searchProducts": "Buscar produtos...",
       "noProducts": "Nenhum produto encontrado. Adicione produtos ao catálogo primeiro.",
       "quantity": "Quantidade",
+      "quantityPlaceholder": "1",
       "quantityHint": "Múltiplo de {unitsPerCarton} unidades (por caixa)",
+      "invalidPrice": "Informe um preço válido",
       "quantityMustBeMultipleOf": "A quantidade deve ser múltipla de {unitsPerCarton} (unidades por caixa)",
       "priceUsd": "Preço (USD)",
       "add": "Adicionar"
@@ -1343,15 +1345,6 @@
       "EXPRESS": "Expresso",
       "suggested": "Sugerido",
       "containerSize": "Tamanho do container"
-    },
-    "FreightStatusCard": {
-      "modality": "Modalidade",
-      "maritimeLcl": "Marítimo (LCL)",
-      "maritimeFcl": "Marítimo (FCL - {type})",
-      "maritimeFclPlural": "Marítimo (FCL - {count}×{type})",
-      "air": "Aéreo",
-      "express": "Expresso",
-      "none": "Não definida"
     },
     "FreightCapacityProgress": {
       "fclTitle": "Capacidade do container",
@@ -1402,6 +1395,7 @@
       "title": "Resumo Financeiro",
       "totalFobUsd": "Total FOB (USD)",
       "totalFreightUsd": "Total Frete (USD)",
+      "configureFreightHint": "Configure o frete em Configurações para personalizar",
       "totalInsuranceUsd": "Total Seguro (USD)",
       "totalTaxesBrl": "Total Impostos (BRL)",
       "totalLandedCostBrl": "Custo Posto Total (BRL)",

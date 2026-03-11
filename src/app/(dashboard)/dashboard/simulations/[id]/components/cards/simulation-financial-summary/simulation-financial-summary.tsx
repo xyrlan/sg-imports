@@ -106,7 +106,13 @@ export function SimulationFinancialSummary({
               icon={<FreightIcon className="size-5" />}
               label={t('totalFreightUsd')}
               value={formatUsd(totalFreightUsd)}
-            />
+            >
+              {totalFreightUsd === 0 &&
+                simulation &&
+                !(simulation.metadata as ShippingMetadata | null)?.isOverride && (
+                  <p className="text-xs text-muted-foreground mt-1">{t('configureFreightHint')}</p>
+                )}
+            </FinancialSummaryItem>
             <TaxBreakdownSection
               totalTaxesBrl={totalTaxesBrl}
               taxBreakdown={taxBreakdown}

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { requireAuthAndOrg } from '@/services/auth.service';
 import { SimulationDetailContent } from './components/simulation-detail-content';
-import { FreightStatusCard } from './components/cards/freight-status-card';
 import {
   getSimulationById,
   getQuoteFinancialSummary,
@@ -64,11 +63,6 @@ export default async function SimulationDetailPage({
         financialSummary={financialSummary}
         hsCodes={hsCodes}
         defaultDestinationState={defaultDestinationState}
-        freightCard={
-          simulationData.items.length > 0 ? (
-            <FreightStatusCard simulation={simulationData.simulation} />
-          ) : null
-        }
       />
     </div>
   );

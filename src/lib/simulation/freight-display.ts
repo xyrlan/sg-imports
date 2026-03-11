@@ -1,6 +1,6 @@
 /**
  * Pure functions for freight display logic.
- * Extracted from useFreightModality and FreightStatusCard for Server Components and reuse.
+ * Extracted from useFreightModality for Server Components and reuse.
  */
 
 import type { ShippingMetadata } from '@/db/types';
@@ -53,7 +53,7 @@ function parseMetadata(m: unknown): ShippingMetadata | null {
 }
 
 /**
- * Returns translation key and params for modality display (FreightStatusCard).
+ * Returns translation key and params for modality display.
  * Use with getTranslations: t(info.modalityKey, info.modalityParams)
  */
 export function getModalityDisplayInfo(simulation: {

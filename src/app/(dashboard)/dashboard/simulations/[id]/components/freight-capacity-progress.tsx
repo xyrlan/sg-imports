@@ -160,28 +160,61 @@ export function FreightCapacityProgress({
   }
 
   if (modality === 'SEA_LCL') {
-    const nearLimit = totalCbm >= LCL_VIABILITY_THRESHOLDS.maxCbm * 0.9;
+    const maxCbm = LCL_VIABILITY_THRESHOLDS.maxCbm;
+    const maxWeight = LCL_VIABILITY_THRESHOLDS.maxWeight;
+    const volOver = totalCbm > maxCbm;
+    const weightOver = totalWeight > maxWeight;
+    const volExcessRatio = maxCbm > 0 ? totalCbm / maxCbm : 0;
+    const weightExcessRatio = maxWeight > 0 ? totalWeight / maxWeight : 0;
+    const volSoft = volExcessRatio > 1 && volExcessRatio <= 1.02;
+    const weightSoft = weightExcessRatio > 1 && weightExcessRatio <= 1.02;
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h3 className="font-semibold flex items-center gap-2">
           <Boxes className="size-5" />
-          {t('lclTitle')}
+          <span className="text-sm font-semibold text-accent">{t('lclTitle')}</span>
         </h3>
-        <div className="grid grid-cols-2 gap-3">
-          <MetricCard label={t('totalCbm')} value={formatVolume(totalCbm)} icon={Box} />
-          <MetricCard
-            label={t('chargeableWeight')}
-            value={formatWeight(totalChargeableWeight)}
+        <div className="flex flex-col gap-4 max-w-lg">
+          <ProgressBar
+            label={t('weight')}
+            value={totalWeight}
+            max={maxWeight}
+            formatVal={formatWeight}
             icon={Weight}
+            isOver={weightOver}
+            isSoftWarning={weightSoft}
           />
+          {(weightOver || weightSoft) && (
+            <div
+              className={`text-xs inline-flex gap-2 items-center ${
+                weightSoft ? 'text-warning' : 'text-danger'
+              }`}
+            >
+              <CircleAlert className="size-4" />
+              {t('weightExceeded')}
+            </div>
+          )}
+          <ProgressBar
+            label={t('volume')}
+            value={totalCbm}
+            max={maxCbm}
+            formatVal={formatVolume}
+            icon={Box}
+            isOver={volOver}
+            isSoftWarning={volSoft}
+          />
+          {(volOver || volSoft) && (
+            <div
+              className={`text-xs inline-flex gap-2 items-center ${
+                volSoft ? 'text-warning' : 'text-danger'
+              }`}
+            >
+              <CircleAlert className="size-4" />
+              {volSoft ? t('softWarning') : t('volumeExceeded')}
+            </div>
+          )}
         </div>
-        {nearLimit && (
-          <div className="text-xs text-warning inline-flex gap-2 items-center">
-            <Info className="size-4" />
-            {t('lclViabilityAlert')}
-          </div>
-        )}
       </div>
     );
   }

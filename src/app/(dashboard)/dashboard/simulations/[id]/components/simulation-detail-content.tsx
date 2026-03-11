@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Button } from '@heroui/react';
+import { Button, Chip } from '@heroui/react';
 import { ArrowLeft, PackageOpen, Settings } from 'lucide-react';
 import { SimulationItemsList } from './simulation-items-list';
 import type {
@@ -26,7 +26,6 @@ interface SimulationDetailContentProps {
   hsCodes: HsCodeOption[];
   financialSummary?: QuoteFinancialSummary | null;
   defaultDestinationState?: string | null;
-  freightCard?: React.ReactNode;
 }
 
 export function SimulationDetailContent({
@@ -37,7 +36,6 @@ export function SimulationDetailContent({
   hsCodes,
   financialSummary = null,
   defaultDestinationState = null,
-  freightCard = null,
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
@@ -60,9 +58,9 @@ export function SimulationDetailContent({
           </Link>
           <div>
             <h1 className="text-2xl font-bold">{simulation.name}</h1>
-            <p className="text-sm text-muted">
-              {t('status')}: {simulation.status ? tStatus(simulation.status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'CONVERTED') : '—'}
-            </p>
+            <Chip size="sm" color="default" variant="soft">
+              {simulation.status ? tStatus(simulation.status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'CONVERTED') : '—'}
+            </Chip>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -94,8 +92,6 @@ export function SimulationDetailContent({
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
         <div className="space-y-6 min-w-0">
-          {items.length > 0 && freightCard}
-
           {items.length > 0 ? (
             <SimulationItemsList
               items={items}

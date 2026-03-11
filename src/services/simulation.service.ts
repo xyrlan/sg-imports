@@ -343,6 +343,30 @@ async function recalculateQuoteTotals(quoteId: string): Promise<void> {
     ? getChargeableWeight(totalWeight, volumetricWeight)
     : totalWeight;
 
+  // Recalculate freight when modality is set and user has not overridden
+  let metadataUpdated = maritimeChanged;
+  if (
+    !metadata.isOverride &&
+    modality &&
+    ['AIR', 'SEA_LCL', 'SEA_FCL', 'EXPRESS'].includes(modality)
+  ) {
+    const { getFreightValueForSimulation } = await import(
+      '@/services/admin/international-freights.service'
+    );
+    const freightResult = await getFreightValueForSimulation({
+      shippingModality: modality as 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS',
+      containerType: metadata.equipmentType,
+      containerQuantity: metadata.equipmentQuantity,
+      totalCbm: totalCbm.toNumber(),
+      totalWeightKg: totalWeight.toNumber(),
+    });
+    metadata = {
+      ...metadata,
+      totalFreightUsd: Math.round(freightResult.value * 100) / 100,
+    };
+    metadataUpdated = true;
+  }
+
   await db
     .update(quotes)
     .set({
@@ -350,7 +374,7 @@ async function recalculateQuoteTotals(quoteId: string): Promise<void> {
       totalWeight: totalWeight.toFixed(3),
       totalChargeableWeight: totalChargeableWeight.toFixed(3),
       ...(modality !== quote.shippingModality && { shippingModality: modality }),
-      ...(maritimeChanged && { metadata }),
+      ...(metadataUpdated && { metadata }),
     })
     .where(eq(quotes.id, quoteId));
 }
@@ -773,7 +797,8 @@ export interface QuoteFinancialSummary {
 
 /**
  * Agrega os valores dos itens calculados e retorna o breakdown financeiro.
- * totalFreightUsd vem do metadata; totalInsuranceUsd é calculado via INTL_INSURANCE.
+ * totalFreightUsd vem do metadata; se ausente, calcula sob demanda (sem persistir).
+ * totalInsuranceUsd é calculado via INTL_INSURANCE.
  */
 export async function getQuoteFinancialSummary(
   quoteId: string,
@@ -785,7 +810,39 @@ export async function getQuoteFinancialSummary(
 
   const { simulation, items } = data;
   const metadata = (simulation.metadata as ShippingMetadata | null) ?? {};
-  const totalFreightUsd = metadata.totalFreightUsd ?? 0;
+  let totalFreightUsd = metadata.totalFreightUsd ?? 0;
+
+  // Compute freight on demand when missing (do not overwrite user override)
+  if (
+    !metadata.isOverride &&
+    totalFreightUsd === 0 &&
+    simulation.shippingModality &&
+    ['AIR', 'SEA_LCL', 'SEA_FCL', 'EXPRESS'].includes(simulation.shippingModality)
+  ) {
+    const totalCbm =
+      items.length > 0
+        ? items.reduce((s, i) => s + Number(i.cbmSnapshot ?? 0), 0)
+        : Number(simulation.totalCbm ?? 0);
+    const totalWeightKg =
+      items.length > 0
+        ? items.reduce((s, i) => s + Number(i.weightSnapshot ?? 0), 0)
+        : Number(simulation.totalWeight ?? 0);
+    const { getFreightValueForSimulation } = await import(
+      '@/services/admin/international-freights.service'
+    );
+    const freightResult = await getFreightValueForSimulation({
+      shippingModality: simulation.shippingModality as
+        | 'AIR'
+        | 'SEA_LCL'
+        | 'SEA_FCL'
+        | 'EXPRESS',
+      containerType: metadata.equipmentType,
+      containerQuantity: metadata.equipmentQuantity,
+      totalCbm,
+      totalWeightKg,
+    });
+    totalFreightUsd = freightResult.value;
+  }
 
   const targetDolar = Number(simulation.targetDolar ?? 0);
   const exchangeRateIof = Number(simulation.exchangeRateIof ?? 0);

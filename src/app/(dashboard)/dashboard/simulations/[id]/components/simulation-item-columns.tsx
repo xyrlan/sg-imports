@@ -84,7 +84,7 @@ export function getSimulationItemColumns(
       header: '',
       cell: (info) => {
         const item = info.row.original;
-        const canEdit = !!item.simulatedProductSnapshot && actions.onEdit;
+        const canEdit = !!actions.onEdit;
         return (
           <div className="flex items-center gap-1">
             {canEdit && (

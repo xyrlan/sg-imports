@@ -196,7 +196,7 @@ export function AddProductModal({
                                   </div>
                                   <ListBox.ItemIndicator>
                                     {({ isSelected }) =>
-                                      isSelected ? <Check className="size-4 shrink-0 text-primary" /> : null
+                                      isSelected ? <Check className="size-4 shrink-0 text-accent" /> : null
                                     }
                                   </ListBox.ItemIndicator>
                                 </ListBox.Item>
@@ -206,12 +206,12 @@ export function AddProductModal({
                         )}
                       </div>
                       {selectedVariant && (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-                            <Check className="size-4 shrink-0 text-primary" />
+                        <div className="space-y-6">
+                          <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2">
+                            <Check className="size-4 shrink-0 text-accent" />
                             <span className="text-sm font-medium">{selectedVariant.product.name} — {selectedVariant.name}</span>
                           </div>
-                          <div className="flex gap-4 items-end flex-wrap">
+                          <div className="flex gap-4 flex-wrap">
                             <TextField
                               variant="primary"
                               value={catalogQuantity}
