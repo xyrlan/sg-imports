@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import { db, type DbTransaction } from '@/db';
 import { quotes, quoteItems, memberships, productVariants, products, hsCodes } from '@/db/schema';
-import { eq, and, desc, asc, sql } from 'drizzle-orm';
+import { eq, and, desc, asc, sql, inArray, isNotNull } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 import { getOrganizationById } from '@/services/organization.service';
@@ -33,6 +33,53 @@ export async function getHsCodesForSimulation(): Promise<HsCodeOption[]> {
     .from(hsCodes)
     .orderBy(hsCodes.code);
   return rows;
+}
+
+/**
+ * Mark quotes that contain items from the given product as needing recalculation.
+ * Used when product.hsCodeId changes (different NCM selected).
+ * @returns Number of quotes updated
+ */
+export async function markQuotesForRecalculationByProductId(productId: string): Promise<number> {
+  const affectedQuotes = await db
+    .selectDistinct({ quoteId: quoteItems.quoteId })
+    .from(quoteItems)
+    .innerJoin(productVariants, eq(quoteItems.variantId, productVariants.id))
+    .where(and(eq(productVariants.productId, productId), isNotNull(quoteItems.variantId)));
+
+  const quoteIds = affectedQuotes.map((r) => r.quoteId);
+  if (quoteIds.length === 0) return 0;
+
+  await db
+    .update(quotes)
+    .set({ isRecalculationNeeded: true, updatedAt: new Date() })
+    .where(inArray(quotes.id, quoteIds));
+
+  return quoteIds.length;
+}
+
+/**
+ * Mark quotes that contain items from products using the given hsCode as needing recalculation.
+ * Used when an hsCode is edited (II, IPI, PIS, COFINS, etc.).
+ * @returns Number of quotes updated
+ */
+export async function markQuotesForRecalculationByHsCodeId(hsCodeId: string): Promise<number> {
+  const affectedQuotes = await db
+    .selectDistinct({ quoteId: quoteItems.quoteId })
+    .from(quoteItems)
+    .innerJoin(productVariants, eq(quoteItems.variantId, productVariants.id))
+    .innerJoin(products, eq(productVariants.productId, products.id))
+    .where(and(eq(products.hsCodeId, hsCodeId), isNotNull(quoteItems.variantId)));
+
+  const quoteIds = affectedQuotes.map((r) => r.quoteId);
+  if (quoteIds.length === 0) return 0;
+
+  await db
+    .update(quotes)
+    .set({ isRecalculationNeeded: true, updatedAt: new Date() })
+    .where(inArray(quotes.id, quoteIds));
+
+  return quoteIds.length;
 }
 
 export interface GetSimulationsOptions {

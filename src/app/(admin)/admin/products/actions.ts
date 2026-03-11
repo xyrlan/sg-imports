@@ -7,6 +7,7 @@ import {
   updateHsCode,
   deleteHsCode,
 } from '@/services/admin';
+import { markQuotesForRecalculationByHsCodeId } from '@/services/simulation.service';
 import {
   updateProduct,
   type UpdateProductVariantInput,
@@ -363,6 +364,7 @@ export async function updateHsCodeAction(
     }
 
     await updateHsCode(hsCodeId, parsed.data);
+    await markQuotesForRecalculationByHsCodeId(hsCodeId);
     revalidatePath('/admin/products');
     return { ok: true };
   } catch (err) {

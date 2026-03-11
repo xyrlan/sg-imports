@@ -1,6 +1,7 @@
 import { db } from '@/db';
 import { products, productVariants, quoteItems } from '@/db/schema';
 import { eq, and, sql, desc, asc, inArray } from 'drizzle-orm';
+import { markQuotesForRecalculationByProductId } from '@/services/simulation.service';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { TieredPriceInfo, VariantAttributes } from '@/db/types';
 
@@ -191,11 +192,16 @@ export async function updateProduct(
   orgId: string,
   data: UpdateProductInput
 ): Promise<ProductWithVariants> {
-
-  console.log('updateProduct data', data);
-  
   const rawHsCodeId = data.hsCodeId && data.hsCodeId !== '' ? data.hsCodeId : null;
   const rawSupplierId = data.supplierId && data.supplierId !== '' ? data.supplierId : null;
+
+  const current = await db.query.products.findFirst({
+    where: eq(products.id, productId),
+    columns: { hsCodeId: true },
+  });
+  const prevHsCodeId = current?.hsCodeId ?? null;
+  const hsCodeIdChanged =
+    (prevHsCodeId ?? '') !== (rawHsCodeId ?? '');
 
   await db
     .update(products)
@@ -266,6 +272,10 @@ export async function updateProduct(
         ...variantData,
       });
     }
+  }
+
+  if (hsCodeIdChanged) {
+    await markQuotesForRecalculationByProductId(productId);
   }
 
   const [result] = await db.query.products.findMany({
