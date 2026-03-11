@@ -63,6 +63,12 @@ export function AddProductModal({
 
   function handleAddFromCatalog() {
     if (!selectedVariantId || !catalogPrice) return;
+    const upc = selectedVariant?.unitsPerCarton ?? 1;
+    const qty = Number(catalogQuantity) || 1;
+    if (qty % upc !== 0) {
+      toast.danger(t('quantityMustBeMultipleOf', { unitsPerCarton: upc }));
+      return;
+    }
     startTransition(async () => {
       const result = await addSimulationItemFromCatalogAction(
         simulationId,
@@ -167,7 +173,10 @@ export function AddProductModal({
                                 const v = products
                                   .flatMap((p) => (p.variants ?? []).map((v) => ({ ...v, product: p })))
                                   .find((x) => x.id === id);
-                                if (v) setCatalogPrice(String(v.priceUsd ?? ''));
+                                if (v) {
+                                  setCatalogPrice(String(v.priceUsd ?? ''));
+                                  setCatalogQuantity(String(v.unitsPerCarton ?? 1));
+                                }
                               }
                             }}
                           >
@@ -211,14 +220,26 @@ export function AddProductModal({
                               <Label>{t('quantity')}</Label>
                               <Input
                                 type="number"
-                                min={1}
+                                min={selectedVariant?.unitsPerCarton ?? 1}
+                                step={selectedVariant?.unitsPerCarton ?? 1}
                                 onBlur={() => {
+                                  const upc = selectedVariant?.unitsPerCarton ?? 1;
                                   const n = Number(catalogQuantity);
-                                  if (catalogQuantity === '' || Number.isNaN(n) || n < 1) {
-                                    setCatalogQuantity('1');
+                                  if (catalogQuantity === '' || Number.isNaN(n) || n < upc) {
+                                    setCatalogQuantity(String(upc));
+                                  } else {
+                                    const rounded = Math.round(n / upc) * upc;
+                                    setCatalogQuantity(String(rounded));
                                   }
                                 }}
                               />
+                              {selectedVariant && (
+                                <Description>
+                                  {t('quantityHint', {
+                                    unitsPerCarton: selectedVariant.unitsPerCarton ?? 1,
+                                  })}
+                                </Description>
+                              )}
                             </TextField>
                             <TextField
                               variant="primary"

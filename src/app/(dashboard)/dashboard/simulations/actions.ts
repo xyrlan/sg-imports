@@ -2,12 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { requireAuthOrRedirect } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { quoteItems } from '@/db/schema';
+import { quoteItems, productVariants } from '@/db/schema';
 import {
   createSimulation,
   updateSimulation,
@@ -471,6 +472,20 @@ export async function addSimulationItemFromCatalogAction(
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
     }
 
+    const variant = await db.query.productVariants.findFirst({
+      where: eq(productVariants.id, validated.data.variantId),
+    });
+    if (!variant) {
+      const t = await getTranslations('Simulations.errors');
+      return { error: t('variantNotFound') };
+    }
+
+    const unitsPerCarton = variant.unitsPerCarton ?? 1;
+    if (validated.data.quantity % unitsPerCarton !== 0) {
+      const t = await getTranslations('Simulations.AddProduct');
+      return { error: t('quantityMustBeMultipleOf', { unitsPerCarton }) };
+    }
+
     const added = await addSimulationItem(
       validated.data.simulationId,
       validated.data.organizationId,
@@ -521,6 +536,18 @@ export async function addSimulatedProductAction(
 
     if (!validated.success) {
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
+    }
+
+    const snap = validated.data.simulatedProductSnapshot;
+    const hasDirectCbmWeight =
+      (snap.totalCbm != null && snap.totalCbm > 0) ||
+      (snap.totalWeight != null && snap.totalWeight > 0);
+    if (!hasDirectCbmWeight) {
+      const unitsPerCarton = snap.unitsPerCarton ?? 1;
+      if (validated.data.quantity % unitsPerCarton !== 0) {
+        const t = await getTranslations('Simulations.QuickForm');
+        return { error: t('quantityMustBeMultipleOf', { unitsPerCarton }) };
+      }
     }
 
     const added = await addSimulationItem(
@@ -623,6 +650,39 @@ export async function updateSimulationItemAction(
 
     if (!validated.success) {
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
+    }
+
+    if (validated.data.quantity !== undefined) {
+      const item = await db.query.quoteItems.findFirst({
+        where: eq(quoteItems.id, itemId),
+        with: { quote: true },
+      });
+      if (!item || !item.quote || item.quote.organizationId !== organizationId) {
+        const t = await getTranslations('Simulations.errors');
+        return { error: t('itemNotFound') };
+      }
+      const snap = (validated.data.simulatedProductSnapshot ?? item.simulatedProductSnapshot) as ProductSnapshot | null;
+      const hasDirectCbmWeight = snap
+        ? (snap.totalCbm != null && snap.totalCbm > 0) || (snap.totalWeight != null && snap.totalWeight > 0)
+        : false;
+      const isCartonMode = !!item.variantId || (!!snap && !hasDirectCbmWeight);
+      if (isCartonMode) {
+        let unitsPerCarton = 1;
+        if (item.variantId) {
+          const variant = await db.query.productVariants.findFirst({
+            where: eq(productVariants.id, item.variantId),
+          });
+          unitsPerCarton = variant?.unitsPerCarton ?? 1;
+        } else if (snap) {
+          unitsPerCarton = snap.unitsPerCarton ?? 1;
+        }
+        if (validated.data.quantity % unitsPerCarton !== 0) {
+          const t = await getTranslations(
+            item.variantId ? 'Simulations.AddProduct' : 'Simulations.QuickForm'
+          );
+          return { error: t('quantityMustBeMultipleOf', { unitsPerCarton }) };
+        }
+      }
     }
 
     const updatePayload: {

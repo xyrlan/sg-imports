@@ -1299,6 +1299,10 @@
       "editItem": "Editar item",
       "saveItem": "Salvar"
     },
+    "errors": {
+      "variantNotFound": "Variante não encontrada",
+      "itemNotFound": "Item não encontrado"
+    },
     "AddProduct": {
       "addProduct": "Adicionar produto",
       "selectProduct": "Selecionar produto",
@@ -1309,6 +1313,8 @@
       "searchProducts": "Buscar produtos...",
       "noProducts": "Nenhum produto encontrado. Adicione produtos ao catálogo primeiro.",
       "quantity": "Quantidade",
+      "quantityHint": "Múltiplo de {unitsPerCarton} unidades (por caixa)",
+      "quantityMustBeMultipleOf": "A quantidade deve ser múltipla de {unitsPerCarton} (unidades por caixa)",
       "priceUsd": "Preço (USD)",
       "add": "Adicionar"
     },
@@ -1316,10 +1322,15 @@
       "defaultName": "Produto simulado",
       "selectNcm": "Selecionar NCM",
       "quantity": "Quantidade",
+      "quantityMustBeMultipleOf": "A quantidade deve ser múltipla de {unitsPerCarton} (unidades por caixa)",
+      "modeTabsLabel": "Modo de preenchimento",
+      "modeDirect": "Valores do fornecedor",
+      "modeCarton": "Dimensões da caixa",
+      "modeDirectHint": "Informe CBM e peso por unidade (conforme packing list ou cotação do fornecedor)",
+      "modeCartonHint": "Sistema calcula CBM e peso a partir das dimensões da caixa",
       "totalCbm": "CBM por unidade",
       "totalWeight": "Peso por unidade (kg)",
       "cbmWeightHint": "Por unidade. Informe ao menos um: volume (CBM) ou peso (kg) para o frete. Total = valor × quantidade.",
-      "advancedOptions": "Opções avançadas (dimensões da caixa)",
       "unitsPerCarton": "Unidades por caixa",
       "cartonWeight": "Peso da caixa (kg)",
       "add": "Adicionar"
