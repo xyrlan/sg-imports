@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Button, Chip } from '@heroui/react';
-import { ArrowLeft, PackageOpen, Settings } from 'lucide-react';
+import { ArrowLeft, PackageOpen, Settings, RefreshCw } from 'lucide-react';
+import { calculateSimulationAction } from '@/domain/simulation/actions/calculate-simulation.action';
 import { SimulationItemsList } from './simulation-items-list';
 import type {
   Simulation,
@@ -41,13 +42,43 @@ export function SimulationDetailContent({
   const tStatus = useTranslations('Simulations.Status');
   const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isRecalculating, startTransition] = useTransition();
 
   const handleMutate = () => {
     router.refresh();
   };
 
+  const handleRecalculate = () => {
+    startTransition(async () => {
+      const result = await calculateSimulationAction(simulation.id, organizationId);
+      if (result.success) {
+        router.refresh();
+      }
+    });
+  };
+
+  const isStale = Boolean(simulation.isRecalculationNeeded);
+
   return (
     <div key={simulation.id} className="space-y-6">
+      {isStale && items.length > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-warning bg-warning/10 px-4 py-3">
+          <p className="text-sm font-medium text-warning-foreground">
+            {t('staleBannerMessage')}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            isDisabled={isRecalculating}
+            isPending={isRecalculating}
+            onPress={handleRecalculate}
+            className="inline-flex items-center gap-2"
+          >
+            <RefreshCw className="size-4" />
+            {t('staleBannerRecalculate')}
+          </Button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/simulations">

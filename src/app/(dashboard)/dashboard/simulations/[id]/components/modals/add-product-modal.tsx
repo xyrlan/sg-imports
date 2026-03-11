@@ -266,14 +266,14 @@ export function AddProductModal({
                 </Tabs>
               </Modal.Body>
               <Modal.Footer>
-                <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)}>
+                <Button type="button" variant="ghost" onPress={() => handleOpenChange(false)} isDisabled={isPending}>
                   {tForm('cancel')}
                 </Button>
                 {selectedTab === 'catalog' ? (
                   <Button
                     variant="primary"
                     onPress={handleAddFromCatalog}
-                    isDisabled={!selectedVariantId || !catalogPrice}
+                    isDisabled={!selectedVariantId || !catalogPrice || isPending}
                     isPending={isPending}
                   >
                     {t('add')}

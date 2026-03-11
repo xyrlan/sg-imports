@@ -42,6 +42,9 @@ export default async function SimulationDetailPage({
     if (!currentTarget || currentTarget !== ptaxStr) {
       await updateSimulation(id, activeOrgId, user.id, { targetDolar: ptaxStr });
       const taxResult = await calculateAndPersistLandedCost(id, activeOrgId, user.id);
+      if (!taxResult.success) {
+        await updateSimulation(id, activeOrgId, user.id, { isRecalculationNeeded: true });
+      }
       const [fresh, newSummary] = await Promise.all([
         getSimulationById(id, activeOrgId, user.id),
         taxResult.success ? getQuoteFinancialSummary(id, activeOrgId, user.id) : null,
@@ -50,7 +53,7 @@ export default async function SimulationDetailPage({
       if (newSummary) financialSummary = newSummary;
     }
   } catch {
-    // PTAX fetch failed; keep existing targetDolar
+    await updateSimulation(id, activeOrgId, user.id, { isRecalculationNeeded: true });
   }
 
   return (

@@ -1297,11 +1297,16 @@
       "itemTotal": "Total",
       "removeItem": "Remover item",
       "editItem": "Editar item",
-      "saveItem": "Salvar"
+      "saveItem": "Salvar",
+      "staleBannerMessage": "Alguns valores de câmbio ou frete mudaram. Clique aqui para recalcular.",
+      "staleBannerRecalculate": "Recalcular"
     },
     "errors": {
       "variantNotFound": "Variante não encontrada",
-      "itemNotFound": "Item não encontrado"
+      "itemNotFound": "Item não encontrado",
+      "addItemFailed": "Falha ao adicionar item",
+      "removeItemFailed": "Falha ao remover item",
+      "updateItemFailed": "Falha ao atualizar item"
     },
     "AddProduct": {
       "addProduct": "Adicionar produto",

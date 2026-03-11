@@ -1,20 +1,17 @@
 import Decimal from 'decimal.js';
-import { db } from '@/db';
+import { db, type DbTransaction } from '@/db';
 import { quotes, quoteItems, memberships, productVariants, products, hsCodes } from '@/db/schema';
 import { eq, and, desc, asc, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 import { getOrganizationById } from '@/services/organization.service';
 import {
-  computeTotalCbm,
-  computeWeight,
-  getDimensionsForCbm,
+  computeItemLogistics,
   getChargeableWeight,
   getVolumetricWeightAir,
   getVolumetricWeightSeaLCL,
   calculateOptimalFreightProfile,
 } from '@/lib/logistics';
-import { computeImportTaxes } from '@/lib/import-taxes';
 
 type Quote = InferSelectModel<typeof quotes>;
 type QuoteItem = InferSelectModel<typeof quoteItems>;
@@ -179,6 +176,7 @@ export interface UpdateSimulationInput {
   targetDolar?: string | null;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
   metadata?: ShippingMetadata | null;
+  isRecalculationNeeded?: boolean;
 }
 
 /**
@@ -234,6 +232,7 @@ export async function updateSimulation(
       }),
       ...(input.shippingModality !== undefined && { shippingModality: input.shippingModality }),
       ...(input.metadata !== undefined && { metadata: input.metadata }),
+      ...(input.isRecalculationNeeded !== undefined && { isRecalculationNeeded: input.isRecalculationNeeded }),
       updatedAt: new Date(),
     })
     .where(eq(quotes.id, simulationId))
@@ -284,9 +283,11 @@ function equipmentEqual(
   return a.type === b.type && a.quantity === b.quantity;
 }
 
-async function recalculateQuoteTotals(quoteId: string): Promise<void> {
-  const items = await db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
-  const quote = await db.query.quotes.findFirst({ where: eq(quotes.id, quoteId) });
+/** Recalculates quote totals (CBM, weight, freight, modality). Accepts optional tx for atomic operations. */
+export async function recalculateQuoteTotals(quoteId: string, tx?: DbTransaction): Promise<void> {
+  const client = tx ?? db;
+  const items = await client.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+  const quote = await client.query.quotes.findFirst({ where: eq(quotes.id, quoteId) });
   if (!quote) return;
 
   const totalCbm = items.reduce(
@@ -367,7 +368,7 @@ async function recalculateQuoteTotals(quoteId: string): Promise<void> {
     metadataUpdated = true;
   }
 
-  await db
+  await client
     .update(quotes)
     .set({
       totalCbm: totalCbm.toFixed(6),
@@ -375,6 +376,21 @@ async function recalculateQuoteTotals(quoteId: string): Promise<void> {
       totalChargeableWeight: totalChargeableWeight.toFixed(3),
       ...(modality !== quote.shippingModality && { shippingModality: modality }),
       ...(metadataUpdated && { metadata }),
+    })
+    .where(eq(quotes.id, quoteId));
+}
+
+/** Zeros quote totals when no items remain. Accepts optional tx for atomic operations. */
+export async function zeroQuoteTotals(quoteId: string, tx?: DbTransaction): Promise<void> {
+  const client = tx ?? db;
+  const metadata: ShippingMetadata = { totalFreightUsd: 0 };
+  await client
+    .update(quotes)
+    .set({
+      totalCbm: '0',
+      totalWeight: '0',
+      totalChargeableWeight: '0',
+      metadata,
     })
     .where(eq(quotes.id, quoteId));
 }
@@ -411,8 +427,6 @@ export async function addSimulationItem(
   }
 
   const quantity = item.quantity;
-  const unitPriceUsd = item.priceUsd;
-  const lineTotalUsd = new Decimal(unitPriceUsd).times(quantity);
 
   let cbmSnapshot: Decimal;
   let weightSnapshot: Decimal;
@@ -425,23 +439,19 @@ export async function addSimulationItem(
     });
     if (!variant?.product) return null;
 
-    const carton = variant.cartonHeight || variant.cartonWidth || variant.cartonLength
-      ? {
-          heightCm: variant.cartonHeight ?? variant.height ?? 0,
-          widthCm: variant.cartonWidth ?? variant.width ?? 0,
-          lengthCm: variant.cartonLength ?? variant.length ?? 0,
-          weightKg: variant.cartonWeight ?? 0,
-          unitsPerCarton: variant.unitsPerCarton ?? 1,
-        }
-      : null;
-    const unit = {
-      heightCm: variant.height ?? undefined,
-      widthCm: variant.width ?? undefined,
-      lengthCm: variant.length ?? undefined,
-    };
-    const dims = getDimensionsForCbm(carton, unit);
-    cbmSnapshot = computeTotalCbm(quantity, dims);
-    weightSnapshot = computeWeight(quantity, dims);
+    const logistics = computeItemLogistics({
+      quantity,
+      cartonHeight: variant.cartonHeight,
+      cartonWidth: variant.cartonWidth,
+      cartonLength: variant.cartonLength,
+      cartonWeight: variant.cartonWeight,
+      unitsPerCarton: variant.unitsPerCarton,
+      height: variant.height,
+      width: variant.width,
+      length: variant.length,
+    });
+    cbmSnapshot = logistics.cbmSnapshot;
+    weightSnapshot = logistics.weightSnapshot;
 
     const hsCodeId = variant.product.hsCodeId;
     if (!hsCodeId) {
@@ -459,44 +469,21 @@ export async function addSimulationItem(
     }
   } else if (hasSimulated && item.simulatedProductSnapshot) {
     const snap = item.simulatedProductSnapshot;
-    const hasDirectCbmWeight =
-      (snap.totalCbm != null && snap.totalCbm > 0) ||
-      (snap.totalWeight != null && snap.totalWeight > 0);
-
-    if (hasDirectCbmWeight) {
-      // totalCbm/totalWeight no snapshot são por unidade; multiplicar por quantity para total da linha
-      const perUnitCbm = new Decimal(snap.totalCbm ?? 0);
-      const perUnitWeight = new Decimal(snap.totalWeight ?? 0);
-      if (perUnitCbm.isZero() && perUnitWeight.gt(0)) {
-        cbmSnapshot = perUnitWeight.div(200).times(quantity);
-        weightSnapshot = perUnitWeight.times(quantity);
-      } else if (perUnitWeight.isZero() && perUnitCbm.gt(0)) {
-        cbmSnapshot = perUnitCbm.times(quantity);
-        weightSnapshot = perUnitCbm.times(200).times(quantity);
-      } else {
-        cbmSnapshot = perUnitCbm.times(quantity);
-        weightSnapshot = perUnitWeight.times(quantity);
-      }
-    } else {
-      const carton =
-        snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
-          ? {
-              heightCm: snap.cartonHeight ?? snap.height ?? 0,
-              widthCm: snap.cartonWidth ?? snap.width ?? 0,
-              lengthCm: snap.cartonLength ?? snap.length ?? 0,
-              weightKg: snap.cartonWeight ?? 0,
-              unitsPerCarton: snap.unitsPerCarton ?? 1,
-            }
-          : null;
-      const unit = {
-        heightCm: snap.height ?? undefined,
-        widthCm: snap.width ?? undefined,
-        lengthCm: snap.length ?? undefined,
-      };
-      const dims = getDimensionsForCbm(carton, unit);
-      cbmSnapshot = computeTotalCbm(quantity, dims);
-      weightSnapshot = computeWeight(quantity, dims);
-    }
+    const logistics = computeItemLogistics({
+      quantity,
+      cartonHeight: snap.cartonHeight,
+      cartonWidth: snap.cartonWidth,
+      cartonLength: snap.cartonLength,
+      cartonWeight: snap.cartonWeight,
+      unitsPerCarton: snap.unitsPerCarton,
+      height: snap.height,
+      width: snap.width,
+      length: snap.length,
+      totalCbm: snap.totalCbm,
+      totalWeight: snap.totalWeight,
+    });
+    cbmSnapshot = logistics.cbmSnapshot;
+    weightSnapshot = logistics.weightSnapshot;
 
     if (snap.taxSnapshot) {
       taxRates = {
@@ -522,13 +509,6 @@ export async function addSimulationItem(
     return null;
   }
 
-  const taxValues = computeImportTaxes(
-    lineTotalUsd,
-    quantity,
-    unitPriceUsd,
-    taxRates,
-  );
-
   const [created] = await db
     .insert(quoteItems)
     .values({
@@ -537,17 +517,13 @@ export async function addSimulationItem(
       simulatedProductSnapshot: item.simulatedProductSnapshot ?? null,
       quantity,
       priceUsd: item.priceUsd,
-      unitPriceUsdSnapshot: unitPriceUsd,
+      unitPriceUsdSnapshot: item.priceUsd,
       weightSnapshot: weightSnapshot.toFixed(3),
       cbmSnapshot: cbmSnapshot.toFixed(6),
       iiRateSnapshot: taxRates.ii,
       ipiRateSnapshot: taxRates.ipi,
       pisRateSnapshot: taxRates.pis,
       cofinsRateSnapshot: taxRates.cofins,
-      iiValueSnapshot: taxValues.ii.toFixed(4),
-      ipiValueSnapshot: taxValues.ipi.toFixed(4),
-      pisValueSnapshot: taxValues.pis.toFixed(4),
-      cofinsValueSnapshot: taxValues.cofins.toFixed(4),
     })
     .returning();
 
@@ -654,8 +630,6 @@ export async function updateSimulationItem(
 
   if (needsLogisticsRecalc && (item.variantId || snap)) {
     const quantity = newQuantity;
-    let cbmSnapshot: Decimal;
-    let weightSnapshot: Decimal;
 
     if (item.variantId) {
       const variant = await db.query.productVariants.findFirst({
@@ -663,68 +637,36 @@ export async function updateSimulationItem(
         with: { product: true },
       });
       if (variant?.product) {
-        const carton =
-          variant.cartonHeight || variant.cartonWidth || variant.cartonLength
-            ? {
-                heightCm: variant.cartonHeight ?? variant.height ?? 0,
-                widthCm: variant.cartonWidth ?? variant.width ?? 0,
-                lengthCm: variant.cartonLength ?? variant.length ?? 0,
-                weightKg: variant.cartonWeight ?? 0,
-                unitsPerCarton: variant.unitsPerCarton ?? 1,
-              }
-            : null;
-        const unit = {
-          heightCm: variant.height ?? undefined,
-          widthCm: variant.width ?? undefined,
-          lengthCm: variant.length ?? undefined,
-        };
-        const dims = getDimensionsForCbm(carton, unit);
-        cbmSnapshot = computeTotalCbm(quantity, dims);
-        weightSnapshot = computeWeight(quantity, dims);
-        values.weightSnapshot = weightSnapshot.toFixed(3);
-        values.cbmSnapshot = cbmSnapshot.toFixed(6);
+        const logistics = computeItemLogistics({
+          quantity,
+          cartonHeight: variant.cartonHeight,
+          cartonWidth: variant.cartonWidth,
+          cartonLength: variant.cartonLength,
+          cartonWeight: variant.cartonWeight,
+          unitsPerCarton: variant.unitsPerCarton,
+          height: variant.height,
+          width: variant.width,
+          length: variant.length,
+        });
+        values.weightSnapshot = logistics.weightSnapshot.toFixed(3);
+        values.cbmSnapshot = logistics.cbmSnapshot.toFixed(6);
       }
     } else if (snap) {
-      const hasDirectCbmWeight =
-        (snap.totalCbm != null && snap.totalCbm > 0) ||
-        (snap.totalWeight != null && snap.totalWeight > 0);
-
-      if (hasDirectCbmWeight) {
-        // totalCbm/totalWeight no snapshot são por unidade; multiplicar por quantity para total da linha
-        const perUnitCbm = new Decimal(snap.totalCbm ?? 0);
-        const perUnitWeight = new Decimal(snap.totalWeight ?? 0);
-        if (perUnitCbm.isZero() && perUnitWeight.gt(0)) {
-          cbmSnapshot = perUnitWeight.div(200).times(quantity);
-          weightSnapshot = perUnitWeight.times(quantity);
-        } else if (perUnitWeight.isZero() && perUnitCbm.gt(0)) {
-          cbmSnapshot = perUnitCbm.times(quantity);
-          weightSnapshot = perUnitCbm.times(200).times(quantity);
-        } else {
-          cbmSnapshot = perUnitCbm.times(quantity);
-          weightSnapshot = perUnitWeight.times(quantity);
-        }
-      } else {
-        const carton =
-          snap.cartonHeight ?? snap.cartonWidth ?? snap.cartonLength
-            ? {
-                heightCm: snap.cartonHeight ?? snap.height ?? 0,
-                widthCm: snap.cartonWidth ?? snap.width ?? 0,
-                lengthCm: snap.cartonLength ?? snap.length ?? 0,
-                weightKg: snap.cartonWeight ?? 0,
-                unitsPerCarton: snap.unitsPerCarton ?? 1,
-              }
-            : null;
-        const unit = {
-          heightCm: snap.height ?? undefined,
-          widthCm: snap.width ?? undefined,
-          lengthCm: snap.length ?? undefined,
-        };
-        const dims = getDimensionsForCbm(carton, unit);
-        cbmSnapshot = computeTotalCbm(quantity, dims);
-        weightSnapshot = computeWeight(quantity, dims);
-      }
-      values.weightSnapshot = weightSnapshot.toFixed(3);
-      values.cbmSnapshot = cbmSnapshot.toFixed(6);
+      const logistics = computeItemLogistics({
+        quantity,
+        cartonHeight: snap.cartonHeight,
+        cartonWidth: snap.cartonWidth,
+        cartonLength: snap.cartonLength,
+        cartonWeight: snap.cartonWeight,
+        unitsPerCarton: snap.unitsPerCarton,
+        height: snap.height,
+        width: snap.width,
+        length: snap.length,
+        totalCbm: snap.totalCbm,
+        totalWeight: snap.totalWeight,
+      });
+      values.weightSnapshot = logistics.weightSnapshot.toFixed(3);
+      values.cbmSnapshot = logistics.cbmSnapshot.toFixed(6);
     }
   }
 
@@ -733,9 +675,6 @@ export async function updateSimulationItem(
   }
 
   if (needsTaxRecalc) {
-    const quantity = newQuantity;
-    const unitPriceUsd = newPriceUsd;
-    const lineTotal = new Decimal(unitPriceUsd).times(quantity);
     let rates: { ii: string; ipi: string; pis: string; cofins: string };
 
     if (snap?.taxSnapshot) {
@@ -763,11 +702,6 @@ export async function updateSimulationItem(
         cofins: String(item.cofinsRateSnapshot ?? 0),
       };
     }
-    const taxValues = computeImportTaxes(lineTotal, quantity, unitPriceUsd, rates);
-    values.iiValueSnapshot = taxValues.ii.toFixed(4);
-    values.ipiValueSnapshot = taxValues.ipi.toFixed(4);
-    values.pisValueSnapshot = taxValues.pis.toFixed(4);
-    values.cofinsValueSnapshot = taxValues.cofins.toFixed(4);
     values.iiRateSnapshot = rates.ii;
     values.ipiRateSnapshot = rates.ipi;
     values.pisRateSnapshot = rates.pis;

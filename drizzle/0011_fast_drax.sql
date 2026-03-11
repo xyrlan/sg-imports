@@ -1,0 +1,1 @@
+ALTER TABLE "quotes" ADD COLUMN "is_recalculation_needed" boolean DEFAULT false NOT NULL;

@@ -13,11 +13,13 @@ import {
   createSimulation,
   updateSimulation,
   deleteSimulation,
-  addSimulationItem,
-  removeSimulationItem,
-  updateSimulationItem,
 } from '@/services/simulation.service';
-import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
+import {
+  calculateAndPersistLandedCost,
+  addSimulationItemAndRecalculate,
+  updateSimulationItemAndRecalculate,
+  removeSimulationItemAndRecalculate,
+} from '@/domain/simulation/services/simulation-domain.service';
 import { getSimulationById } from '@/services/simulation.service';
 import { getFreightValueForSimulation } from '@/services/admin/international-freights.service';
 import { calculateOptimalFreightProfile } from '@/lib/logistics';
@@ -486,7 +488,7 @@ export async function addSimulationItemFromCatalogAction(
       return { error: t('quantityMustBeMultipleOf', { unitsPerCarton }) };
     }
 
-    const added = await addSimulationItem(
+    const result = await addSimulationItemAndRecalculate(
       validated.data.simulationId,
       validated.data.organizationId,
       user.id,
@@ -494,24 +496,20 @@ export async function addSimulationItemFromCatalogAction(
         variantId: validated.data.variantId,
         quantity: validated.data.quantity,
         priceUsd: validated.data.priceUsd,
-      }
+      },
     );
 
-    if (!added) return { error: 'Failed to add item' };
-
-    await calculateAndPersistLandedCost(
-      validated.data.simulationId,
-      validated.data.organizationId,
-      user.id,
-    );
+    const tErrors = await getTranslations('Simulations.errors');
+    if (!result.success) return { error: result.errors?.[0] ?? tErrors('addItemFailed') };
     revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
     }
+    const tErrors = await getTranslations('Simulations.errors');
     return {
-      error: err instanceof Error ? err.message : 'Failed to add item',
+      error: err instanceof Error ? err.message : tErrors('addItemFailed'),
     };
   }
 }
@@ -550,7 +548,7 @@ export async function addSimulatedProductAction(
       }
     }
 
-    const added = await addSimulationItem(
+    const result = await addSimulationItemAndRecalculate(
       validated.data.simulationId,
       validated.data.organizationId,
       user.id,
@@ -558,24 +556,20 @@ export async function addSimulatedProductAction(
         simulatedProductSnapshot: validated.data.simulatedProductSnapshot,
         quantity: validated.data.quantity,
         priceUsd: validated.data.priceUsd,
-      }
+      },
     );
 
-    if (!added) return { error: 'Failed to add item' };
-
-    await calculateAndPersistLandedCost(
-      validated.data.simulationId,
-      validated.data.organizationId,
-      user.id,
-    );
+    const tErrors = await getTranslations('Simulations.errors');
+    if (!result.success) return { error: result.errors?.[0] ?? tErrors('addItemFailed') };
     revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
     }
+    const tErrors = await getTranslations('Simulations.errors');
     return {
-      error: err instanceof Error ? err.message : 'Failed to add item',
+      error: err instanceof Error ? err.message : tErrors('addItemFailed'),
     };
   }
 }
@@ -602,20 +596,16 @@ export async function removeSimulationItemAction(
       .from(quoteItems)
       .where(eq(quoteItems.id, validated.data.itemId));
 
-    const ok = await removeSimulationItem(
+    const result = await removeSimulationItemAndRecalculate(
       validated.data.itemId,
       validated.data.organizationId,
-      user.id
+      user.id,
     );
 
-    if (!ok) return { error: 'Failed to remove item' };
+    const tErrors = await getTranslations('Simulations.errors');
+    if (!result.success) return { error: result.errors?.[0] ?? tErrors('removeItemFailed') };
 
     if (item?.quoteId) {
-      await calculateAndPersistLandedCost(
-        item.quoteId,
-        validated.data.organizationId,
-        user.id,
-      );
       revalidatePath(`/dashboard/simulations/${item.quoteId}`);
     }
     return { success: true };
@@ -623,8 +613,9 @@ export async function removeSimulationItemAction(
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
     }
+    const tErrors = await getTranslations('Simulations.errors');
     return {
-      error: err instanceof Error ? err.message : 'Failed to remove item',
+      error: err instanceof Error ? err.message : tErrors('removeItemFailed'),
     };
   }
 }
@@ -696,28 +687,31 @@ export async function updateSimulationItemAction(
       updatePayload.simulatedProductSnapshot = validated.data.simulatedProductSnapshot;
     }
 
-    const updated = await updateSimulationItem(
+    const result = await updateSimulationItemAndRecalculate(
       validated.data.itemId,
       validated.data.organizationId,
       user.id,
-      updatePayload
+      updatePayload,
     );
 
-    if (!updated) return { error: 'Failed to update item' };
+    const tErrors = await getTranslations('Simulations.errors');
+    if (!result.success) return { error: result.errors?.[0] ?? tErrors('updateItemFailed') };
 
-    await calculateAndPersistLandedCost(
-      updated.quoteId,
-      validated.data.organizationId,
-      user.id,
-    );
-    revalidatePath(`/dashboard/simulations/${updated.quoteId}`);
+    const [item] = await db
+      .select({ quoteId: quoteItems.quoteId })
+      .from(quoteItems)
+      .where(eq(quoteItems.id, validated.data.itemId));
+    if (item?.quoteId) {
+      revalidatePath(`/dashboard/simulations/${item.quoteId}`);
+    }
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
     }
+    const tErrors = await getTranslations('Simulations.errors');
     return {
-      error: err instanceof Error ? err.message : 'Failed to update item',
+      error: err instanceof Error ? err.message : tErrors('updateItemFailed'),
     };
   }
 }

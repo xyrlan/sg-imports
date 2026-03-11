@@ -237,6 +237,86 @@ export function getChargeableWeight(
 }
 
 /**
+ * Input for computeItemLogistics — agnostic of DB, accepts variant-like or ProductSnapshot-like dimensions.
+ */
+export interface ItemLogisticsInput {
+  quantity: number;
+  /** Carton dimensions (variant or snapshot) */
+  cartonHeight?: number | string | null;
+  cartonWidth?: number | string | null;
+  cartonLength?: number | string | null;
+  cartonWeight?: number | string | null;
+  unitsPerCarton?: number | null;
+  /** Unit dimensions fallback */
+  height?: number | string | null;
+  width?: number | string | null;
+  length?: number | string | null;
+  /** Direct mode: CBM and weight per unit (no carton) — from ProductSnapshot */
+  totalCbm?: number | null;
+  totalWeight?: number | null;
+}
+
+export interface ItemLogisticsResult {
+  cbmSnapshot: Decimal;
+  weightSnapshot: Decimal;
+}
+
+/**
+ * Computes CBM and weight for a simulation item — agnostic of DB.
+ * Reusable for add/update in simulation flow.
+ *
+ * - Direct mode: when totalCbm or totalWeight provided (per unit), multiply by quantity.
+ * - Carton mode: use getDimensionsForCbm + computeTotalCbm/computeWeight.
+ */
+export function computeItemLogistics(input: ItemLogisticsInput): ItemLogisticsResult {
+  const { quantity } = input;
+  const hasDirectCbmWeight =
+    (input.totalCbm != null && input.totalCbm > 0) ||
+    (input.totalWeight != null && input.totalWeight > 0);
+
+  if (hasDirectCbmWeight) {
+    const perUnitCbm = new Decimal(input.totalCbm ?? 0);
+    const perUnitWeight = new Decimal(input.totalWeight ?? 0);
+    let cbmSnapshot: Decimal;
+    let weightSnapshot: Decimal;
+    if (perUnitCbm.isZero() && perUnitWeight.gt(0)) {
+      cbmSnapshot = perUnitWeight.div(200).times(quantity);
+      weightSnapshot = perUnitWeight.times(quantity);
+    } else if (perUnitWeight.isZero() && perUnitCbm.gt(0)) {
+      cbmSnapshot = perUnitCbm.times(quantity);
+      weightSnapshot = perUnitCbm.times(200).times(quantity);
+    } else {
+      cbmSnapshot = perUnitCbm.times(quantity);
+      weightSnapshot = perUnitWeight.times(quantity);
+    }
+    return { cbmSnapshot, weightSnapshot };
+  }
+
+  const hasCarton =
+    Number(input.cartonHeight ?? 0) > 0 ||
+    Number(input.cartonWidth ?? 0) > 0 ||
+    Number(input.cartonLength ?? 0) > 0;
+  const carton = hasCarton
+    ? {
+        heightCm: input.cartonHeight ?? input.height ?? 0,
+        widthCm: input.cartonWidth ?? input.width ?? 0,
+        lengthCm: input.cartonLength ?? input.length ?? 0,
+        weightKg: input.cartonWeight ?? 0,
+        unitsPerCarton: input.unitsPerCarton ?? 1,
+      }
+    : null;
+  const unit = {
+    heightCm: input.height ?? undefined,
+    widthCm: input.width ?? undefined,
+    lengthCm: input.length ?? undefined,
+  };
+  const dims = getDimensionsForCbm(carton, unit);
+  const cbmSnapshot = computeTotalCbm(quantity, dims);
+  const weightSnapshot = computeWeight(quantity, dims);
+  return { cbmSnapshot, weightSnapshot };
+}
+
+/**
  * Fallback order: 1) Carton dimensions, 2) Unit dimensions, 3) Default 0
  */
 export function getDimensionsForCbm(

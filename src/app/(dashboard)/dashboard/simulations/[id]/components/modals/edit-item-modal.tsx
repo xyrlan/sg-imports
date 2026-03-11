@@ -158,10 +158,10 @@ export function EditItemModal({
               )}
             </Modal.Body>
             <Modal.Footer>
-              <Button type="button" variant="ghost" onPress={() => onOpenChange(false)}>
+              <Button type="button" variant="ghost" onPress={() => onOpenChange(false)} isDisabled={isPending}>
                 {tForm('cancel')}
               </Button>
-              <Button form={formId} type="submit" variant="primary" isPending={isPending}>
+              <Button form={formId} type="submit" variant="primary" isPending={isPending} isDisabled={isPending}>
                 {t('saveItem')}
               </Button>
             </Modal.Footer>

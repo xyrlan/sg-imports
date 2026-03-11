@@ -314,6 +314,9 @@ export const quotes = pgTable('quotes', {
   totalWeight: decimal('total_weight', { precision: 12, scale: 3 }),
   totalChargeableWeight: decimal('total_chargeable_weight', { precision: 12, scale: 3 }).default('0').notNull(),
 
+  /** Flag: set when PTAX fetch or recalc fails; UI shows banner to recalculate */
+  isRecalculationNeeded: boolean('is_recalculation_needed').default(false).notNull(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
