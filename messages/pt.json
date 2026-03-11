@@ -258,6 +258,7 @@
     },
     "Profile": {
       "noOrganization": "Sem Organização",
+      "adminDashboard": "Painel Admin",
       "myProfile": "Meu Perfil",
       "settings": "Configurações",
       "logout": "Sair",

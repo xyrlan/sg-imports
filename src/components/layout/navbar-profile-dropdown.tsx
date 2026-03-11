@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dropdown, Avatar, Label } from '@heroui/react';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useOrganizationState } from '@/contexts/organization-context';
@@ -29,6 +29,7 @@ export function NavbarProfileDropdown() {
   const userFullName = profile?.fullName || '';
   const organizationName = currentOrganization?.name || t('noOrganization');
   const userRole = membership?.role || 'VIEWER';
+  const isSuperAdmin = profile?.systemRole === 'SUPER_ADMIN';
   const initials = organizationName.charAt(0).toUpperCase() + (organizationName.charAt(1) || '').toUpperCase();
 
   return (
@@ -58,10 +59,24 @@ export function NavbarProfileDropdown() {
             router.push('/dashboard/profile');
           } else if (key === 'settings') {
             router.push('/dashboard/settings');
+          } else if (key === 'admin-dashboard') {
+            router.push('/admin');
           } else if (key === 'logout') {
             handleSignOut();
           }
         }}>
+          {isSuperAdmin && (
+            <Dropdown.Item
+              id="admin-dashboard"
+              isDisabled={isLoggingOut}
+              textValue={t('adminDashboard')}
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                <Label>{t('adminDashboard')}</Label>
+              </div>
+            </Dropdown.Item>
+          )}
           <Dropdown.Item
             id="my-profile"
             isDisabled={isLoggingOut}
