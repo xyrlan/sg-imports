@@ -24,11 +24,11 @@ export function TaxBreakdownSection({
   const formatBrl = (value: number) => formatCurrency(value, 'pt-BR', 'BRL');
 
   return (
-    <div className="rounded-lg border p-3 space-y-2">
+    <div className="rounded-lg border border-default-200 p-3 space-y-2">
       <div className="flex items-center gap-3">
         <Receipt className="size-5 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs">{t('totalTaxesBrl')}</p>
+          <p className="text-xs text-default-500">{t('totalTaxesBrl')}</p>
           <p className="font-medium">{formatBrl(totalTaxesBrl)}</p>
         </div>
         {hasTaxBreakdown && (

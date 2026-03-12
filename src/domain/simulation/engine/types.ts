@@ -44,6 +44,10 @@ export interface LandedCostEngineContext {
   icmsRate?: number | string;
   /** Despesas adicionais BRL por item (opcional) */
   despesasBrl?: number | string;
+  /** Despesas adicionais de frete (USD) — somado ao frete internacional */
+  additionalFreightUsd?: number | string;
+  /** Comissão % sobre FOB (0-100) */
+  commissionPercent?: number | string;
 }
 
 export interface LandedCostEngineResult {

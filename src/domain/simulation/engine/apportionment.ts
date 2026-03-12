@@ -101,3 +101,47 @@ export function apportionByFob(
 
   return result;
 }
+
+/**
+ * Rateio proporcional ao valor FOB em USD.
+ * Usado para comissão (% sobre FOB).
+ */
+export function apportionByFobUsd(
+  totalAmountUsd: number | string,
+  items: Array<{ id: string; fobUsd: number | string }>,
+): Map<string, Decimal> {
+  const total = toD(totalAmountUsd);
+  const totalFobUsd = items.reduce(
+    (sum, i) => sum.plus(toD(i.fobUsd)),
+    new Decimal(0),
+  );
+
+  if (totalFobUsd.isZero() || items.length === 0) {
+    return new Map(items.map((i) => [i.id, new Decimal(0)]));
+  }
+
+  const result = new Map<string, Decimal>();
+  let allocatedCents = new Decimal(0);
+  const totalCents = total.times(100).floor();
+
+  for (let idx = 0; idx < items.length; idx++) {
+    const item = items[idx];
+    const fobUsd = toD(item.fobUsd);
+    const proportion = fobUsd.div(totalFobUsd);
+
+    let itemCents: Decimal;
+    if (idx < items.length - 1) {
+      itemCents = proportion.times(totalCents).floor();
+    } else {
+      itemCents = totalCents.minus(allocatedCents);
+    }
+
+    allocatedCents = allocatedCents.plus(itemCents);
+    result.set(
+      item.id,
+      itemCents.div(100).toDecimalPlaces(DP, Decimal.ROUND_HALF_UP),
+    );
+  }
+
+  return result;
+}

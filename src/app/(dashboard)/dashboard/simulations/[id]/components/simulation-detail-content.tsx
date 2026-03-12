@@ -121,7 +121,7 @@ export function SimulationDetailContent({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_550px] gap-6 lg:gap-8">
         <div className="space-y-6 min-w-0">
           {items.length > 0 ? (
             <SimulationItemsList

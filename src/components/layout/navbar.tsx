@@ -68,7 +68,7 @@ export function Navbar() {
       href: '/dashboard/products',
       label: t('products'),
       icon: <PackageOpen className="w-5 h-5" />,
-      roles: ['ADMIN', 'ADMIN_EMPLOYEE', 'SELLER'],
+      roles: ['ADMIN', 'ADMIN_EMPLOYEE', 'SELLER', 'OWNER'],
     },
   ];
 

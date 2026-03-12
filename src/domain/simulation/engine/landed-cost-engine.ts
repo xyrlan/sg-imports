@@ -4,7 +4,7 @@
  */
 
 import Decimal from 'decimal.js';
-import { apportionByWeight, apportionByFob } from './apportionment';
+import { apportionByWeight, apportionByFob, apportionByFobUsd } from './apportionment';
 import {
   computeIiIpiPisCofins,
   computeTaxesRts,
@@ -50,15 +50,19 @@ function computeFobUsd(
 }
 
 /**
- * CIF BRL = (FOB + Frete Rateado + Seguro Rateado) * Dolar Efetivo
+ * CIF BRL = (FOB + Frete Rateado + Seguro Rateado + Comissão Rateada) * Dolar Efetivo
  */
 function computeCifBrl(
   fobUsd: Decimal,
   freightShareUsd: Decimal,
   insuranceShareUsd: Decimal,
+  commissionShareUsd: Decimal,
   effectiveDolar: Decimal,
 ): Decimal {
-  const cifUsd = fobUsd.plus(freightShareUsd).plus(insuranceShareUsd);
+  const cifUsd = fobUsd
+    .plus(freightShareUsd)
+    .plus(insuranceShareUsd)
+    .plus(commissionShareUsd);
   return cifUsd.times(effectiveDolar).toDecimalPlaces(DP_INTERMEDIATE);
 }
 
@@ -83,28 +87,43 @@ export function runLandedCostEngine(
   );
   const isExpress = context.shippingModality === 'EXPRESS';
   const totalFreightUsd = Number(context.totalFreightUsd ?? 0);
+  const additionalFreightUsd = Number(context.additionalFreightUsd ?? 0);
+  const effectiveFreightUsd = totalFreightUsd + additionalFreightUsd;
   const totalInsuranceUsd = Number(context.totalInsuranceUsd ?? 0);
   const totalCapataziaUsd = Number(context.totalCapataziaUsd ?? 0);
   const totalSiscomexBrl = toD(context.totalSiscomexBrl ?? 0);
   const afrmmRate = toD(context.afrmmRate ?? 0).div(100);
   const icmsRate = context.icmsRate;
   const despesasBrl = toD(context.despesasBrl ?? 0);
+  const commissionPercent = Number(context.commissionPercent ?? 0);
 
   const weightItems = items.map((i) => ({
     id: i.id,
     weight: Number(i.weightSnapshot) || 0,
   }));
 
-  const freightShares = apportionByWeight(totalFreightUsd, weightItems);
-  const insuranceShares = apportionByWeight(totalInsuranceUsd, weightItems);
-  const capataziaShares = totalCapataziaUsd > 0
-    ? apportionByWeight(totalCapataziaUsd, weightItems)
-    : new Map<string, Decimal>();
-
   const fobItems = items.map((i) => ({
     id: i.id,
     fobUsd: i.fobUsd ?? Number(i.priceUsd) * i.quantity,
   }));
+  const totalFobUsd = fobItems.reduce(
+    (sum, i) => sum + Number(i.fobUsd),
+    0,
+  );
+  const totalCommissionUsd =
+    commissionPercent > 0
+      ? toD(totalFobUsd).times(commissionPercent).div(100).toNumber()
+      : 0;
+  const commissionShares =
+    totalCommissionUsd > 0
+      ? apportionByFobUsd(totalCommissionUsd, fobItems)
+      : new Map<string, Decimal>();
+
+  const freightShares = apportionByWeight(effectiveFreightUsd, weightItems);
+  const insuranceShares = apportionByWeight(totalInsuranceUsd, weightItems);
+  const capataziaShares = totalCapataziaUsd > 0
+    ? apportionByWeight(totalCapataziaUsd, weightItems)
+    : new Map<string, Decimal>();
 
   const siscomexShares =
     totalSiscomexBrl.gt(0) && items.length > 0
@@ -117,12 +136,14 @@ export function runLandedCostEngine(
     const fobUsd = computeFobUsd(item.priceUsd, item.quantity);
     const freightShareUsd = freightShares.get(item.id) ?? new Decimal(0);
     const insuranceShareUsd = insuranceShares.get(item.id) ?? new Decimal(0);
+    const commissionShareUsd = commissionShares.get(item.id) ?? new Decimal(0);
     const capataziaShareUsd = capataziaShares.get(item.id) ?? new Decimal(0);
 
     const cifBrl = computeCifBrl(
       fobUsd,
       freightShareUsd,
       insuranceShareUsd,
+      commissionShareUsd,
       effectiveDolar,
     );
 

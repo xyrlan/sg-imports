@@ -214,7 +214,11 @@ const shippingMetadataSchema = z.object({
   totalInsuranceUsd: z.number().min(0).optional(),
   capataziaUsd: z.number().min(0).optional(),
   destinationState: z.string().max(2).optional(),
+  additionalFreightUsd: z.number().min(0).optional(),
+  commissionPercent: z.number().min(0).max(100).optional(),
 });
+
+const incotermSchema = z.enum(['EXW', 'FOB', 'CIF', 'DDP']);
 
 const updateSimulationSchema = z
   .object({
@@ -223,6 +227,7 @@ const updateSimulationSchema = z
     name: z.string().min(1).max(200).optional(),
     targetDolar: z.string().nullable().optional(),
     shippingModality: shippingModalitySchema.nullable().optional(),
+    incoterm: incotermSchema.optional(),
     metadata: z
       .string()
       .optional()
@@ -271,6 +276,10 @@ export async function updateSimulationAction(
     if (formData.has('shippingModality')) {
       const v = (formData.get('shippingModality') as string)?.trim();
       rawData.shippingModality = v && v !== '__none__' ? v : null;
+    }
+    if (formData.has('incoterm')) {
+      const v = (formData.get('incoterm') as string)?.trim();
+      rawData.incoterm = v && v !== '__none__' ? v : undefined;
     }
     if (formData.has('metadata')) {
       rawData.metadata = formData.get('metadata') as string;
@@ -382,6 +391,7 @@ export async function updateSimulationAction(
         ...(modalityToSave !== undefined && {
           shippingModality: modalityToSave,
         }),
+        ...(validated.data.incoterm !== undefined && { incoterm: validated.data.incoterm }),
         ...(metadataToSave !== undefined && { metadata: metadataToSave }),
       }
     );

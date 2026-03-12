@@ -222,6 +222,7 @@ export interface UpdateSimulationInput {
   name?: string;
   targetDolar?: string | null;
   shippingModality?: 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'SEA_FCL_PARTIAL' | 'EXPRESS' | null;
+  incoterm?: 'EXW' | 'FOB' | 'CIF' | 'DDP';
   metadata?: ShippingMetadata | null;
   isRecalculationNeeded?: boolean;
 }
@@ -278,6 +279,7 @@ export async function updateSimulation(
         targetDolar: (input.targetDolar?.trim() || '0').replace(',', '.'),
       }),
       ...(input.shippingModality !== undefined && { shippingModality: input.shippingModality }),
+      ...(input.incoterm !== undefined && { incoterm: input.incoterm }),
       ...(input.metadata !== undefined && { metadata: input.metadata }),
       ...(input.isRecalculationNeeded !== undefined && { isRecalculationNeeded: input.isRecalculationNeeded }),
       updatedAt: new Date(),

@@ -110,7 +110,7 @@ export function FreightCapacityProgress({
         <h3 className="font-semibold flex items-center gap-2">
           <Ship className="size-5" />
           {containerType && (
-            <span className="text-sm font-semibold text-accent">
+            <span className="text-sm font-semibold ">
               {containerType} {containerQuantity > 1 && `× ${containerQuantity}`}
             </span>
           )}
@@ -173,7 +173,7 @@ export function FreightCapacityProgress({
       <div className="space-y-6">
         <h3 className="font-semibold flex items-center gap-2">
           <Boxes className="size-5" />
-          <span className="text-sm font-semibold text-accent">{t('lclTitle')}</span>
+          <span className="text-sm font-semibold ">{t('lclTitle')}</span>
         </h3>
         <div className="flex flex-col gap-4 max-w-lg">
           <ProgressBar

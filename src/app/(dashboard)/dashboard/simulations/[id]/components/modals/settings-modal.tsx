@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { startTransition } from 'react';
-import { Button, Modal, Label, Select, ListBox } from '@heroui/react';
+import { Button, Input, Modal, Label, Select, ListBox, TextField } from '@heroui/react';
 import { Settings } from 'lucide-react';
 import { updateSimulationAction } from '../../../actions';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
@@ -24,6 +24,15 @@ const MODALITY_OPTIONS = [
   { id: 'AIR' as const, labelKey: 'AIR' },
   { id: 'EXPRESS' as const, labelKey: 'EXPRESS' },
 ] as const;
+
+const INCOTERM_OPTIONS = [
+  { id: 'EXW' as const, labelKey: 'EXW' },
+  { id: 'FOB' as const, labelKey: 'FOB' },
+  { id: 'CIF' as const, labelKey: 'CIF' },
+  { id: 'DDP' as const, labelKey: 'DDP' },
+] as const;
+
+type IncotermValue = 'EXW' | 'FOB' | 'CIF' | 'DDP';
 
 interface SettingsModalProps {
   simulation: Simulation;
@@ -52,6 +61,15 @@ export function SettingsModal({
   const [shippingModality, setShippingModality] = useState<'SEA_LCL' | 'AIR' | 'EXPRESS'>(() =>
     modalityToUiValue(simulation.shippingModality),
   );
+  const [incoterm, setIncoterm] = useState<IncotermValue>(
+    () => (simulation.incoterm as IncotermValue) ?? 'FOB',
+  );
+  const [additionalFreightUsd, setAdditionalFreightUsd] = useState(
+    () => String(existingMetadata.additionalFreightUsd ?? ''),
+  );
+  const [commissionPercent, setCommissionPercent] = useState(
+    () => String(existingMetadata.commissionPercent ?? ''),
+  );
 
   const [state, formAction, isPending] = useActionState(updateSimulationAction, null);
 
@@ -61,9 +79,12 @@ export function SettingsModal({
       queueMicrotask(() => {
         setDestinationState(meta.destinationState ?? defaultDestinationState ?? '');
         setShippingModality(modalityToUiValue(simulation.shippingModality));
+        setIncoterm((simulation.incoterm as IncotermValue) ?? 'FOB');
+        setAdditionalFreightUsd(String(meta.additionalFreightUsd ?? ''));
+        setCommissionPercent(String(meta.commissionPercent ?? ''));
       });
     }
-  }, [open, simulation.metadata, simulation.shippingModality, defaultDestinationState]);
+  }, [open, simulation.metadata, simulation.shippingModality, simulation.incoterm, defaultDestinationState]);
 
   useEffect(() => {
     if (
@@ -86,15 +107,35 @@ export function SettingsModal({
     if (!destinationState) {
       return;
     }
+    const additionalFreightNum = additionalFreightUsd.trim()
+      ? parseFloat(additionalFreightUsd.replace(',', '.'))
+      : undefined;
+    const commissionNum = commissionPercent.trim()
+      ? parseFloat(commissionPercent.replace(',', '.'))
+      : undefined;
     const metadata: ShippingMetadata = {
       ...existingMetadata,
       destinationState,
+      additionalFreightUsd:
+        additionalFreightNum !== undefined &&
+        !Number.isNaN(additionalFreightNum) &&
+        additionalFreightNum >= 0
+          ? additionalFreightNum
+          : undefined,
+      commissionPercent:
+        commissionNum !== undefined &&
+        !Number.isNaN(commissionNum) &&
+        commissionNum >= 0 &&
+        commissionNum <= 100
+          ? commissionNum
+          : undefined,
     };
     const formData = new FormData();
     formData.set('simulationId', simulation.id);
     formData.set('organizationId', simulation.organizationId);
     formData.set('metadata', JSON.stringify(metadata));
     formData.set('shippingModality', shippingModality);
+    formData.set('incoterm', incoterm);
     startTransition(() => {
       formAction(formData);
     });
@@ -138,6 +179,60 @@ export function SettingsModal({
                         </ListBox>
                       </Select.Popover>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('incotermLabel')}</Label>
+                    <Select
+                      variant="primary"
+                      placeholder={t('incotermPlaceholder')}
+                      value={incoterm}
+                      onChange={(k) => setIncoterm((k as IncotermValue) ?? 'FOB')}
+                      isDisabled={isPending}
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          {INCOTERM_OPTIONS.map(({ id, labelKey }) => (
+                            <ListBox.Item key={id} id={id} textValue={t(labelKey)}>
+                              {t(labelKey)}
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('additionalFreightLabel')}</Label>
+                    <TextField
+                      variant="primary"
+                      value={additionalFreightUsd}
+                      onChange={(v) => setAdditionalFreightUsd(v)}
+                      isDisabled={isPending}
+                    >
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder={t('additionalFreightPlaceholder')}
+                      />
+                    </TextField>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('commissionLabel')}</Label>
+                    <TextField
+                      variant="primary"
+                      value={commissionPercent}
+                      onChange={(v) => setCommissionPercent(v)}
+                      isDisabled={isPending}
+                    >
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder={t('commissionPlaceholder')}
+                      />
+                    </TextField>
                   </div>
                   <div className="space-y-2">
                     <Label>{t('destinationState')}</Label>

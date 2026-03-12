@@ -57,7 +57,7 @@ export default async function SimulationDetailPage({
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="mx-auto p-6">
       <SimulationDetailContent
         simulation={simulationData.simulation}
         items={simulationData.items}

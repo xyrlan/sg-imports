@@ -66,4 +66,8 @@ export interface ShippingMetadata {
   capataziaUsd?: number;
   /** UF para ICMS (ex: 'SP') — estado de destino/desembaraço */
   destinationState?: string;
+  /** Despesas adicionais de frete (USD) — somado ao frete internacional */
+  additionalFreightUsd?: number;
+  /** Comissão % sobre FOB (0-100) */
+  commissionPercent?: number;
 }
