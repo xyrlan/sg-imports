@@ -1,6 +1,6 @@
 import { cache } from 'react';
 import { db } from '@/db';
-import { notifications } from '@/db/schema';
+import { notifications, memberships } from '@/db/schema';
 import { eq, and, count, desc } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 
@@ -33,6 +33,36 @@ export async function sendNotification(data: SendNotificationInput): Promise<Not
     .returning();
 
   return inserted ?? null;
+}
+
+/**
+ * Notify all members of an organization (OWNER/ADMIN for quote proposals).
+ */
+export async function notifyOrganizationMembers(
+  organizationId: string,
+  title: string,
+  message: string,
+  actionUrl?: string,
+  type: NotificationType = 'INFO'
+): Promise<number> {
+  const members = await db
+    .select({ profileId: memberships.profileId })
+    .from(memberships)
+    .where(eq(memberships.organizationId, organizationId));
+
+  let sent = 0;
+  for (const m of members) {
+    const n = await sendNotification({
+      profileId: m.profileId,
+      organizationId,
+      title,
+      message,
+      type,
+      actionUrl,
+    });
+    if (n) sent++;
+  }
+  return sent;
 }
 
 /**

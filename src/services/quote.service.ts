@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { quotes, memberships } from '@/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, or, inArray } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import { getOrganizationById } from '@/services/organization.service';
 
@@ -33,7 +33,10 @@ export async function getProformaQuotesByOrganization(
 
   const proformaQuotes = await db.query.quotes.findMany({
     where: and(
-      eq(quotes.organizationId, organizationId),
+      or(
+        eq(quotes.sellerOrganizationId, organizationId),
+        eq(quotes.clientOrganizationId, organizationId)
+      ),
       eq(quotes.type, 'PROFORMA'),
       inArray(quotes.status, ['DRAFT', 'SENT'])
     ),
@@ -71,7 +74,10 @@ export async function getProformaQuoteById(
   const quote = await db.query.quotes.findFirst({
     where: and(
       eq(quotes.id, quoteId),
-      eq(quotes.organizationId, organizationId),
+      or(
+        eq(quotes.sellerOrganizationId, organizationId),
+        eq(quotes.clientOrganizationId, organizationId)
+      ),
       eq(quotes.type, 'PROFORMA')
     ),
   });
@@ -112,7 +118,8 @@ export async function createProformaQuote(
   const [created] = await db
     .insert(quotes)
     .values({
-      organizationId,
+      sellerOrganizationId: organizationId,
+      createdById: userId,
       type: 'PROFORMA',
       status: 'DRAFT',
       name: name.trim(),

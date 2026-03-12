@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import { db, type DbTransaction } from '@/db';
 import { quotes, quoteItems, memberships, productVariants, products, hsCodes } from '@/db/schema';
-import { eq, and, desc, asc, sql, inArray, isNotNull } from 'drizzle-orm';
+import { eq, and, or, desc, asc, sql, inArray, isNotNull } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 import { getOrganizationById } from '@/services/organization.service';
@@ -131,7 +131,10 @@ export async function getSimulationsByOrganization(
   const [data, countResult] = await Promise.all([
     db.query.quotes.findMany({
       where: and(
-        eq(quotes.organizationId, organizationId),
+        or(
+          eq(quotes.sellerOrganizationId, organizationId),
+          eq(quotes.clientOrganizationId, organizationId)
+        ),
         eq(quotes.type, 'SIMULATION')
       ),
       orderBy:
@@ -146,7 +149,15 @@ export async function getSimulationsByOrganization(
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(quotes)
-      .where(and(eq(quotes.organizationId, organizationId), eq(quotes.type, 'SIMULATION'))),
+      .where(
+        and(
+          or(
+            eq(quotes.sellerOrganizationId, organizationId),
+            eq(quotes.clientOrganizationId, organizationId)
+          ),
+          eq(quotes.type, 'SIMULATION')
+        )
+      ),
   ]);
 
   const totalCount = countResult[0]?.count ?? 0;
@@ -185,7 +196,10 @@ export async function getSimulationById(
   const simulation = await db.query.quotes.findFirst({
     where: and(
       eq(quotes.id, simulationId),
-      eq(quotes.organizationId, organizationId),
+      or(
+        eq(quotes.sellerOrganizationId, organizationId),
+        eq(quotes.clientOrganizationId, organizationId)
+      ),
       eq(quotes.type, 'SIMULATION')
     ),
   });
@@ -245,7 +259,8 @@ export async function createSimulation(
   const [created] = await db
     .insert(quotes)
     .values({
-      organizationId: input.organizationId,
+      sellerOrganizationId: input.organizationId,
+      createdById: input.userId,
       type: 'SIMULATION',
       status: 'DRAFT',
       name: input.name.trim(),
@@ -598,7 +613,11 @@ export async function removeSimulationItem(
     with: { quote: true },
   });
 
-  if (!item || !item.quote || item.quote.type !== 'SIMULATION' || item.quote.organizationId !== organizationId) {
+  const hasAccess =
+    item?.quote &&
+    item.quote.type === 'SIMULATION' &&
+    (item.quote.sellerOrganizationId === organizationId || item.quote.clientOrganizationId === organizationId);
+  if (!hasAccess) {
     return false;
   }
 
@@ -645,7 +664,11 @@ export async function updateSimulationItem(
     with: { quote: true },
   });
 
-  if (!item || !item.quote || item.quote.type !== 'SIMULATION' || item.quote.organizationId !== organizationId) {
+  const hasAccess =
+    item?.quote &&
+    item.quote.type === 'SIMULATION' &&
+    (item.quote.sellerOrganizationId === organizationId || item.quote.clientOrganizationId === organizationId);
+  if (!hasAccess) {
     return null;
   }
 

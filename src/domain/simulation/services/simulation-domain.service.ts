@@ -15,7 +15,7 @@ import {
   stateIcmsRates,
   productVariants,
 } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 import { getSiscomexFeeConfig, getGlobalPlatformRates } from '@/services/admin/config.service';
 import { runLandedCostEngine } from '../engine/landed-cost-engine';
@@ -247,7 +247,14 @@ export async function addSimulationItemAndRecalculate(
   if (!membership) return { success: false, errors: ['Acesso negado à organização'] };
 
   const simulation = await db.query.quotes.findFirst({
-    where: and(eq(quotes.id, simulationId), eq(quotes.organizationId, organizationId), eq(quotes.type, 'SIMULATION')),
+    where: and(
+      eq(quotes.id, simulationId),
+      or(
+        eq(quotes.sellerOrganizationId, organizationId),
+        eq(quotes.clientOrganizationId, organizationId),
+      ),
+      eq(quotes.type, 'SIMULATION'),
+    ),
   });
   if (!simulation) return { success: false, errors: ['Simulação não encontrada'] };
 
@@ -380,7 +387,11 @@ export async function updateSimulationItemAndRecalculate(
     where: eq(quoteItems.id, itemId),
     with: { quote: true },
   });
-  if (!item || !item.quote || item.quote.type !== 'SIMULATION' || item.quote.organizationId !== organizationId) {
+  const hasAccess =
+    item?.quote &&
+    item.quote.type === 'SIMULATION' &&
+    (item.quote.sellerOrganizationId === organizationId || item.quote.clientOrganizationId === organizationId);
+  if (!hasAccess) {
     return { success: false, errors: ['Item não encontrado'] };
   }
 
@@ -507,7 +518,11 @@ export async function removeSimulationItemAndRecalculate(
     where: eq(quoteItems.id, itemId),
     with: { quote: true },
   });
-  if (!item || !item.quote || item.quote.type !== 'SIMULATION' || item.quote.organizationId !== organizationId) {
+  const hasAccess =
+    item?.quote &&
+    item.quote.type === 'SIMULATION' &&
+    (item.quote.sellerOrganizationId === organizationId || item.quote.clientOrganizationId === organizationId);
+  if (!hasAccess) {
     return { success: false, errors: ['Item não encontrado'] };
   }
 
@@ -559,7 +574,10 @@ export async function calculateAndPersistLandedCost(
   const simulation = await db.query.quotes.findFirst({
     where: and(
       eq(quotes.id, quoteId),
-      eq(quotes.organizationId, organizationId),
+      or(
+        eq(quotes.sellerOrganizationId, organizationId),
+        eq(quotes.clientOrganizationId, organizationId),
+      ),
       eq(quotes.type, 'SIMULATION'),
     ),
   });
