@@ -1236,6 +1236,35 @@
       "error": "Falha ao exportar CSV"
     }
   },
+  "Quote": {
+    "Public": {
+      "back": "Voltar",
+      "fromSeller": "Proposta de {name}",
+      "staleMessage": "Esta cotação está desatualizada. Solicite uma atualização ao vendedor.",
+      "items": "Itens da proposta",
+      "product": "Produto",
+      "sku": "SKU",
+      "qty": "Qtd",
+      "unitPrice": "Preço unit.",
+      "totalBrl": "Total (BRL)",
+      "summary": "Resumo",
+      "totalFobUsd": "Total FOB (USD)",
+      "totalLandedCostBrl": "Custo Posto (BRL)",
+      "nextSteps": "Próximos passos",
+      "login": "Entrar",
+      "createAccount": "Criar conta",
+      "emailMismatch": "O e-mail da sua conta não corresponde ao e-mail da proposta. Faça login com o e-mail correto.",
+      "noOrganization": "Crie ou selecione uma organização para vincular esta proposta.",
+      "selectOrganization": "Organização",
+      "selectOrganizationPlaceholder": "Selecione a organização",
+      "linkToMyOrganization": "Vincular à minha organização",
+      "errors": {
+        "loginRequired": "Faça login para vincular a proposta",
+        "invalidData": "Dados inválidos",
+        "linkFailed": "Erro ao vincular"
+      }
+    }
+  },
   "Simulations": {
     "title": "Simulações",
     "description": "Crie e gerencie simulações de cotações",
@@ -1303,12 +1332,28 @@
       "staleBannerMessage": "Alguns valores de câmbio ou frete mudaram. Clique aqui para recalcular.",
       "staleBannerRecalculate": "Recalcular"
     },
+    "Workflow": {
+      "sendToClient": "Enviar para Cliente",
+      "pullBack": "Puxar de volta",
+      "accept": "Aceitar",
+      "generateOrder": "Gerar Pedido",
+      "viewShipment": "Ver Pedido",
+      "staleCannotAccept": "Esta cotação está desatualizada. Solicite uma atualização ao Seller.",
+      "sendModalTitle": "Enviar proposta ao cliente",
+      "sendModalDescription": "Selecione a organização do cliente ou informe o e-mail para enviar o link da proposta.",
+      "clientOrganization": "Organização do cliente",
+      "selectOrganization": "Selecione a organização",
+      "orClientEmail": "Ou e-mail do cliente (não cadastrado)",
+      "cancel": "Cancelar",
+      "send": "Enviar"
+    },
     "errors": {
       "variantNotFound": "Variante não encontrada",
       "itemNotFound": "Item não encontrado",
       "addItemFailed": "Falha ao adicionar item",
       "removeItemFailed": "Falha ao remover item",
-      "updateItemFailed": "Falha ao atualizar item"
+      "updateItemFailed": "Falha ao atualizar item",
+      "quoteLockedEdit": "Esta cotação foi enviada. Puxe de volta para rascunho para editar."
     },
     "AddProduct": {
       "addProduct": "Adicionar produto",
