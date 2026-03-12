@@ -16,14 +16,14 @@ export function Step1OrganizationDetails({
 }: Step1OrganizationDetailsProps) {
   return (
     <form action={onSubmit}>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">{t('Step1.title')}</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold mb-1">{t('Step1.title')}</h2>
         <p className="text-sm text-muted">{t('Step1.description')}</p>
       </div>
 
       <FormError message={error} variant="danger" />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <TextField variant="primary" isDisabled={isPending} isRequired>
           <Label>{t('Step1.tradeName')}</Label>
           <Input name="tradeName" placeholder={t('Step1.tradeNamePlaceholder')} />
@@ -86,7 +86,7 @@ export function Step1OrganizationDetails({
         </TextField>
       </div>
 
-      <div className="flex justify-end gap-3 mt-6">
+      <div className="flex justify-end gap-3 mt-4">
         <Button type="submit" variant="primary" isDisabled={isPending} size="lg">
           {isPending ? t('loading') : t('next')}
         </Button>

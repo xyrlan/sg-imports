@@ -219,8 +219,8 @@ function SendQuoteModal({
                 <Label>{t('clientOrganization')}</Label>
                 <Select
                   placeholder={t('selectOrganization')}
-                  selectedKey={clientOrgId || null}
-                  onSelectionChange={(k) => setClientOrgId((k as string) ?? '')}
+                  value={clientOrgId || null}
+                  onChange={(k) => setClientOrgId((k as string) ?? '')}
                   onOpenChange={(isOpen) => isOpen && loadOrgs()}
                 >
                   <Select.Trigger>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Chip } from '@heroui/react';
+import { Card, Chip, Button, Spinner } from '@heroui/react';
+import { Building2, ArrowRight } from 'lucide-react';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
 import { useTranslations } from 'next-intl';
 import type { UserOrganization } from '@/services/organization.service';
@@ -51,8 +52,12 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
         return 'accent';
       case 'ADMIN':
         return 'success';
-      case 'OPERATOR':
+      case 'EMPLOYEE':
         return 'warning';
+      case 'SELLER':
+        return 'default';
+      case 'CUSTOMS_BROKER':
+        return 'default';
       case 'VIEWER':
         return 'default';
       default:
@@ -61,87 +66,109 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
   };
 
   return (
-    <div className="w-full max-w-6xl">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t('select')}</h1>
-        <p className="text-muted">
-          {t('selectDescription')}
-        </p>
-      </div>
+    <Card variant="default" className="w-full shadow-lg border border-default-200/50 overflow-hidden">
+      <Card.Content className="p-6 md:p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            {t('select')}
+          </h1>
+          <p className="text-sm text-muted">
+            {t('selectDescription')}
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {organizations.map(({ organization, role }) => {
-          const isThisOrgLoading = isLoading && selectedOrgId === organization.id;
-          const handleClick = () => handleSelectOrganization(organization.id);
-          return (
-          <div
-            key={organization.id}
-            role="button"
-            tabIndex={0}
-            onClick={handleClick}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleClick();
-              }
-            }}
-            aria-disabled={isLoading}
-            className={`text-left transition-all hover:scale-[1.02] cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              isLoading ? 'pointer-events-none opacity-70' : ''
-            }`}
-          >
-            <Card variant="default" className="h-full">
-              <Card.Content>
-                <div className="flex-col items-start">
-                  <div className="flex justify-between w-full items-start mb-2">
-                    <h3 className="text-lg font-semibold line-clamp-1">
-                      {organization.name}
-                    </h3>
-                    <Chip
-                      color={getRoleColor(role)}
-                      size="sm"
-                      variant="secondary"
-                    >
-                      {t(`role.${role}`)}
-                    </Chip>
-                  </div>
-                  
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-muted">CNPJ:</span>
-                      <span className="ml-2 font-mono">{organization.document}</span>
-                    </div>
-                    
-                    {organization.email && (
-                      <div>
-                        <span className="text-muted">Email:</span>
-                        <span className="ml-2 font-mono">{organization.email}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {organizations.map(({ organization, role }) => {
+            const isThisOrgLoading = isLoading && selectedOrgId === organization.id;
+            const handleClick = () => handleSelectOrganization(organization.id);
+            return (
+              <div
+                key={organization.id}
+                role="button"
+                tabIndex={0}
+                onClick={handleClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleClick();
+                  }
+                }}
+                aria-disabled={isLoading}
+                className={`group text-left transition-all duration-200 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                  isLoading ? 'pointer-events-none opacity-70' : 'cursor-pointer hover:-translate-y-0.5'
+                }`}
+              >
+                <Card
+                  variant="default"
+                  className={`h-full border border-default-200/50 transition-all duration-200 ${
+                    !isLoading && 'hover:shadow-md hover:border-accent/30'
+                  }`}
+                >
+                  <Card.Content className="p-5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="shrink-0 rounded-xl bg-accent/10 p-3">
+                        <Building2 className="w-6 h-6 text-accent" />
                       </div>
-                    )}
-                    
-                    <div
-                      className="mt-4 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-accent text-foreground"
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold text-foreground line-clamp-1">
+                          {organization.name}
+                        </h3>
+                        <Chip
+                          color={getRoleColor(role)}
+                          size="sm"
+                          variant="secondary"
+                          className="mt-2"
+                        >
+                          {t(`role.${role}`)}
+                        </Chip>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-sm text-muted mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="shrink-0">CNPJ:</span>
+                        <span className="font-mono text-foreground truncate">
+                          {organization.document}
+                        </span>
+                      </div>
+                      {organization.email && (
+                        <div className="flex items-center gap-2">
+                          <span className="shrink-0">Email:</span>
+                          <span className="font-mono text-foreground truncate">
+                            {organization.email}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="primary"
+                      className="w-full"
+                      isDisabled={isLoading}
+                      startContent={
+                        isThisOrgLoading ? (
+                          <Spinner size="sm" color="current" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4" />
+                        )
+                      }
                       aria-hidden
                     >
                       {isThisOrgLoading ? t('loading') : t('access')}
-                    </div>
-                </div>
-              </Card.Content>
-            </Card>
-          </div>
-          );
-        })}
-      </div>
-
-      {organizations.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted">
-            {t('noOrganizations')}
-          </p>
+                    </Button>
+                  </Card.Content>
+                </Card>
+              </div>
+            );
+          })}
         </div>
-      )}
-    </div>
+
+        {organizations.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted">{t('noOrganizations')}</p>
+          </div>
+        )}
+      </Card.Content>
+    </Card>
   );
 }

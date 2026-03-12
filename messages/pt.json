@@ -1,6 +1,11 @@
 {
   "Auth": {
+    "userHeader": {
+      "logout": "Sair",
+      "userLabel": "Usuário"
+    },
     "Register": {
+      "emailAlreadyRegistered": "Este e-mail já está cadastrado",
       "Owner": {
         "title": "Cadastro de Cliente Importador",
         "fullName": "Nome Completo",
@@ -132,6 +137,9 @@
     "CreateNew": {
       "title": "Cadastrar Nova Empresa",
       "description": "Adicione uma nova organização à sua conta. Você será redirecionado para completar o cadastro após a criação.",
+      "emailAlreadyInUse": "Este e-mail já está vinculado a outra conta. Entre em contato com o suporte se precisar de ajuda.",
+      "genericError": "Ocorreu um erro ao criar a organização.",
+      "invalidData": "Dados inválidos",
       "companyName": "Nome da Empresa",
       "companyNamePlaceholder": "Empresa XYZ LTDA",
       "cnpj": "CNPJ",

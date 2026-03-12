@@ -5,6 +5,7 @@ import {
 } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import { getProfile } from '@/services/profile.service';
+import { UserHeaderWithLogout } from '@/components/auth/user-header-with-logout';
 import { OnboardingForm } from './onboarding-form';
 
 /**
@@ -65,11 +66,21 @@ export default async function OnboardingPage() {
 
   // Step 6: Render onboarding form with detected initial step
   return (
-    <OnboardingForm
-      organizationName={organization.name}
-      role={membership.role}
-      initialStep={initialStep}
-      profileHasDocuments={profileHasDocuments}
-    />
+    <div className="min-h-screen flex flex-col items-center justify-start py-4 px-4 overflow-y-auto bg-linear-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="w-full max-w-2xl space-y-4 flex-1">
+        <UserHeaderWithLogout
+          email={user.email ?? ''}
+          name={user.user_metadata?.full_name}
+          maxWidth="max-w-2xl"
+          compact
+        />
+        <OnboardingForm
+          organizationName={organization.name}
+          role={membership.role}
+          initialStep={initialStep}
+          profileHasDocuments={profileHasDocuments}
+        />
+      </div>
+    </div>
   );
 }

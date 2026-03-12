@@ -55,14 +55,14 @@ export function Step3Documents({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">{t('Step4.title')}</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold mb-1">{t('Step4.title')}</h2>
         <p className="text-sm text-muted">{t('Step4.description')}</p>
       </div>
 
       <FormError message={error} variant="danger" />
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {!showOnlySocialContract && (
           <>
             <FileUpload
@@ -108,7 +108,7 @@ export function Step3Documents({
         </div>
       </div>
 
-      <div className="flex justify-between gap-3 mt-6">
+      <div className="flex justify-between gap-3 mt-4">
         <Button
           type="button"
           variant="outline"

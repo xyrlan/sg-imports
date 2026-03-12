@@ -1,9 +1,10 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { sellerRegistrationSchema } from '../../schemas';
-import { ensureUserSetup } from '@/services/user-setup.service';
+import { ensureUserSetup, isEmailInUse } from '@/services/user-setup.service';
 
 export interface RegistrationState {
   error?: string;
@@ -32,6 +33,12 @@ export async function registerSeller(
     // Validate with Zod
     const validatedData = sellerRegistrationSchema.parse(rawData);
 
+    // Prevent duplicate accounts - check profiles before signUp
+    if (await isEmailInUse(validatedData.email)) {
+      const t = await getTranslations('Auth.Register');
+      return { error: t('emailAlreadyRegistered') };
+    }
+
     // Create Supabase client
     const supabase = await createClient();
 
@@ -52,9 +59,10 @@ export async function registerSeller(
     });
 
     if (error) {
-      // Handle specific Supabase errors
+      // Handle specific Supabase errors (fallback if isEmailInUse check was bypassed)
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        return { error: 'Este e-mail já está cadastrado' };
+        const t = await getTranslations('Auth.Register');
+        return { error: t('emailAlreadyRegistered') };
       }
       if (error.message.includes('password')) {
         return { error: 'A senha deve ter no mínimo 8 caracteres' };

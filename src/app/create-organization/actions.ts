@@ -1,9 +1,11 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { requireAuthOrRedirect } from '@/services/auth.service';
 import { createFirstOrganization } from '@/services/organization.service';
+import { ProfileEmailConflictError } from '@/services/user-setup.service';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
 
 const createOrganizationSchema = z.object({
@@ -44,8 +46,9 @@ export async function createFirstOrganizationAction(
 
     const validated = createOrganizationSchema.safeParse(rawData);
     if (!validated.success) {
+      const t = await getTranslations('Organization.CreateNew');
       return {
-        error: validated.error.issues[0]?.message ?? 'Dados inválidos',
+        error: validated.error.issues[0]?.message ?? t('invalidData'),
       };
     }
 
@@ -64,9 +67,13 @@ export async function createFirstOrganizationAction(
     if (err && typeof err === 'object' && 'digest' in err) {
       throw err;
     }
+    if (err instanceof ProfileEmailConflictError) {
+      const t = await getTranslations('Organization.CreateNew');
+      return { error: t('emailAlreadyInUse') };
+    }
+    const t = await getTranslations('Organization.CreateNew');
     return {
-      error:
-        err instanceof Error ? err.message : 'Ocorreu um erro ao criar a organização.',
+      error: err instanceof Error ? err.message : t('genericError'),
     };
   }
 }

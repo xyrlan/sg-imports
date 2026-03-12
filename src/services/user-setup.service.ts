@@ -2,11 +2,33 @@ import { db } from '@/db';
 import { profiles, organizations, memberships } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
+const PG_UNIQUE_VIOLATION = '23505';
+
+/** Thrown when profile insert fails due to email already existing (unique constraint) */
+export class ProfileEmailConflictError extends Error {
+  constructor() {
+    super('Profile email already in use');
+    this.name = 'ProfileEmailConflictError';
+  }
+}
+
 export interface UserMetadata {
   role: 'OWNER' | 'SELLER' | 'ADMIN' | 'ADMIN_EMPLOYEE' | 'CUSTOMS_BROKER' | 'VIEWER';
   fullName: string;
   document: string;
   organizationName?: string;
+}
+
+/**
+ * Checks if an email is already registered in profiles.
+ * Use before signUp to prevent duplicate accounts.
+ */
+export async function isEmailInUse(email: string): Promise<boolean> {
+  const existing = await db.query.profiles.findFirst({
+    where: eq(profiles.email, email),
+    columns: { id: true },
+  });
+  return !!existing;
 }
 
 /**
@@ -22,13 +44,26 @@ export async function ensureProfileExists(
     where: eq(profiles.id, userId),
   });
   if (!existing) {
-    await db.insert(profiles).values({
-      id: userId,
-      email,
-      fullName: fullName ?? email.split('@')[0],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    try {
+      await db
+        .insert(profiles)
+        .values({
+          id: userId,
+          email,
+          fullName: fullName ?? email.split('@')[0],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .onConflictDoNothing({ target: profiles.id });
+    } catch (err) {
+      // Drizzle wraps PostgresError in DrizzleQueryError - check both err and err.cause
+      const e = err as { code?: string; cause?: { code?: string } };
+      const code = e.code ?? e.cause?.code;
+      if (code === PG_UNIQUE_VIOLATION) {
+        throw new ProfileEmailConflictError();
+      }
+      throw err;
+    }
   }
 }
 
@@ -51,13 +86,21 @@ export async function ensureUserSetup(
     });
 
     if (!existingProfile) {
-      await db.insert(profiles).values({
-        id: userId,
-        email,
-        fullName: metadata.fullName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).onConflictDoNothing();
+      try {
+        await db.insert(profiles).values({
+          id: userId,
+          email,
+          fullName: metadata.fullName,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).onConflictDoNothing({ target: profiles.id });
+      } catch (profileErr) {
+        const e = profileErr as { code?: string; cause?: { code?: string } };
+        if (e.code === PG_UNIQUE_VIOLATION || e.cause?.code === PG_UNIQUE_VIOLATION) {
+          return { success: false, error: 'Este e-mail já está vinculado a outra conta.' };
+        }
+        throw profileErr;
+      }
     }
 
     // 2. Ensure Organization exists

@@ -22,18 +22,18 @@ export function CreateOrganizationForm() {
   };
 
   return (
-    <Card variant="default" className="w-full max-w-md">
+    <Card variant="default" className="w-full max-w-md shadow-lg border border-default-200/50">
       <Card.Content className="p-8">
-        <div className="mb-6">
+        <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-foreground">
             {t('CreateNew.title')}
           </h1>
-          <p className="text-sm text-muted mt-1">
+          <p className="text-sm text-muted mt-2">
             {t('CreateNew.description')}
           </p>
         </div>
 
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-5">
           {state?.error && (
             <div className="p-3 bg-danger/10 border border-danger rounded-lg">
               <p className="text-sm text-danger">{state.error}</p>

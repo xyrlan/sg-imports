@@ -90,8 +90,8 @@ export function Step2Address({
         <input type="hidden" name="sameAsDelivery" value={sameAsDelivery ? 'true' : 'false'} />
       )}
 
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">{t('Step2.title')}</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold mb-1">{t('Step2.title')}</h2>
         <p className="text-sm text-muted">
           {isSeller ? t('Step2.descriptionSeller') : t('Step2.description')}
         </p>
@@ -101,7 +101,7 @@ export function Step2Address({
       <FormError message={cepError || undefined} variant="warning" />
       <FormError message={deliveryCepError || undefined} variant="warning" />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Billing / Single Address block */}
         <div className="space-y-4">
           {!isSeller && (
@@ -299,7 +299,7 @@ export function Step2Address({
         )}
       </div>
 
-      <div className="flex justify-between gap-3 mt-6">
+      <div className="flex justify-between gap-3 mt-4">
         <Button type="button" variant="outline" onClick={onBack} isDisabled={isPending} size="lg">
           {t('back')}
         </Button>

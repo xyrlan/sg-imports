@@ -88,22 +88,26 @@ export function OnboardingForm({
   }, [step4State]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">{t('title')}</h1>
-          <p className="text-sm text-muted mb-1">{t('subtitle')}</p>
-          <p className="text-xs text-muted">{organizationName}</p>
+    <div className="w-full max-w-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('title')}</h1>
+          <p className="text-sm text-muted mt-0.5">{t('subtitle')}</p>
         </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-surface-secondary">
+            <span className="text-sm font-medium text-foreground">{organizationName}</span>
+          </div>
+          <span className="text-xs text-muted hidden sm:inline">
+            {t('step', { current: currentStep, total: totalSteps })}
+          </span>
+        </div>
+      </div>
 
-        <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
+      <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
-        <p className="text-center text-sm text-muted mb-6">
-          {t('step', { current: currentStep, total: totalSteps })}
-        </p>
-
-        <Card variant="default">
-          <Card.Content className="p-6">
+      <Card variant="default" className="shadow-lg border border-default-200/50 overflow-hidden">
+        <Card.Content className="p-5 md:p-6 max-h-[min(65vh,calc(100svh-280px))] min-h-[260px] overflow-y-auto">
             {currentStep === 1 && (
               <Step1OrganizationDetails
                 onSubmit={step1Action}
@@ -140,7 +144,6 @@ export function OnboardingForm({
             )}
           </Card.Content>
         </Card>
-      </div>
     </div>
   );
 }
