@@ -15,6 +15,13 @@ import {
   deleteSimulation,
 } from '@/services/simulation.service';
 import {
+  sendQuoteToClient,
+  pullQuoteBackToDraft,
+  acceptQuote,
+  convertQuoteToShipment,
+  getOrganizationsForQuoteTarget,
+} from '@/services/quote-workflow.service';
+import {
   calculateAndPersistLandedCost,
   addSimulationItemAndRecalculate,
   updateSimulationItemAndRecalculate,
@@ -302,16 +309,21 @@ export async function updateSimulationAction(
       return { error: 'Forbidden' };
     }
 
+    const simData = await getSimulationById(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+    );
+    if (!simData || simData.simulation.status !== 'DRAFT') {
+      const t = await getTranslations('Simulations.errors');
+      return { error: t('quoteLockedEdit') };
+    }
+
     let modalityToSave = validated.data.shippingModality;
     let metadataToSave = validated.data.metadata;
 
     // When user selects Marítimo (SEA_LCL), compute optimal profile from current totals
     if (modalityToSave === 'SEA_LCL') {
-      const simData = await getSimulationById(
-        validated.data.simulationId,
-        validated.data.organizationId,
-        user.id,
-      );
       if (simData) {
         let totalCbm: number;
         let totalWeightKg: number;
@@ -507,6 +519,16 @@ export async function addSimulationItemFromCatalogAction(
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
     }
 
+    const simData = await getSimulationById(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+    );
+    if (!simData || simData.simulation.status !== 'DRAFT') {
+      const t = await getTranslations('Simulations.errors');
+      return { error: t('quoteLockedEdit') };
+    }
+
     const variant = await db.query.productVariants.findFirst({
       where: eq(productVariants.id, validated.data.variantId),
     });
@@ -569,6 +591,16 @@ export async function addSimulatedProductAction(
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
     }
 
+    const simData = await getSimulationById(
+      validated.data.simulationId,
+      validated.data.organizationId,
+      user.id,
+    );
+    if (!simData || simData.simulation.status !== 'DRAFT') {
+      const t = await getTranslations('Simulations.errors');
+      return { error: t('quoteLockedEdit') };
+    }
+
     const snap = validated.data.simulatedProductSnapshot;
     const hasDirectCbmWeight =
       (snap.totalCbm != null && snap.totalCbm > 0) ||
@@ -629,6 +661,14 @@ export async function removeSimulationItemAction(
       .from(quoteItems)
       .where(eq(quoteItems.id, validated.data.itemId));
 
+    if (item?.quoteId) {
+      const simData = await getSimulationById(item.quoteId, validated.data.organizationId, user.id);
+      if (!simData || simData.simulation.status !== 'DRAFT') {
+        const t = await getTranslations('Simulations.errors');
+        return { error: t('quoteLockedEdit') };
+      }
+    }
+
     const result = await removeSimulationItemAndRecalculate(
       validated.data.itemId,
       validated.data.organizationId,
@@ -676,25 +716,34 @@ export async function updateSimulationItemAction(
       return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
     }
 
+    const itemForCheck = await db.query.quoteItems.findFirst({
+      where: eq(quoteItems.id, validated.data.itemId),
+      with: { quote: true },
+    });
+    const hasAccess =
+      itemForCheck?.quote &&
+      (itemForCheck.quote.sellerOrganizationId === validated.data.organizationId ||
+        itemForCheck.quote.clientOrganizationId === validated.data.organizationId);
+    if (!hasAccess) {
+      const t = await getTranslations('Simulations.errors');
+      return { error: t('itemNotFound') };
+    }
+    if (itemForCheck.quote.status !== 'DRAFT') {
+      const t = await getTranslations('Simulations.errors');
+      return { error: t('quoteLockedEdit') };
+    }
+
     if (validated.data.quantity !== undefined) {
-      const item = await db.query.quoteItems.findFirst({
-        where: eq(quoteItems.id, itemId),
-        with: { quote: true },
-      });
-      if (!item || !item.quote || item.quote.organizationId !== organizationId) {
-        const t = await getTranslations('Simulations.errors');
-        return { error: t('itemNotFound') };
-      }
-      const snap = (validated.data.simulatedProductSnapshot ?? item.simulatedProductSnapshot) as ProductSnapshot | null;
+      const snap = (validated.data.simulatedProductSnapshot ?? itemForCheck.simulatedProductSnapshot) as ProductSnapshot | null;
       const hasDirectCbmWeight = snap
         ? (snap.totalCbm != null && snap.totalCbm > 0) || (snap.totalWeight != null && snap.totalWeight > 0)
         : false;
-      const isCartonMode = !!item.variantId || (!!snap && !hasDirectCbmWeight);
+      const isCartonMode = !!itemForCheck.variantId || (!!snap && !hasDirectCbmWeight);
       if (isCartonMode) {
         let unitsPerCarton = 1;
-        if (item.variantId) {
+        if (itemForCheck.variantId) {
           const variant = await db.query.productVariants.findFirst({
-            where: eq(productVariants.id, item.variantId),
+            where: eq(productVariants.id, itemForCheck.variantId),
           });
           unitsPerCarton = variant?.unitsPerCarton ?? 1;
         } else if (snap) {
@@ -702,7 +751,7 @@ export async function updateSimulationItemAction(
         }
         if (validated.data.quantity % unitsPerCarton !== 0) {
           const t = await getTranslations(
-            item.variantId ? 'Simulations.AddProduct' : 'Simulations.QuickForm'
+            itemForCheck.variantId ? 'Simulations.AddProduct' : 'Simulations.QuickForm'
           );
           return { error: t('quantityMustBeMultipleOf', { unitsPerCarton }) };
         }
@@ -730,12 +779,8 @@ export async function updateSimulationItemAction(
     const tErrors = await getTranslations('Simulations.errors');
     if (!result.success) return { error: result.errors?.[0] ?? tErrors('updateItemFailed') };
 
-    const [item] = await db
-      .select({ quoteId: quoteItems.quoteId })
-      .from(quoteItems)
-      .where(eq(quoteItems.id, validated.data.itemId));
-    if (item?.quoteId) {
-      revalidatePath(`/dashboard/simulations/${item.quoteId}`);
+    if (itemForCheck?.quoteId) {
+      revalidatePath(`/dashboard/simulations/${itemForCheck.quoteId}`);
     }
     return { success: true };
   } catch (err) {
@@ -746,5 +791,159 @@ export async function updateSimulationItemAction(
     return {
       error: err instanceof Error ? err.message : tErrors('updateItemFailed'),
     };
+  }
+}
+
+// ==========================================
+// Quote Workflow Actions (Etapas B, C, D)
+// ==========================================
+
+export async function getOrganizationsForQuoteTargetAction(
+  sellerOrganizationId: string
+): Promise<{ id: string; name: string }[]> {
+  const user = await requireAuthOrRedirect();
+  const access = await getOrganizationById(sellerOrganizationId, user.id);
+  if (!access) return [];
+  return getOrganizationsForQuoteTarget(sellerOrganizationId);
+}
+
+
+const sendQuoteToClientSchema = z
+  .object({
+    quoteId: z.string().uuid(),
+    organizationId: z.string().uuid(),
+    clientOrganizationId: z
+      .string()
+      .uuid()
+      .optional()
+      .nullable()
+      .transform((s) => (s && s.trim() ? s : null)),
+    clientEmail: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((s) => (s && s.trim() ? s : null)),
+  })
+  .refine((d) => d.clientOrganizationId || d.clientEmail, {
+    message: 'Informe a organização ou o e-mail do cliente',
+  })
+  .refine((d) => !d.clientEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.clientEmail), {
+    message: 'E-mail inválido',
+    path: ['clientEmail'],
+  });
+
+export interface SendQuoteToClientResult {
+  success?: boolean;
+  error?: string;
+}
+
+export async function sendQuoteToClientAction(
+  _prevState: SendQuoteToClientResult | null,
+  formData: FormData
+): Promise<SendQuoteToClientResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+    const raw = {
+      quoteId: formData.get('quoteId') as string,
+      organizationId: formData.get('organizationId') as string,
+      clientOrganizationId: (formData.get('clientOrganizationId') as string) || null,
+      clientEmail: (formData.get('clientEmail') as string)?.trim() || null,
+    };
+    const validated = sendQuoteToClientSchema.safeParse(raw);
+    if (!validated.success) return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
+
+    const access = await getOrganizationById(validated.data.organizationId, user.id);
+    if (!access) return { error: 'Acesso negado' };
+
+    const result = await sendQuoteToClient({
+      quoteId: validated.data.quoteId,
+      organizationId: validated.data.organizationId,
+      userId: user.id,
+      clientOrganizationId: validated.data.clientOrganizationId ?? undefined,
+      clientEmail: validated.data.clientEmail ?? undefined,
+    });
+
+    if (!result.success) return { error: result.error };
+    revalidatePath(`/dashboard/simulations/${validated.data.quoteId}`);
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    return { error: err instanceof Error ? err.message : 'Falha ao enviar' };
+  }
+}
+
+export interface PullQuoteBackResult {
+  success?: boolean;
+  error?: string;
+}
+
+export async function pullQuoteBackToDraftAction(
+  quoteId: string,
+  organizationId: string
+): Promise<PullQuoteBackResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+    const access = await getOrganizationById(organizationId, user.id);
+    if (!access) return { error: 'Acesso negado' };
+
+    const result = await pullQuoteBackToDraft(quoteId, organizationId, user.id);
+    if (!result.success) return { error: result.error };
+    revalidatePath(`/dashboard/simulations/${quoteId}`);
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    return { error: err instanceof Error ? err.message : 'Falha ao puxar de volta' };
+  }
+}
+
+export interface AcceptQuoteResult {
+  success?: boolean;
+  error?: string;
+}
+
+export async function acceptQuoteAction(
+  quoteId: string,
+  organizationId: string
+): Promise<AcceptQuoteResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+    const access = await getOrganizationById(organizationId, user.id);
+    if (!access) return { error: 'Acesso negado' };
+
+    const result = await acceptQuote(quoteId, organizationId, user.id);
+    if (!result.success) return { error: result.error };
+    revalidatePath(`/dashboard/simulations/${quoteId}`);
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    return { error: err instanceof Error ? err.message : 'Falha ao aceitar' };
+  }
+}
+
+export interface ConvertQuoteToShipmentResult {
+  success?: boolean;
+  shipmentId?: string;
+  error?: string;
+}
+
+export async function convertQuoteToShipmentAction(
+  quoteId: string,
+  organizationId: string
+): Promise<ConvertQuoteToShipmentResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+    const access = await getOrganizationById(organizationId, user.id);
+    if (!access) return { error: 'Acesso negado' };
+
+    const result = await convertQuoteToShipment(quoteId, organizationId, user.id);
+    if (!result.success) return { error: result.error };
+    revalidatePath(`/dashboard/simulations/${quoteId}`);
+    if (result.shipmentId) {
+      revalidatePath(`/dashboard/shipments/${result.shipmentId}`);
+    }
+    return { success: true, shipmentId: result.shipmentId };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    return { error: err instanceof Error ? err.message : 'Falha ao gerar pedido' };
   }
 }
