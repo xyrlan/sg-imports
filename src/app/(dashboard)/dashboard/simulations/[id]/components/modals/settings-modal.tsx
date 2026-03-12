@@ -36,6 +36,7 @@ type IncotermValue = 'EXW' | 'FOB' | 'CIF' | 'DDP';
 
 interface SettingsModalProps {
   simulation: Simulation;
+  organizationId: string;
   defaultDestinationState?: string | null;
   onMutate?: () => void;
   open: boolean;
@@ -44,6 +45,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({
   simulation,
+  organizationId,
   defaultDestinationState,
   onMutate,
   open,
@@ -132,7 +134,7 @@ export function SettingsModal({
     };
     const formData = new FormData();
     formData.set('simulationId', simulation.id);
-    formData.set('organizationId', simulation.organizationId);
+    formData.set('organizationId', organizationId);
     formData.set('metadata', JSON.stringify(metadata));
     formData.set('shippingModality', shippingModality);
     formData.set('incoterm', incoterm);

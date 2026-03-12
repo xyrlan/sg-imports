@@ -18,6 +18,7 @@ import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductModal } from './modals/add-product-modal';
 import { SettingsModal } from './modals/settings-modal';
 import { SimulationFinancialSummary } from './cards/simulation-financial-summary';
+import { QuoteWorkflowButtons } from './quote-workflow-buttons';
 
 interface SimulationDetailContentProps {
   simulation: Simulation;
@@ -58,6 +59,8 @@ export function SimulationDetailContent({
   };
 
   const isStale = Boolean(simulation.isRecalculationNeeded);
+  const isDraft = simulation.status === 'DRAFT';
+  const canEdit = isDraft;
 
   return (
     <div key={simulation.id} className="space-y-6">
@@ -95,29 +98,39 @@ export function SimulationDetailContent({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={() => setSettingsOpen(true)}
-            className="inline-flex items-center gap-2"
-          >
-            <Settings className="size-4" />
-            {t('settingsButton')}
-          </Button>
-          <SettingsModal
+          <QuoteWorkflowButtons
             simulation={simulation}
-            defaultDestinationState={defaultDestinationState}
-            onMutate={handleMutate}
-            open={settingsOpen}
-            onOpenChange={setSettingsOpen}
-          />
-          <AddProductModal
-            simulationId={simulation.id}
             organizationId={organizationId}
-            products={products}
-            hsCodes={hsCodes}
             onMutate={handleMutate}
           />
+          {canEdit && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => setSettingsOpen(true)}
+                className="inline-flex items-center gap-2"
+              >
+                <Settings className="size-4" />
+                {t('settingsButton')}
+              </Button>
+              <SettingsModal
+                simulation={simulation}
+                organizationId={organizationId}
+                defaultDestinationState={defaultDestinationState}
+                onMutate={handleMutate}
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+              />
+              <AddProductModal
+                simulationId={simulation.id}
+                organizationId={organizationId}
+                products={products}
+                hsCodes={hsCodes}
+                onMutate={handleMutate}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -130,6 +143,7 @@ export function SimulationDetailContent({
               organizationId={organizationId}
               hsCodes={hsCodes}
               onMutate={handleMutate}
+              canEdit={canEdit}
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-16 border border-dashed rounded-lg">
@@ -137,14 +151,16 @@ export function SimulationDetailContent({
               <p className="text-muted text-center max-w-sm mb-4">
                 {t('emptyMessage')}
               </p>
-              <AddProductModal
-                simulationId={simulation.id}
-                organizationId={organizationId}
-                products={products}
-                hsCodes={hsCodes}
-                onMutate={handleMutate}
-                triggerLabel={t('addFirstProduct')}
-              />
+              {canEdit && (
+                <AddProductModal
+                  simulationId={simulation.id}
+                  organizationId={organizationId}
+                  products={products}
+                  hsCodes={hsCodes}
+                  onMutate={handleMutate}
+                  triggerLabel={t('addFirstProduct')}
+                />
+              )}
             </div>
           )}
         </div>

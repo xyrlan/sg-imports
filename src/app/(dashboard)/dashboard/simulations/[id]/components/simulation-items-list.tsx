@@ -15,6 +15,7 @@ interface SimulationItemsListProps {
   organizationId: string;
   hsCodes: HsCodeOption[];
   onMutate?: () => void;
+  canEdit?: boolean;
 }
 
 export function SimulationItemsList({
@@ -23,6 +24,7 @@ export function SimulationItemsList({
   organizationId,
   hsCodes,
   onMutate,
+  canEdit = true,
 }: SimulationItemsListProps) {
   const [editingItem, setEditingItem] = useState<SimulationItem | null>(null);
   const t = useTranslations('Simulations.Detail');
@@ -44,8 +46,12 @@ export function SimulationItemsList({
   }, []);
 
   const columns = useMemo(
-    () => getSimulationItemColumns(t, { onRemove: handleRemove, onEdit: handleEdit }),
-    [t, handleRemove, handleEdit]
+    () =>
+      getSimulationItemColumns(t, {
+        onRemove: canEdit ? handleRemove : undefined,
+        onEdit: canEdit ? handleEdit : undefined,
+      }),
+    [t, handleRemove, handleEdit, canEdit]
   );
 
   return (

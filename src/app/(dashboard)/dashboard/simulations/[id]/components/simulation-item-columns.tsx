@@ -31,7 +31,7 @@ function getItemSku(item: SimulationItem): string {
 }
 
 interface SimulationItemColumnsActions {
-  onRemove: (item: SimulationItem) => void;
+  onRemove?: (item: SimulationItem) => void;
   onEdit?: (item: SimulationItem) => void;
 }
 
@@ -85,6 +85,8 @@ export function getSimulationItemColumns(
       cell: (info) => {
         const item = info.row.original;
         const canEdit = !!actions.onEdit;
+        const canRemove = !!actions.onRemove;
+        if (!canEdit && !canRemove) return null;
         return (
           <div className="flex items-center gap-1">
             {canEdit && (
@@ -98,15 +100,17 @@ export function getSimulationItemColumns(
                 <Pencil className="size-4" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              aria-label={t('removeItem')}
-              onPress={() => actions.onRemove(item)}
-            >
-              <Trash2 className="size-4 text-danger" />
-            </Button>
+            {canRemove && (
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label={t('removeItem')}
+                onPress={() => actions.onRemove?.(item)}
+              >
+                <Trash2 className="size-4 text-danger" />
+              </Button>
+            )}
           </div>
         );
       },
