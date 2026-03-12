@@ -298,7 +298,17 @@ export const productVariants = pgTable(
 
 export const quotes = pgTable('quotes', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  /** A organização que criou (SELLER) */
+  sellerOrganizationId: uuid('seller_organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  /** A organização que vai receber (CLIENT) — nullable enquanto rascunho ou envio por email */
+  clientOrganizationId: uuid('client_organization_id').references(() => organizations.id),
+  /** Quem dentro do Seller criou a cotação */
+  createdById: uuid('created_by_id').references(() => profiles.id).notNull(),
+  /** Ponte para cliente não cadastrado: token público; preenche clientOrganizationId quando cliente criar conta */
+  publicToken: text('public_token').unique(),
+  /** Email do cliente quando ainda não cadastrado */
+  clientEmail: text('client_email'),
+
   type: quoteTypeEnum('type').default('STANDARD').notNull(),
   status: quoteStatusEnum('status').default('DRAFT').notNull(),
   name: text('name').notNull(),
@@ -368,7 +378,12 @@ export const quoteItems = pgTable(
 
 export const shipments = pgTable('shipments', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').references(() => organizations.id).notNull(),
+  /** Quote de origem (auditoria e comissões) */
+  quoteId: uuid('quote_id').references(() => quotes.id),
+  /** Organização administradora (Seller) — filtros "Meus Processos" */
+  sellerOrganizationId: uuid('seller_organization_id').references(() => organizations.id).notNull(),
+  /** Organização dona do pedido (Client) — billing/pagamentos */
+  clientOrganizationId: uuid('client_organization_id').references(() => organizations.id).notNull(),
   code: integer('code').generatedAlwaysAsIdentity(), // ID legível sequencial (Postgres 10+)
   status: shipmentStatusEnum('status').default('PENDING').notNull(),
 
@@ -898,8 +913,10 @@ export const shipmentFreightReceipts = pgTable('shipment_freight_receipts', {
 export const organizationsRelations = relations(organizations, ({ many, one }) => ({
   members: many(memberships),
   products: many(products),
-  shipments: many(shipments),
-  quotes: many(quotes),
+  shipmentsAsSeller: many(shipments, { relationName: 'shipmentsAsSeller' }),
+  shipmentsAsClient: many(shipments, { relationName: 'shipmentsAsClient' }),
+  quotesAsSeller: many(quotes, { relationName: 'quotesAsSeller' }),
+  quotesAsClient: many(quotes, { relationName: 'quotesAsClient' }),
   suppliers: many(suppliers),
   freightProposals: many(freightProposals),
   feeConfig: one(serviceFeeConfigs, {
@@ -921,6 +938,7 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
   changeRequests: many(shipmentChangeRequests),
   notifications: many(notifications),
   freightProposalsCreated: many(freightProposals),
+  quotesCreated: many(quotes),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -935,7 +953,9 @@ export const productVariantsRelations = relations(productVariants, ({ one }) => 
 }));
 
 export const shipmentsRelations = relations(shipments, ({ one, many }) => ({
-  organization: one(organizations, { fields: [shipments.organizationId], references: [organizations.id] }),
+  quote: one(quotes, { fields: [shipments.quoteId], references: [quotes.id] }),
+  sellerOrganization: one(organizations, { fields: [shipments.sellerOrganizationId], references: [organizations.id], relationName: 'shipmentsAsSeller' }),
+  clientOrganization: one(organizations, { fields: [shipments.clientOrganizationId], references: [organizations.id], relationName: 'shipmentsAsClient' }),
   carrier: one(carriers, { fields: [shipments.carrierId], references: [carriers.id] }),
   
   // Logística e Financeiro
@@ -948,9 +968,6 @@ export const shipmentsRelations = relations(shipments, ({ one, many }) => ({
   // Auditoria e Histórico
   stepHistory: many(shipmentStepHistory),
   changeRequests: many(shipmentChangeRequests),
-  
-  // Relação 1:1 inversa com Quote
-  quote: one(quotes, { fields: [shipments.id], references: [quotes.generatedShipmentId] }), 
 
   // Integrações Externas
   integrationLogs: many(integrationLogs),
@@ -961,7 +978,9 @@ export const integrationLogsRelations = relations(integrationLogs, ({ one }) => 
 }));
 
 export const quotesRelations = relations(quotes, ({ one, many }) => ({
-  organization: one(organizations, { fields: [quotes.organizationId], references: [organizations.id] }),
+  sellerOrganization: one(organizations, { fields: [quotes.sellerOrganizationId], references: [organizations.id], relationName: 'quotesAsSeller' }),
+  clientOrganization: one(organizations, { fields: [quotes.clientOrganizationId], references: [organizations.id], relationName: 'quotesAsClient' }),
+  createdBy: one(profiles, { fields: [quotes.createdById], references: [profiles.id] }),
   items: many(quoteItems),
   generatedShipment: one(shipments, { fields: [quotes.generatedShipmentId], references: [shipments.id] }),
 }));

@@ -8,6 +8,13 @@
       "when": 1773258902368,
       "tag": "0000_fearless_squirrel_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1731340800000,
+      "tag": "0001_quote_shipment_seller_client",
+      "breakpoints": true
     }
   ]
 }
