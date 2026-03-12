@@ -48,6 +48,7 @@ export function SettingsModal({
   const [destinationState, setDestinationState] = useState(
     () => existingMetadata.destinationState ?? defaultDestinationState ?? '',
   );
+  const [destinationStateTouched, setDestinationStateTouched] = useState(false);
   const [shippingModality, setShippingModality] = useState<'SEA_LCL' | 'AIR' | 'EXPRESS'>(() =>
     modalityToUiValue(simulation.shippingModality),
   );
@@ -59,7 +60,7 @@ export function SettingsModal({
       const meta = (simulation.metadata as ShippingMetadata | null) ?? {};
       queueMicrotask(() => {
         setDestinationState(meta.destinationState ?? defaultDestinationState ?? '');
-      setShippingModality(modalityToUiValue(simulation.shippingModality));
+        setShippingModality(modalityToUiValue(simulation.shippingModality));
       });
     }
   }, [open, simulation.metadata, simulation.shippingModality, defaultDestinationState]);
@@ -82,9 +83,12 @@ export function SettingsModal({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!destinationState) {
+      return;
+    }
     const metadata: ShippingMetadata = {
       ...existingMetadata,
-      destinationState: destinationState || undefined,
+      destinationState,
     };
     const formData = new FormData();
     formData.set('simulationId', simulation.id);
@@ -140,9 +144,17 @@ export function SettingsModal({
                     <Select
                       variant="primary"
                       placeholder={t('destinationStatePlaceholder')}
-                      value={destinationState || null}
-                      onChange={(k) => setDestinationState((k as string) ?? '')}
+                      value={destinationState || ''}
+                      onChange={(k) => {
+                        setDestinationState((k as string) ?? '');
+                        setDestinationStateTouched(true);
+                      }}
+                      onBlur={() => setDestinationStateTouched(true)}
                       isDisabled={isPending}
+                      isInvalid={
+                        !!state?.fieldErrors?.destinationState ||
+                        (destinationStateTouched && !destinationState)
+                      }
                     >
                       <Select.Trigger>
                         <Select.Value />
@@ -150,9 +162,6 @@ export function SettingsModal({
                       </Select.Trigger>
                       <Select.Popover>
                         <ListBox>
-                          <ListBox.Item key="__none__" id="__none__" textValue={t('destinationStatePlaceholder')}>
-                            {t('destinationStatePlaceholder')}
-                          </ListBox.Item>
                           {BRAZILIAN_STATES.map((uf) => (
                             <ListBox.Item key={uf} id={uf} textValue={uf}>
                               {uf}
@@ -161,6 +170,12 @@ export function SettingsModal({
                         </ListBox>
                       </Select.Popover>
                     </Select>
+                    {(state?.fieldErrors?.destinationState ||
+                      (destinationStateTouched && !destinationState)) && (
+                      <p className="text-sm text-danger">
+                        {state?.fieldErrors?.destinationState ?? t('destinationStateRequired')}
+                      </p>
+                    )}
                   </div>
                   {state?.error && (
                     <p className="text-sm text-danger mt-2">{state.error}</p>
@@ -175,7 +190,12 @@ export function SettingsModal({
                 >
                   {t('cancel')}
                 </Button>
-                <Button variant="primary" type="submit" isPending={isPending}>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  isPending={isPending}
+                  isDisabled={!destinationState}
+                >
                   {t('save')}
                 </Button>
               </Modal.Footer>

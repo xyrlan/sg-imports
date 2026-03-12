@@ -6,7 +6,7 @@ import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { requireAuthOrRedirect } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { quoteItems, productVariants } from '@/db/schema';
 import {
@@ -76,7 +76,10 @@ const createSimulationModalitySchema = z.enum(['SEA_LCL', 'AIR', 'EXPRESS']);
 const createSimulationSchema = z.object({
   organizationId: z.string().uuid('Invalid organization'),
   name: z.string().min(1, 'Name is required').max(200),
-  destinationState: z.string().max(2).optional(),
+  destinationState: z
+    .string()
+    .min(1, 'Selecione o estado de destino')
+    .max(2, 'UF inválido'),
   shippingModality: createSimulationModalitySchema.default('SEA_LCL'),
 });
 
@@ -176,9 +179,7 @@ export async function createSimulationAction(
     }
 
     const targetDolar = String(await getDolarPTAX());
-    const metadata: ShippingMetadata | undefined = validated.data.destinationState
-      ? { destinationState: validated.data.destinationState }
-      : undefined;
+    const metadata: ShippingMetadata = { destinationState: validated.data.destinationState };
 
     const created = await createSimulation({
       organizationId: validated.data.organizationId,
@@ -215,26 +216,39 @@ const shippingMetadataSchema = z.object({
   destinationState: z.string().max(2).optional(),
 });
 
-const updateSimulationSchema = z.object({
-  simulationId: z.string().uuid(),
-  organizationId: z.string().uuid(),
-  name: z.string().min(1).max(200).optional(),
-  targetDolar: z.string().nullable().optional(),
-  shippingModality: shippingModalitySchema.nullable().optional(),
-  metadata: z
-    .string()
-    .optional()
-    .transform((s): ShippingMetadata | undefined => {
-      if (!s) return undefined;
-      try {
-        const parsed = JSON.parse(s) as unknown;
-        const result = shippingMetadataSchema.safeParse(parsed);
-        return result.success ? (result.data as ShippingMetadata) : undefined;
-      } catch {
-        return undefined;
+const updateSimulationSchema = z
+  .object({
+    simulationId: z.string().uuid(),
+    organizationId: z.string().uuid(),
+    name: z.string().min(1).max(200).optional(),
+    targetDolar: z.string().nullable().optional(),
+    shippingModality: shippingModalitySchema.nullable().optional(),
+    metadata: z
+      .string()
+      .optional()
+      .transform((s): ShippingMetadata | undefined => {
+        if (!s) return undefined;
+        try {
+          const parsed = JSON.parse(s) as unknown;
+          const result = shippingMetadataSchema.safeParse(parsed);
+          return result.success ? (result.data as ShippingMetadata) : undefined;
+        } catch {
+          return undefined;
+        }
+      }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.metadata && typeof data.metadata === 'object') {
+      const m = data.metadata as ShippingMetadata;
+      if (!m.destinationState || m.destinationState.length !== 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Selecione o estado de destino',
+          path: ['destinationState'],
+        });
       }
-    }),
-});
+    }
+  });
 
 export interface UpdateSimulationState {
   error?: string;
@@ -393,16 +407,25 @@ export async function updateSimulationAction(
         }
       }
 
-      const taxResult = await calculateAndPersistLandedCost(
-        validated.data.simulationId,
-        validated.data.organizationId,
-        user.id,
-      );
-      if (!taxResult.success) {
-        return {
-          error: taxResult.errors?.[0] ?? 'Falha ao calcular impostos',
-          fieldErrors: taxResult.errors ? { _tax: taxResult.errors.join('; ') } : undefined,
-        };
+      // Recalculate taxes only when there are items; settings can be saved without items
+      const [itemCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(quoteItems)
+        .where(eq(quoteItems.quoteId, validated.data.simulationId));
+      const hasItems = (itemCount?.count ?? 0) > 0;
+
+      if (hasItems) {
+        const taxResult = await calculateAndPersistLandedCost(
+          validated.data.simulationId,
+          validated.data.organizationId,
+          user.id,
+        );
+        if (!taxResult.success) {
+          return {
+            error: taxResult.errors?.[0] ?? 'Falha ao calcular impostos',
+            fieldErrors: taxResult.errors ? { _tax: taxResult.errors.join('; ') } : undefined,
+          };
+        }
       }
     }
 

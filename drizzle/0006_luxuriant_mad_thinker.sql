@@ -1,2 +1,0 @@
-ALTER TABLE "quote_items" ADD COLUMN "landed_cost_total_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL;--> statement-breakpoint
-ALTER TABLE "quote_items" ADD COLUMN "landed_cost_unit_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL;

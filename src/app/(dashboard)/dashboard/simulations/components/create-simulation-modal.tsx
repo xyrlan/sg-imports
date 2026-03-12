@@ -22,6 +22,7 @@ const MODALITY_OPTIONS = [
 export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: CreateSimulationModalProps) {
   const [open, setOpen] = useState(false);
   const [destinationState, setDestinationState] = useState<string | null>(null);
+  const [destinationStateTouched, setDestinationStateTouched] = useState(false);
   const [shippingModality, setShippingModality] = useState<'SEA_LCL' | 'AIR' | 'EXPRESS'>('SEA_LCL');
   const t = useTranslations('Simulations.CreateSimulation');
 
@@ -29,11 +30,12 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!destinationState) {
+      return;
+    }
     const form = e.currentTarget;
     const formData = new FormData(form);
-    if (destinationState && destinationState !== '__none__') {
-      formData.set('destinationState', destinationState);
-    }
+    formData.set('destinationState', destinationState);
     formData.set('shippingModality', shippingModality);
     startTransition(() => {
       formAction(formData);
@@ -107,9 +109,17 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
                     <Select
                       variant="primary"
                       placeholder={t('destinationStatePlaceholder')}
-                      value={destinationState ?? '__none__'}
-                      onChange={(k) => setDestinationState(k === '__none__' ? null : (k as string))}
+                      value={destinationState ?? ''}
+                      onChange={(k) => {
+                        setDestinationState((k as string) || null);
+                        setDestinationStateTouched(true);
+                      }}
+                      onBlur={() => setDestinationStateTouched(true)}
                       isDisabled={isPending}
+                      isInvalid={
+                        !!state?.fieldErrors?.destinationState ||
+                        (destinationStateTouched && !destinationState)
+                      }
                     >
                       <Select.Trigger>
                         <Select.Value />
@@ -117,10 +127,6 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
                       </Select.Trigger>
                       <Select.Popover>
                         <ListBox>
-                          <ListBox.Item key="__none__" id="__none__" textValue={t('destinationStatePlaceholder')}>
-                            {t('destinationStatePlaceholder')}
-                            <ListBox.ItemIndicator />
-                          </ListBox.Item>
                           {BRAZILIAN_STATES.map((uf) => (
                             <ListBox.Item key={uf} id={uf} textValue={uf}>
                               {uf}
@@ -130,6 +136,12 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
                         </ListBox>
                       </Select.Popover>
                     </Select>
+                    {(state?.fieldErrors?.destinationState ||
+                      (destinationStateTouched && !destinationState)) && (
+                      <p className="text-sm text-danger">
+                        {state?.fieldErrors?.destinationState ?? t('destinationStateRequired')}
+                      </p>
+                    )}
                   </div>
                   {state?.error && (
                     <p className="text-sm text-danger mt-2">{state.error}</p>
@@ -140,7 +152,12 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
                   <Button variant="tertiary" onPress={() => setOpen(false)} isDisabled={isPending}>
                     {t('cancel')}
                   </Button>
-                  <Button variant="primary" type="submit" isPending={isPending}>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    isPending={isPending}
+                    isDisabled={!destinationState}
+                  >
                     {t('create')}
                   </Button>
                 </Modal.Footer>

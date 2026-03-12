@@ -87,12 +87,14 @@ export async function updateSession(request: NextRequest) {
     });
   }
 
-  // All set, but trying to access onboarding/select
+  // All set, but trying to access org selection (select/create)
+  // Do NOT redirect onboarding→dashboard: user may have onboarded a previous org
+  // but created a new org that still needs onboarding. Let dashboard/onboarding pages handle that flow.
   if (
     isOnboarded &&
     hasOrg &&
     hasValidSig &&
-    (isOnboardingRoute || isOrgSelectionRoute)
+    isOrgSelectionRoute
   ) {
     return redirectTo('/dashboard', request, supabaseResponse);
   }

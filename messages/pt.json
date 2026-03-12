@@ -1275,6 +1275,7 @@
       "EXPRESS": "Expresso",
       "destinationStateLabel": "Estado de Destino (ICMS)",
       "destinationStatePlaceholder": "Selecione o estado",
+      "destinationStateRequired": "Selecione o estado de destino",
       "create": "Criar",
       "cancel": "Cancelar"
     },
@@ -1377,6 +1378,7 @@
       "EXPRESS": "Expresso",
       "destinationState": "Estado de Destino (ICMS)",
       "destinationStatePlaceholder": "Selecione o estado",
+      "destinationStateRequired": "Selecione o estado de destino",
       "save": "Salvar",
       "cancel": "Cancelar"
     },

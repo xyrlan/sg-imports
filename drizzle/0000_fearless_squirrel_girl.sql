@@ -1,3 +1,4 @@
+CREATE TYPE "public"."audit_action" AS ENUM('CREATE', 'UPDATE', 'DELETE');--> statement-breakpoint
 CREATE TYPE "public"."charge_type" AS ENUM('PERCENTAGE', 'FIXED');--> statement-breakpoint
 CREATE TYPE "public"."container_type" AS ENUM('GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40');--> statement-breakpoint
 CREATE TYPE "public"."currency" AS ENUM('BRL', 'USD', 'CNY', 'EUR');--> statement-breakpoint
@@ -11,6 +12,7 @@ CREATE TYPE "public"."order_type" AS ENUM('ORDER', 'DIRECT_ORDER');--> statement
 CREATE TYPE "public"."organization_role" AS ENUM('OWNER', 'ADMIN', 'EMPLOYEE', 'SELLER', 'CUSTOMS_BROKER', 'VIEWER');--> statement-breakpoint
 CREATE TYPE "public"."packaging_type" AS ENUM('BOX', 'PALLET', 'BAG');--> statement-breakpoint
 CREATE TYPE "public"."payment_status" AS ENUM('PENDING', 'PAID', 'OVERDUE', 'WAITING_EXCHANGE', 'EXCHANGED');--> statement-breakpoint
+CREATE TYPE "public"."port_type" AS ENUM('PORT', 'AIRPORT');--> statement-breakpoint
 CREATE TYPE "public"."pricing_scope" AS ENUM('CARRIER', 'PORT', 'SPECIFIC');--> statement-breakpoint
 CREATE TYPE "public"."quote_status" AS ENUM('DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CONVERTED');--> statement-breakpoint
 CREATE TYPE "public"."quote_type" AS ENUM('STANDARD', 'PROFORMA', 'SIMULATION');--> statement-breakpoint
@@ -33,6 +35,21 @@ CREATE TABLE "addresses" (
 	"state" text NOT NULL,
 	"postal_code" text NOT NULL,
 	"country" text DEFAULT 'Brazil' NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "audit_logs" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"table_name" text NOT NULL,
+	"entity_id" text NOT NULL,
+	"action" "audit_action" NOT NULL,
+	"actor_id" uuid,
+	"actor_email" text,
+	"old_values" jsonb,
+	"new_values" jsonb,
+	"changed_keys" text[],
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"ip" text,
+	"user_agent" text
 );
 --> statement-breakpoint
 CREATE TABLE "carriers" (
@@ -128,12 +145,23 @@ CREATE TABLE "integration_logs" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "int_freight_ports_discharge" (
+	"international_freight_id" uuid NOT NULL,
+	"port_id" uuid NOT NULL,
+	CONSTRAINT "int_freight_discharge_pk" PRIMARY KEY("international_freight_id","port_id")
+);
+--> statement-breakpoint
+CREATE TABLE "int_freight_ports_loading" (
+	"international_freight_id" uuid NOT NULL,
+	"port_id" uuid NOT NULL,
+	CONSTRAINT "int_freight_loading_pk" PRIMARY KEY("international_freight_id","port_id")
+);
+--> statement-breakpoint
 CREATE TABLE "international_freights" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"shipping_modality" "shipping_modality" DEFAULT 'SEA_FCL' NOT NULL,
 	"carrier_id" uuid,
-	"container_type" "container_type" NOT NULL,
-	"port_of_loading_id" uuid NOT NULL,
-	"port_of_discharge_id" uuid NOT NULL,
+	"container_type" "container_type",
 	"value" numeric(10, 2) NOT NULL,
 	"currency" "currency" DEFAULT 'USD' NOT NULL,
 	"free_time_days" integer DEFAULT 0,
@@ -189,13 +217,13 @@ CREATE TABLE "ports" (
 	"name" text NOT NULL,
 	"code" text NOT NULL,
 	"country" text NOT NULL,
+	"type" "port_type" DEFAULT 'PORT' NOT NULL,
 	CONSTRAINT "ports_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
 CREATE TABLE "pricing_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"pricing_rule_id" uuid,
-	"shipment_id" uuid,
 	"name" text NOT NULL,
 	"amount" numeric(10, 2) NOT NULL,
 	"currency" "currency" DEFAULT 'BRL' NOT NULL,
@@ -209,11 +237,17 @@ CREATE TABLE "pricing_rules" (
 	"carrier_id" uuid NOT NULL,
 	"port_id" uuid,
 	"container_type" "container_type",
+	"port_direction" text DEFAULT 'BOTH' NOT NULL,
 	"scope" "pricing_scope" DEFAULT 'SPECIFIC' NOT NULL,
 	"valid_from" timestamp NOT NULL,
 	"valid_to" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "pricing_rules_scope_integrity" CHECK ((
+        ("pricing_rules"."scope" = 'CARRIER' AND "pricing_rules"."port_id" IS NULL AND "pricing_rules"."container_type" IS NULL)
+        OR ("pricing_rules"."scope" = 'PORT' AND "pricing_rules"."port_id" IS NOT NULL AND "pricing_rules"."container_type" IS NULL)
+        OR ("pricing_rules"."scope" = 'SPECIFIC' AND "pricing_rules"."port_id" IS NOT NULL AND "pricing_rules"."container_type" IS NOT NULL)
+      ))
 );
 --> statement-breakpoint
 CREATE TABLE "product_variants" (
@@ -286,6 +320,12 @@ CREATE TABLE "quote_items" (
 	"ipi_value_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
 	"pis_value_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
 	"cofins_value_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
+	"siscomex_value_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
+	"afrmm_value_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
+	"icms_rate_snapshot" numeric(5, 2) DEFAULT '0' NOT NULL,
+	"icms_value_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
+	"landed_cost_total_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
+	"landed_cost_unit_snapshot" numeric(12, 4) DEFAULT '0' NOT NULL,
 	CONSTRAINT "quote_items_variant_or_simulated" CHECK (("quote_items"."variant_id" IS NOT NULL) OR ("quote_items"."simulated_product_snapshot" IS NOT NULL))
 );
 --> statement-breakpoint
@@ -307,6 +347,7 @@ CREATE TABLE "quotes" (
 	"total_cbm" numeric(12, 6),
 	"total_weight" numeric(12, 3),
 	"total_chargeable_weight" numeric(12, 3) DEFAULT '0' NOT NULL,
+	"is_recalculation_needed" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -442,7 +483,7 @@ CREATE TABLE "storage_periods" (
 	"days_from" integer NOT NULL,
 	"days_to" integer,
 	"charge_type" charge_type DEFAULT 'PERCENTAGE' NOT NULL,
-	"rate" numeric(12, 2) NOT NULL,
+	"rate" numeric(12, 6) NOT NULL,
 	"is_daily_rate" boolean DEFAULT true
 );
 --> statement-breakpoint
@@ -454,7 +495,7 @@ CREATE TABLE "storage_rules" (
 	"currency" "currency" DEFAULT 'BRL' NOT NULL,
 	"min_value" numeric(10, 2) DEFAULT '0',
 	"free_days" integer DEFAULT 0,
-	"cif_insurance" numeric(5, 2) DEFAULT '0',
+	"cif_insurance" numeric(10, 6) DEFAULT '0',
 	"additional_fees" jsonb DEFAULT '[]'::jsonb
 );
 --> statement-breakpoint
@@ -537,21 +578,23 @@ CREATE TABLE "webhook_events" (
 	CONSTRAINT "webhook_events_provider_external_id_event_type_key" UNIQUE("provider","external_id","event_type")
 );
 --> statement-breakpoint
+ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_id_profiles_id_fk" FOREIGN KEY ("actor_id") REFERENCES "public"."profiles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exchange_contracts" ADD CONSTRAINT "exchange_contracts_transaction_id_transactions_id_fk" FOREIGN KEY ("transaction_id") REFERENCES "public"."transactions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exchange_contracts" ADD CONSTRAINT "exchange_contracts_broker_id_currency_exchange_brokers_id_fk" FOREIGN KEY ("broker_id") REFERENCES "public"."currency_exchange_brokers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "freight_proposals" ADD CONSTRAINT "freight_proposals_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "freight_proposals" ADD CONSTRAINT "freight_proposals_international_freight_id_international_freights_id_fk" FOREIGN KEY ("international_freight_id") REFERENCES "public"."international_freights"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "freight_proposals" ADD CONSTRAINT "freight_proposals_created_by_id_profiles_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."profiles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "freight_proposals" ADD CONSTRAINT "fp_intl_freight_fk" FOREIGN KEY ("international_freight_id") REFERENCES "public"."international_freights"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "integration_logs" ADD CONSTRAINT "integration_logs_shipment_id_shipments_id_fk" FOREIGN KEY ("shipment_id") REFERENCES "public"."shipments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "int_freight_ports_discharge" ADD CONSTRAINT "int_freight_ports_discharge_port_id_ports_id_fk" FOREIGN KEY ("port_id") REFERENCES "public"."ports"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "int_freight_ports_discharge" ADD CONSTRAINT "ifpd_intl_freight_fk" FOREIGN KEY ("international_freight_id") REFERENCES "public"."international_freights"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "int_freight_ports_loading" ADD CONSTRAINT "int_freight_ports_loading_port_id_ports_id_fk" FOREIGN KEY ("port_id") REFERENCES "public"."ports"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "int_freight_ports_loading" ADD CONSTRAINT "ifpl_intl_freight_fk" FOREIGN KEY ("international_freight_id") REFERENCES "public"."international_freights"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "international_freights" ADD CONSTRAINT "international_freights_carrier_id_carriers_id_fk" FOREIGN KEY ("carrier_id") REFERENCES "public"."carriers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "international_freights" ADD CONSTRAINT "international_freights_port_of_loading_id_ports_id_fk" FOREIGN KEY ("port_of_loading_id") REFERENCES "public"."ports"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "international_freights" ADD CONSTRAINT "international_freights_port_of_discharge_id_ports_id_fk" FOREIGN KEY ("port_of_discharge_id") REFERENCES "public"."ports"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_profile_id_profiles_id_fk" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_profile_id_profiles_id_fk" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "pricing_items" ADD CONSTRAINT "pricing_items_pricing_rule_id_pricing_rules_id_fk" FOREIGN KEY ("pricing_rule_id") REFERENCES "public"."pricing_rules"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "pricing_items" ADD CONSTRAINT "pricing_items_shipment_id_shipments_id_fk" FOREIGN KEY ("shipment_id") REFERENCES "public"."shipments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "pricing_rules" ADD CONSTRAINT "pricing_rules_carrier_id_carriers_id_fk" FOREIGN KEY ("carrier_id") REFERENCES "public"."carriers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "pricing_rules" ADD CONSTRAINT "pricing_rules_port_id_ports_id_fk" FOREIGN KEY ("port_id") REFERENCES "public"."ports"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "product_variants" ADD CONSTRAINT "product_variants_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -582,10 +625,13 @@ ALTER TABLE "storage_rules" ADD CONSTRAINT "storage_rules_terminal_id_terminals_
 ALTER TABLE "sub_suppliers" ADD CONSTRAINT "sub_suppliers_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "suppliers_wallet_transactions" ADD CONSTRAINT "suppliers_wallet_transactions_wallet_id_suppliers_wallets_id_fk" FOREIGN KEY ("wallet_id") REFERENCES "public"."suppliers_wallets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "suppliers_wallet_transactions" ADD CONSTRAINT "suppliers_wallet_transactions_exchange_contract_id_exchange_contracts_id_fk" FOREIGN KEY ("exchange_contract_id") REFERENCES "public"."exchange_contracts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "suppliers_wallet_transactions" ADD CONSTRAINT "suppliers_wallet_transactions_order_id_shipments_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."shipments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "suppliers_wallet_transactions" ADD CONSTRAINT "suppliers_wallet_transactions_transaction_id_transactions_id_fk" FOREIGN KEY ("transaction_id") REFERENCES "public"."transactions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "suppliers_wallet_transactions" ADD CONSTRAINT "swt_exchange_contract_fk" FOREIGN KEY ("exchange_contract_id") REFERENCES "public"."exchange_contracts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "suppliers_wallets" ADD CONSTRAINT "suppliers_wallets_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_shipment_id_shipments_id_fk" FOREIGN KEY ("shipment_id") REFERENCES "public"."shipments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "audit_logs_table_created_idx" ON "audit_logs" USING btree ("table_name","created_at");--> statement-breakpoint
+CREATE INDEX "audit_logs_actor_created_idx" ON "audit_logs" USING btree ("actor_id","created_at");--> statement-breakpoint
+CREATE INDEX "audit_logs_entity_table_idx" ON "audit_logs" USING btree ("entity_id","table_name");--> statement-breakpoint
 CREATE INDEX "webhook_events_status_created_at_idx" ON "webhook_events" USING btree ("status","created_at");

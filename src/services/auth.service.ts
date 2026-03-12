@@ -51,7 +51,7 @@ export async function requireAuthAndOrg(): Promise<{
   if (!activeOrgId) redirect('/select-organization');
 
   const orgData = await getOrganizationById(activeOrgId, user.id);
-  if (!orgData) redirect('/select-organization');
+  if (!orgData) redirect('/api/clear-org');
 
   return { user, activeOrgId };
 }

@@ -340,6 +340,10 @@ export async function completeOnboarding(): Promise<void> {
     revalidatePath('/dashboard', 'layout');
     redirect('/dashboard?from=onboarding');
   } catch (error) {
+    // NEXT_REDIRECT is thrown by redirect() - re-throw, do not treat as error
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
     console.error('Error completing onboarding:', error);
     redirect('/onboarding');
   }

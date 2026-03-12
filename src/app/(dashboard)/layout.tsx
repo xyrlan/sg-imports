@@ -42,7 +42,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   const currentOrgData = await getOrganizationById(activeOrgId, user.id);
-  if (!currentOrgData) redirect('/select-organization');
+  if (!currentOrgData) redirect('/api/clear-org');
 
   // Edge case: org missing addresses (metadata says onboarded but DB inconsistent)
   const needsOnboarding = 

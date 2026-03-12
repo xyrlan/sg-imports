@@ -35,7 +35,7 @@ export default async function OnboardingPage() {
   const orgData = await getOrganizationById(activeOrgId, user.id);
 
   if (!orgData) {
-    redirect('/select-organization');
+    redirect('/api/clear-org');
   }
 
   // Step 5: Detect current onboarding step based on existing data

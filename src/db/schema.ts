@@ -12,7 +12,8 @@ import {
   boolean,
   unique,
   index,
-  check
+  check,
+  foreignKey
 } from 'drizzle-orm/pg-core';
 
 import { 
@@ -218,14 +219,21 @@ export const suppliersWalletTransactions = pgTable(
   {
     id: uuid('id').defaultRandom(),
     walletId: uuid('wallet_id').references(() => suppliersWallets.id, { onDelete: 'cascade' }).notNull(),
-  exchangeContractId: uuid('exchange_contract_id').references(() => exchangeContracts.id, { onDelete: 'cascade' }),
-  orderId: uuid('order_id').references(() => shipments.id, { onDelete: 'cascade' }).notNull(),
-  transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }),
-  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-  type: walletTransactionTypeEnum('type').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+    exchangeContractId: uuid('exchange_contract_id'),
+    orderId: uuid('order_id').references(() => shipments.id, { onDelete: 'cascade' }).notNull(),
+    transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }),
+    amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+    type: walletTransactionTypeEnum('type').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [primaryKey({ columns: [t.walletId, t.orderId, t.type] })]
+  (t) => [
+    primaryKey({ columns: [t.walletId, t.orderId, t.type] }),
+    foreignKey({
+      columns: [t.exchangeContractId],
+      foreignColumns: [exchangeContracts.id],
+      name: 'swt_exchange_contract_fk',
+    }).onDelete('cascade'),
+  ]
 );
 
 export const products = pgTable('products', {
@@ -759,50 +767,72 @@ export const internationalFreights = pgTable(
 export const internationalFreightPortsOfLoading = pgTable(
   'int_freight_ports_loading',
   {
-    internationalFreightId: uuid('international_freight_id')
-      .references(() => internationalFreights.id, { onDelete: 'cascade' })
-      .notNull(),
+    internationalFreightId: uuid('international_freight_id').notNull(),
     portId: uuid('port_id').references(() => ports.id, { onDelete: 'cascade' }).notNull(),
   },
-  (t) => [primaryKey({ 
-    name: 'int_freight_loading_pk',
-    columns: [t.internationalFreightId, t.portId] })]
+  (t) => [
+    primaryKey({
+      name: 'int_freight_loading_pk',
+      columns: [t.internationalFreightId, t.portId],
+    }),
+    foreignKey({
+      columns: [t.internationalFreightId],
+      foreignColumns: [internationalFreights.id],
+      name: 'ifpl_intl_freight_fk',
+    }).onDelete('cascade'),
+  ]
 );
 
 /** Junction: international freight ↔ ports of discharge (many-to-many) */
 export const internationalFreightPortsOfDischarge = pgTable(
   'int_freight_ports_discharge',
   {
-    internationalFreightId: uuid('international_freight_id')
-      .references(() => internationalFreights.id, { onDelete: 'cascade' })
-      .notNull(),
+    internationalFreightId: uuid('international_freight_id').notNull(),
     portId: uuid('port_id').references(() => ports.id, { onDelete: 'cascade' }).notNull(),
   },
-  (t) => [primaryKey({ 
-    name: 'int_freight_discharge_pk',
-    columns: [t.internationalFreightId, t.portId] })]
+  (t) => [
+    primaryKey({
+      name: 'int_freight_discharge_pk',
+      columns: [t.internationalFreightId, t.portId],
+    }),
+    foreignKey({
+      columns: [t.internationalFreightId],
+      foreignColumns: [internationalFreights.id],
+      name: 'ifpd_intl_freight_fk',
+    }).onDelete('cascade'),
+  ]
 );
 
 /** Commercial proposals sent to clients (based on internationalFreights) */
-export const freightProposals = pgTable('freight_proposals', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
-  internationalFreightId: uuid('international_freight_id').references(() => internationalFreights.id, { onDelete: 'restrict' }).notNull(),
-  status: freightProposalStatusEnum('status').default('DRAFT').notNull(),
-  freightValue: decimal('freight_value', { precision: 10, scale: 2 }).notNull(),
-  totalValue: decimal('total_value', { precision: 10, scale: 2 }).notNull(),
-  customTaxes: jsonb('custom_taxes'),
-  transitTimeDays: integer('transit_time_days'),
-  validUntil: timestamp('valid_until'),
-  pdfUrl: text('pdf_url'),
-  cnpj: text('cnpj'),
-  email: text('email'),
-  reference: text('reference'),
-  incoterm: incotermEnum('incoterm').default('FOB'),
-  createdById: uuid('created_by_id').references(() => profiles.id, { onDelete: 'restrict' }).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const freightProposals = pgTable(
+  'freight_proposals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
+    internationalFreightId: uuid('international_freight_id').notNull(),
+    status: freightProposalStatusEnum('status').default('DRAFT').notNull(),
+    freightValue: decimal('freight_value', { precision: 10, scale: 2 }).notNull(),
+    totalValue: decimal('total_value', { precision: 10, scale: 2 }).notNull(),
+    customTaxes: jsonb('custom_taxes'),
+    transitTimeDays: integer('transit_time_days'),
+    validUntil: timestamp('valid_until'),
+    pdfUrl: text('pdf_url'),
+    cnpj: text('cnpj'),
+    email: text('email'),
+    reference: text('reference'),
+    incoterm: incotermEnum('incoterm').default('FOB'),
+    createdById: uuid('created_by_id').references(() => profiles.id, { onDelete: 'restrict' }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.internationalFreightId],
+      foreignColumns: [internationalFreights.id],
+      name: 'fp_intl_freight_fk',
+    }).onDelete('restrict'),
+  ]
+);
 
 /** Admin tariff rules — carrier/port/container scope */
 export const pricingRules = pgTable(

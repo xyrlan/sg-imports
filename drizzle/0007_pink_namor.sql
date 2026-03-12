@@ -1,2 +1,0 @@
-ALTER TABLE "storage_periods" ALTER COLUMN "rate" SET DATA TYPE numeric(12, 6);--> statement-breakpoint
-ALTER TABLE "international_freights" ADD CONSTRAINT "int_freight_carrier_container_unique" UNIQUE("carrier_id","container_type");

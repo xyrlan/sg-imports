@@ -1,5 +1,5 @@
 {
-  "id": "2137f05e-bb1f-4854-bf8a-f65d35e35a8a",
+  "id": "3cea5381-1720-4eab-bc3e-450e297d4be3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -67,6 +67,172 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.audit_logs": {
+      "name": "audit_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "table_name": {
+          "name": "table_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "audit_action",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actor_email": {
+          "name": "actor_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "old_values": {
+          "name": "old_values",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_values": {
+          "name": "new_values",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "changed_keys": {
+          "name": "changed_keys",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "audit_logs_table_created_idx": {
+          "name": "audit_logs_table_created_idx",
+          "columns": [
+            {
+              "expression": "table_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_logs_actor_created_idx": {
+          "name": "audit_logs_actor_created_idx",
+          "columns": [
+            {
+              "expression": "actor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_logs_entity_table_idx": {
+          "name": "audit_logs_entity_table_idx",
+          "columns": [
+            {
+              "expression": "entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "table_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "audit_logs_actor_id_profiles_id_fk": {
+          "name": "audit_logs_actor_id_profiles_id_fk",
+          "tableFrom": "audit_logs",
+          "tableTo": "profiles",
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -387,12 +553,12 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "freight_proposals_international_freight_id_international_freights_id_fk": {
-          "name": "freight_proposals_international_freight_id_international_freights_id_fk",
+        "freight_proposals_created_by_id_profiles_id_fk": {
+          "name": "freight_proposals_created_by_id_profiles_id_fk",
           "tableFrom": "freight_proposals",
-          "tableTo": "international_freights",
+          "tableTo": "profiles",
           "columnsFrom": [
-            "international_freight_id"
+            "created_by_id"
           ],
           "columnsTo": [
             "id"
@@ -400,12 +566,12 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
-        "freight_proposals_created_by_id_profiles_id_fk": {
-          "name": "freight_proposals_created_by_id_profiles_id_fk",
+        "fp_intl_freight_fk": {
+          "name": "fp_intl_freight_fk",
           "tableFrom": "freight_proposals",
-          "tableTo": "profiles",
+          "tableTo": "international_freights",
           "columnsFrom": [
-            "created_by_id"
+            "international_freight_id"
           ],
           "columnsTo": [
             "id"
@@ -710,6 +876,126 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.int_freight_ports_discharge": {
+      "name": "int_freight_ports_discharge",
+      "schema": "",
+      "columns": {
+        "international_freight_id": {
+          "name": "international_freight_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "port_id": {
+          "name": "port_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "int_freight_ports_discharge_port_id_ports_id_fk": {
+          "name": "int_freight_ports_discharge_port_id_ports_id_fk",
+          "tableFrom": "int_freight_ports_discharge",
+          "tableTo": "ports",
+          "columnsFrom": [
+            "port_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ifpd_intl_freight_fk": {
+          "name": "ifpd_intl_freight_fk",
+          "tableFrom": "int_freight_ports_discharge",
+          "tableTo": "international_freights",
+          "columnsFrom": [
+            "international_freight_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "int_freight_discharge_pk": {
+          "name": "int_freight_discharge_pk",
+          "columns": [
+            "international_freight_id",
+            "port_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.int_freight_ports_loading": {
+      "name": "int_freight_ports_loading",
+      "schema": "",
+      "columns": {
+        "international_freight_id": {
+          "name": "international_freight_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "port_id": {
+          "name": "port_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "int_freight_ports_loading_port_id_ports_id_fk": {
+          "name": "int_freight_ports_loading_port_id_ports_id_fk",
+          "tableFrom": "int_freight_ports_loading",
+          "tableTo": "ports",
+          "columnsFrom": [
+            "port_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ifpl_intl_freight_fk": {
+          "name": "ifpl_intl_freight_fk",
+          "tableFrom": "int_freight_ports_loading",
+          "tableTo": "international_freights",
+          "columnsFrom": [
+            "international_freight_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "int_freight_loading_pk": {
+          "name": "int_freight_loading_pk",
+          "columns": [
+            "international_freight_id",
+            "port_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.international_freights": {
       "name": "international_freights",
       "schema": "",
@@ -720,6 +1006,14 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "shipping_modality": {
+          "name": "shipping_modality",
+          "type": "shipping_modality",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'SEA_FCL'"
         },
         "carrier_id": {
           "name": "carrier_id",
@@ -732,19 +1026,7 @@
           "type": "container_type",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
-        },
-        "port_of_loading_id": {
-          "name": "port_of_loading_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "port_of_discharge_id": {
-          "name": "port_of_discharge_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "value": {
           "name": "value",
@@ -814,32 +1096,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "international_freights_port_of_loading_id_ports_id_fk": {
-          "name": "international_freights_port_of_loading_id_ports_id_fk",
-          "tableFrom": "international_freights",
-          "tableTo": "ports",
-          "columnsFrom": [
-            "port_of_loading_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "international_freights_port_of_discharge_id_ports_id_fk": {
-          "name": "international_freights_port_of_discharge_id_ports_id_fk",
-          "tableFrom": "international_freights",
-          "tableTo": "ports",
-          "columnsFrom": [
-            "port_of_discharge_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -1173,6 +1429,14 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "port_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PORT'"
         }
       },
       "indexes": {},
@@ -1204,12 +1468,6 @@
         },
         "pricing_rule_id": {
           "name": "pricing_rule_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "shipment_id": {
-          "name": "shipment_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
@@ -1271,19 +1529,6 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "pricing_items_shipment_id_shipments_id_fk": {
-          "name": "pricing_items_shipment_id_shipments_id_fk",
-          "tableFrom": "pricing_items",
-          "tableTo": "shipments",
-          "columnsFrom": [
-            "shipment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1321,6 +1566,13 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
+        },
+        "port_direction": {
+          "name": "port_direction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'BOTH'"
         },
         "scope": {
           "name": "scope",
@@ -1389,7 +1641,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "pricing_rules_scope_integrity": {
+          "name": "pricing_rules_scope_integrity",
+          "value": "(\n        (\"pricing_rules\".\"scope\" = 'CARRIER' AND \"pricing_rules\".\"port_id\" IS NULL AND \"pricing_rules\".\"container_type\" IS NULL)\n        OR (\"pricing_rules\".\"scope\" = 'PORT' AND \"pricing_rules\".\"port_id\" IS NOT NULL AND \"pricing_rules\".\"container_type\" IS NULL)\n        OR (\"pricing_rules\".\"scope\" = 'SPECIFIC' AND \"pricing_rules\".\"port_id\" IS NOT NULL AND \"pricing_rules\".\"container_type\" IS NOT NULL)\n      )"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.product_variants": {
@@ -1894,6 +2151,48 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'0'"
+        },
+        "siscomex_value_snapshot": {
+          "name": "siscomex_value_snapshot",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "afrmm_value_snapshot": {
+          "name": "afrmm_value_snapshot",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "icms_rate_snapshot": {
+          "name": "icms_rate_snapshot",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "icms_value_snapshot": {
+          "name": "icms_value_snapshot",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "landed_cost_total_snapshot": {
+          "name": "landed_cost_total_snapshot",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "landed_cost_unit_snapshot": {
+          "name": "landed_cost_unit_snapshot",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
         }
       },
       "indexes": {},
@@ -2050,6 +2349,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'0'"
+        },
+        "is_recalculation_needed": {
+          "name": "is_recalculation_needed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -3102,7 +3408,7 @@
         },
         "rate": {
           "name": "rate",
-          "type": "numeric(12, 2)",
+          "type": "numeric(12, 6)",
           "primaryKey": false,
           "notNull": true
         },
@@ -3192,7 +3498,7 @@
         },
         "cif_insurance": {
           "name": "cif_insurance",
-          "type": "numeric(5, 2)",
+          "type": "numeric(10, 6)",
           "primaryKey": false,
           "notNull": false,
           "default": "'0'"
@@ -3468,19 +3774,6 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "suppliers_wallet_transactions_exchange_contract_id_exchange_contracts_id_fk": {
-          "name": "suppliers_wallet_transactions_exchange_contract_id_exchange_contracts_id_fk",
-          "tableFrom": "suppliers_wallet_transactions",
-          "tableTo": "exchange_contracts",
-          "columnsFrom": [
-            "exchange_contract_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "suppliers_wallet_transactions_order_id_shipments_id_fk": {
           "name": "suppliers_wallet_transactions_order_id_shipments_id_fk",
           "tableFrom": "suppliers_wallet_transactions",
@@ -3500,6 +3793,19 @@
           "tableTo": "transactions",
           "columnsFrom": [
             "transaction_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "swt_exchange_contract_fk": {
+          "name": "swt_exchange_contract_fk",
+          "tableFrom": "suppliers_wallet_transactions",
+          "tableTo": "exchange_contracts",
+          "columnsFrom": [
+            "exchange_contract_id"
           ],
           "columnsTo": [
             "id"
@@ -3844,6 +4150,15 @@
     }
   },
   "enums": {
+    "public.audit_action": {
+      "name": "audit_action",
+      "schema": "public",
+      "values": [
+        "CREATE",
+        "UPDATE",
+        "DELETE"
+      ]
+    },
     "public.charge_type": {
       "name": "charge_type",
       "schema": "public",
@@ -3980,6 +4295,14 @@
         "OVERDUE",
         "WAITING_EXCHANGE",
         "EXCHANGED"
+      ]
+    },
+    "public.port_type": {
+      "name": "port_type",
+      "schema": "public",
+      "values": [
+        "PORT",
+        "AIRPORT"
       ]
     },
     "public.pricing_scope": {
