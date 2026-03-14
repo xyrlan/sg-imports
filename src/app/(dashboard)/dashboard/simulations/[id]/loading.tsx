@@ -2,7 +2,7 @@ import { Card } from '@heroui/react';
 
 export default function SimulationDetailLoading() {
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="mx-auto p-6 ">
       <div className="space-y-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -18,7 +18,7 @@ export default function SimulationDetailLoading() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_550px] gap-6 lg:gap-8">
           <div className="space-y-6 min-w-0">
             <Card className="p-6">
               <Card.Content className="space-y-4">
