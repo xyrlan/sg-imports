@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getSafeRedirect } from '@/lib/safe-redirect';
 
 /**
  * Auth Callback Route
@@ -32,9 +33,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/login?error=no_user`);
     }
 
-    // Success - redirect to select-organization
-    // The middleware will handle further routing based on organization membership
-    return NextResponse.redirect(`${origin}/select-organization`);
+    const next = requestUrl.searchParams.get('next');
+    const destination = getSafeRedirect(next, '/select-organization');
+    return NextResponse.redirect(`${origin}${destination}`);
   }
 
   // No code provided - redirect to login

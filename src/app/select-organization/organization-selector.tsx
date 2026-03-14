@@ -145,15 +145,13 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
                       variant="primary"
                       className="w-full"
                       isDisabled={isLoading}
-                      startContent={
-                        isThisOrgLoading ? (
+                      aria-hidden
+                    >
+                      {isThisOrgLoading ? (
                           <Spinner size="sm" color="current" />
                         ) : (
                           <ArrowRight className="w-4 h-4" />
-                        )
-                      }
-                      aria-hidden
-                    >
+                        )}
                       {isThisOrgLoading ? t('loading') : t('access')}
                     </Button>
                   </Card.Content>

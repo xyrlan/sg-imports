@@ -133,6 +133,47 @@ export async function sendWelcomeEmail(
 }
 
 /**
+ * Send quote link email to external client (no organization)
+ * @param to - Recipient email address
+ * @param quoteName - Name of the quote
+ * @param quoteLink - Full URL to the public quote page
+ * @param sellerName - Name of the seller organization
+ * @param quoteId - Optional quote ID for logging on failure
+ */
+export async function sendQuoteLinkEmail(
+  to: string,
+  quoteName: string,
+  quoteLink: string,
+  sellerName: string,
+  quoteId?: string
+): Promise<boolean> {
+  try {
+    const html = renderEmailTemplate('quote-shared', {
+      quoteName,
+      quoteLink,
+      sellerName,
+      year: new Date().getFullYear().toString(),
+    });
+
+    const sent = await sendEmail({
+      to,
+      subject: `Proposta de Importação: ${quoteName} - ${sellerName}`,
+      html,
+      text: `A empresa ${sellerName} enviou uma proposta de importação. Visualize em: ${quoteLink}`,
+    });
+
+    if (!sent && quoteId) {
+      console.error('❌ Quote link email failed', { quoteId, clientEmail: to });
+    }
+
+    return sent;
+  } catch (error) {
+    console.error('❌ Error preparing quote link email:', error);
+    return false;
+  }
+}
+
+/**
  * Send notification email (generic transactional email)
  * @param to - Recipient email address
  * @param subject - Email subject

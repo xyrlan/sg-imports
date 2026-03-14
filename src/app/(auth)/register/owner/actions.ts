@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { ownerRegistrationSchema } from '../../schemas';
 import { ensureUserSetup, isEmailInUse } from '@/services/user-setup.service';
+import { isSafeRedirect } from '@/lib/safe-redirect';
 
 export interface RegistrationState {
   error?: string;
@@ -30,6 +31,8 @@ export async function registerOwner(
       cnpj: formData.get('cnpj') as string,
     };
 
+    const next = formData.get('next') as string | null;
+
     // Validate with Zod
     const validatedData = ownerRegistrationSchema.parse(rawData);
 
@@ -54,7 +57,11 @@ export async function registerOwner(
           organizationName: validatedData.companyName,
           document: validatedData.cnpj, // Already cleaned by Zod transform
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/callback`,
+        emailRedirectTo: (() => {
+          const callbackUrl = new URL('/api/auth/callback', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+          if (isSafeRedirect(next)) callbackUrl.searchParams.set('next', next!);
+          return callbackUrl.toString();
+        })(),
       },
     });
 
@@ -94,7 +101,7 @@ export async function registerOwner(
 
     // Supabase sends verification email automatically via configured SMTP (Mailtrap)
     // User will be redirected to /verify-email page to see instructions and resend option
-    redirect(`/verify-email?email=${encodeURIComponent(validatedData.email)}`);
+    redirect(`/verify-email?email=${encodeURIComponent(validatedData.email)}${isSafeRedirect(next) ? '&next=' + encodeURIComponent(next!) : ''}`);
   } catch (error) {
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'issues' in error) {

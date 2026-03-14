@@ -11,6 +11,7 @@ import { getOrganizationById } from '@/services/organization.service';
 import { getSimulationById } from '@/services/simulation.service';
 import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
 import { randomBytes } from 'crypto';
+import { sendQuoteLinkEmail } from '@/services/email.service';
 
 export interface SendQuoteToClientInput {
   quoteId: string;
@@ -47,6 +48,7 @@ export async function sendQuoteToClient(
       eq(quotes.sellerOrganizationId, organizationId),
       eq(quotes.status, 'DRAFT')
     ),
+    with: { sellerOrganization: { columns: { name: true } } },
   });
 
   if (!quote) return { success: false, error: 'Cotação não encontrada ou já enviada' };
@@ -91,7 +93,25 @@ export async function sendQuoteToClient(
       .where(eq(quotes.id, quoteId))
       .returning();
     if (!updated) return { success: false, error: 'Falha ao atualizar' };
-    // TODO: Enviar email com link /quote/[publicToken]
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const quoteLink = `${baseUrl}/quote/${publicToken}`;
+    const emailSent = await sendQuoteLinkEmail(
+      clientEmail.trim(),
+      quote.name,
+      quoteLink,
+      quote.sellerOrganization?.name ?? 'SoulGlobal',
+      quoteId
+    );
+
+    if (!emailSent) {
+      return {
+        success: false,
+        error:
+          'Cotação enviada, mas o e-mail não pôde ser enviado. Tente novamente ou compartilhe o link manualmente.',
+      };
+    }
+
     return { success: true };
   }
 

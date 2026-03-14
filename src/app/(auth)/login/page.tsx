@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, TextField, Input, Label, Button } from '@heroui/react';
 import { loginAction } from '@/app/(auth)/login/actions';
@@ -13,6 +14,8 @@ import { Logo } from '@/components/logo';
  */
 export default function LoginPage() {
   const t = useTranslations('Auth.Login');
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next');
   const [state, formAction, isPending] = useActionState(loginAction, null);
 
   return (
@@ -24,6 +27,7 @@ export default function LoginPage() {
           </div>
 
           <form action={formAction} className="space-y-4">
+            <input type="hidden" name="next" value={next ?? ''} />
             {/* Error Message */}
             {state?.error && (
               <div className="p-3 bg-danger/10 border border-danger rounded-lg">
@@ -86,7 +90,7 @@ export default function LoginPage() {
 
           {/* Registration Links */}
           <div className="flex flex-col gap-2">
-            <Link href="/register/owner">
+            <Link href={`/register/owner${next ? '?next=' + encodeURIComponent(next) : ''}`}>
               <Button
                 variant="outline"
                 className="w-full"
@@ -96,7 +100,7 @@ export default function LoginPage() {
               </Button>
             </Link>
             
-            <Link href="/register/seller">
+            <Link href={`/register/seller${next ? '?next=' + encodeURIComponent(next) : ''}`}>
               <Button
                 variant="outline"
                 className="w-full"

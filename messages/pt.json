@@ -1351,6 +1351,8 @@
       "sendModalDescription": "Selecione a organização do cliente ou informe o e-mail para enviar o link da proposta.",
       "clientOrganization": "Organização do cliente",
       "selectOrganization": "Selecione a organização",
+      "searchOrganization": "Buscar organização...",
+      "noOrganizationFound": "Nenhuma organização encontrada",
       "orClientEmail": "Ou e-mail do cliente (não cadastrado)",
       "cancel": "Cancelar",
       "send": "Enviar"

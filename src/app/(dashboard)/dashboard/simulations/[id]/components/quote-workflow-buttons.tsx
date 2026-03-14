@@ -1,10 +1,21 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useLayoutEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Button, Modal, Input, Label, Select, ListBox, TextField } from '@heroui/react';
+import {
+  Autocomplete,
+  Button,
+  EmptyState,
+  Input,
+  Label,
+  ListBox,
+  Modal,
+  SearchField,
+  TextField,
+  useFilter,
+} from '@heroui/react';
 import { Send, RotateCcw, Check, Package, ExternalLink } from 'lucide-react';
 import {
   sendQuoteToClientAction,
@@ -32,16 +43,17 @@ export function QuoteWorkflowButtons({
   const [clientOrgId, setClientOrgId] = useState<string>('');
   const [clientEmail, setClientEmail] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   const isSeller = simulation.sellerOrganizationId === organizationId;
   const isClient = simulation.clientOrganizationId === organizationId;
   const canAccept = isClient && !simulation.isRecalculationNeeded;
   const isStale = Boolean(simulation.isRecalculationNeeded);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     setSendError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    try {
       const formData = new FormData();
       formData.set('quoteId', simulation.id);
       formData.set('organizationId', organizationId);
@@ -57,37 +69,48 @@ export function QuoteWorkflowButtons({
       } else {
         setSendError(result.error ?? 'Falha ao enviar');
       }
-    });
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  const handlePullBack = () => {
-    startTransition(async () => {
+  const handlePullBack = async () => {
+    setIsPending(true);
+    try {
       const result = await pullQuoteBackToDraftAction(simulation.id, organizationId);
       if (result.success) {
         router.refresh();
         onMutate?.();
       }
-    });
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  const handleAccept = () => {
-    startTransition(async () => {
+  const handleAccept = async () => {
+    setIsPending(true);
+    try {
       const result = await acceptQuoteAction(simulation.id, organizationId);
       if (result.success) {
         router.refresh();
         onMutate?.();
       }
-    });
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  const handleConvert = () => {
-    startTransition(async () => {
+  const handleConvert = async () => {
+    setIsPending(true);
+    try {
       const result = await convertQuoteToShipmentAction(simulation.id, organizationId);
       if (result.success && result.shipmentId) {
         router.push(`/dashboard?shipment=${result.shipmentId}`);
         onMutate?.();
       }
-    });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   if (simulation.status === 'CONVERTED' && simulation.generatedShipmentId) {
@@ -198,6 +221,15 @@ function SendQuoteModal({
 }: SendQuoteModalProps) {
   const t = useTranslations('Simulations.Workflow');
   const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
+  const [filterText, setFilterText] = useState('');
+  const { contains } = useFilter({ sensitivity: 'base' });
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [triggerWidth, setTriggerWidth] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!triggerRef.current) return;
+    setTriggerWidth(triggerRef.current.offsetWidth);
+  }, []);
 
   const loadOrgs = async () => {
     const list = await getOrganizationsForQuoteTargetAction(sellerOrgId);
@@ -215,29 +247,50 @@ function SendQuoteModal({
             </Modal.Header>
             <Modal.Body className="space-y-4">
               <p className="text-sm text-default-500">{t('sendModalDescription')}</p>
-              <div>
+              <div className='flex flex-col gap-2'>
                 <Label>{t('clientOrganization')}</Label>
-                <Select
+                <Autocomplete
                   placeholder={t('selectOrganization')}
                   value={clientOrgId || null}
                   onChange={(k) => setClientOrgId((k as string) ?? '')}
                   onOpenChange={(isOpen) => isOpen && loadOrgs()}
+                  variant="primary"
+                  allowsEmptyCollection
                 >
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      {orgs.map((o) => (
-                        <ListBox.Item key={o.id} id={o.id} textValue={o.name}>
-                          {o.name}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
+                  <Autocomplete.Trigger ref={triggerRef}>
+                    <Autocomplete.Value />
+                    <Autocomplete.ClearButton />
+                    <Autocomplete.Indicator />
+                  </Autocomplete.Trigger>
+                  <Autocomplete.Popover style={{ width: triggerWidth ? `${triggerWidth}px` : 'auto' }}>
+                    <Autocomplete.Filter
+                      filter={contains}
+                      inputValue={filterText}
+                      onInputChange={setFilterText}
+                    >
+                      <SearchField variant="secondary">
+                        <SearchField.Group>
+                          <SearchField.SearchIcon />
+                          <SearchField.Input placeholder={t('searchOrganization')} />
+                          <SearchField.ClearButton />
+                        </SearchField.Group>
+                      </SearchField>
+                      <ListBox
+                        items={orgs}
+                        renderEmptyState={() => (
+                          <EmptyState className="py-6">{t('noOrganizationFound')}</EmptyState>
+                        )}
+                      >
+                        {(o) => (
+                          <ListBox.Item key={o.id} id={o.id} textValue={o.name}>
+                            {o.name}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        )}
+                      </ListBox>
+                    </Autocomplete.Filter>
+                  </Autocomplete.Popover>
+                </Autocomplete>
               </div>
               <TextField variant="primary" value={clientEmail} onChange={setClientEmail}>
                 <Label>{t('orClientEmail')}</Label>

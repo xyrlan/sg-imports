@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, TextField, Input, Label, Button } from '@heroui/react';
 import { registerSeller } from '@/app/(auth)/register/seller/actions';
@@ -14,6 +15,8 @@ import { Logo } from '@/components/logo';
  */
 export default function SellerRegisterPage() {
   const t = useTranslations('Auth.Register.Seller');
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next');
   const [state, formAction, isPending] = useActionState(registerSeller, null);
 
   return (
@@ -25,6 +28,7 @@ export default function SellerRegisterPage() {
           </div>
 
           <form action={formAction} className="space-y-4">
+            <input type="hidden" name="next" value={next ?? ''} />
             {/* Error Message */}
             {state?.error && (
               <div className="p-3 bg-danger/10 border border-danger rounded-lg">
@@ -78,13 +82,13 @@ export default function SellerRegisterPage() {
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-muted">
               {t('hasAccount')}{' '}
-              <Link href="/login" className="text-accent hover:underline font-medium">
+              <Link href={`/login${next ? '?next=' + encodeURIComponent(next) : ''}`} className="text-accent hover:underline font-medium">
                 {t('login')}
               </Link>
             </p>
             <p className="text-sm text-muted">
               {t('orRegisterAs')}{' '}
-              <Link href="/register/owner" className="text-accent hover:underline font-medium">
+              <Link href={`/register/owner${next ? '?next=' + encodeURIComponent(next) : ''}`} className="text-accent hover:underline font-medium">
                 {t('owner')}
               </Link>
             </p>

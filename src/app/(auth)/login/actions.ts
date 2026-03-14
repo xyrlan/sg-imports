@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/app/(auth)/schemas';
 import { getUserOrganizations } from '@/services/organization.service';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
+import { getSafeRedirect } from '@/lib/safe-redirect';
 
 export interface LoginState {
   error?: string;
@@ -54,6 +55,7 @@ export async function loginAction(
       return { error: 'Erro ao fazer login. Tente novamente.' };
     }
 
+    const next = formData.get('next') as string | null;
     const organizations = await getUserOrganizations(data.user.id);
 
     if (organizations.length === 0) {
@@ -61,9 +63,9 @@ export async function loginAction(
     }
     if (organizations.length === 1) {
       await setOrganizationCookie(organizations[0].organization.id);
-      redirect('/dashboard');
+      redirect(getSafeRedirect(next, '/dashboard'));
     }
-    redirect('/select-organization');
+    redirect(getSafeRedirect(next, '/select-organization'));
   } catch (error) {
     // NEXT_REDIRECT is a special error thrown by Next.js redirect()
     // It has a 'digest' property and should be re-thrown, not handled

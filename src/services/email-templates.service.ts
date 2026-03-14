@@ -16,7 +16,7 @@ export interface EmailTemplateVariables {
  * Available email template names
  * Note: Authentication emails (verify-email, reset-password) are handled by Supabase
  */
-export type EmailTemplateName = 'welcome-email' | 'notification';
+export type EmailTemplateName = 'welcome-email' | 'notification' | 'quote-shared';
 
 /**
  * Render an email template by replacing placeholders with actual values

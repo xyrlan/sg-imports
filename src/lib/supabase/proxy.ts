@@ -36,6 +36,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthFlow = ['/login', '/register', '/auth', '/api/auth', '/verify-email'].some(
     (p) => pathname.startsWith(p)
   );
+  const isPublicQuote = pathname.startsWith('/quote/');
   const isOnboardingRoute =
     pathname.startsWith('/onboarding') || pathname.startsWith('/api/onboarding');
   const isOrgSelectionRoute =
@@ -44,7 +45,7 @@ export async function updateSession(request: NextRequest) {
 
   // 1. Not logged in
   if (!user) {
-    if (isAuthFlow) {
+    if (isAuthFlow || isPublicQuote) {
       return supabaseResponse;
     }
     return redirectTo('/login', request, supabaseResponse);
@@ -69,7 +70,8 @@ export async function updateSession(request: NextRequest) {
     !isOnboarded &&
     !isOnboardingRoute &&
     !isOrgSelectionRoute &&
-    !isLoggingOut
+    !isLoggingOut &&
+    !isPublicQuote
   ) {
     return redirectTo('/onboarding', request, supabaseResponse);
   }
@@ -80,7 +82,8 @@ export async function updateSession(request: NextRequest) {
     (!hasOrg || !hasValidSig) &&
     !isOrgSelectionRoute &&
     !isLoggingOut &&
-    !isOnboardingRoute
+    !isOnboardingRoute &&
+    !isPublicQuote
   ) {
     return redirectTo('/select-organization', request, supabaseResponse, {
       clearOrgCookies: hasOrg && !hasValidSig,

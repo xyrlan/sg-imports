@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CircleCheck, CircleX, Mail, Clock, RefreshCw, LogOut, User } from 'lucide-react';
 import { Card, Button, Spinner, Skeleton } from '@heroui/react';
 import { createClient } from '@/lib/supabase/client';
+import { getSafeRedirect } from '@/lib/safe-redirect';
 
 // Types for better state management
 type VerificationState =
@@ -145,8 +146,9 @@ export default function VerifyEmailPage() {
         // Clear localStorage
         localStorage.removeItem('pendingVerificationEmail');
         // Redirect after 2 seconds
+        const nextParam = searchParams.get('next');
         setTimeout(() => {
-          router.push('/login');
+          router.push('/login' + (nextParam ? '?next=' + encodeURIComponent(nextParam) : ''));
         }, 2000);
       }
     } catch (error) {
@@ -219,7 +221,8 @@ export default function VerifyEmailPage() {
 
       // Check if already verified
       if (supabaseUser?.email_confirmed_at) {
-        router.push('/select-organization');
+        const nextParam = searchParams.get('next');
+        router.push(getSafeRedirect(nextParam, '/select-organization'));
         return;
       }
 
