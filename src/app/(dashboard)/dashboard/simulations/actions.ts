@@ -823,6 +823,11 @@ const sendQuoteToClientSchema = z
       .optional()
       .nullable()
       .transform((s) => (s && s.trim() ? s : null)),
+    clientPhone: z
+      .string()
+      .optional()
+      .nullable()
+      .transform((s) => (s && s.trim() ? s : null)),
   })
   .refine((d) => d.clientOrganizationId || d.clientEmail, {
     message: 'Informe a organização ou o e-mail do cliente',
@@ -830,6 +835,10 @@ const sendQuoteToClientSchema = z
   .refine((d) => !d.clientEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.clientEmail), {
     message: 'E-mail inválido',
     path: ['clientEmail'],
+  })
+  .refine((d) => !d.clientPhone || /^\+?\d[\d\s()-]{7,}$/.test(d.clientPhone), {
+    message: 'Telefone inválido',
+    path: ['clientPhone'],
   });
 
 export interface SendQuoteToClientResult {
@@ -848,6 +857,7 @@ export async function sendQuoteToClientAction(
       organizationId: formData.get('organizationId') as string,
       clientOrganizationId: (formData.get('clientOrganizationId') as string) || null,
       clientEmail: (formData.get('clientEmail') as string)?.trim() || null,
+      clientPhone: (formData.get('clientPhone') as string)?.trim() || null,
     };
     const validated = sendQuoteToClientSchema.safeParse(raw);
     if (!validated.success) return { error: validated.error.issues[0]?.message ?? 'Invalid input' };
@@ -861,6 +871,7 @@ export async function sendQuoteToClientAction(
       userId: user.id,
       clientOrganizationId: validated.data.clientOrganizationId ?? undefined,
       clientEmail: validated.data.clientEmail ?? undefined,
+      clientPhone: validated.data.clientPhone ?? undefined,
     });
 
     if (!result.success) return { error: result.error };

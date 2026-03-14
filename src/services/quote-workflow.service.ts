@@ -19,6 +19,7 @@ export interface SendQuoteToClientInput {
   userId: string;
   clientOrganizationId?: string | null;
   clientEmail?: string | null;
+  clientPhone?: string | null;
 }
 
 export interface SendQuoteToClientResult {
@@ -34,7 +35,7 @@ export interface SendQuoteToClientResult {
 export async function sendQuoteToClient(
   input: SendQuoteToClientInput
 ): Promise<SendQuoteToClientResult> {
-  const { quoteId, organizationId, userId, clientOrganizationId, clientEmail } = input;
+  const { quoteId, organizationId, userId, clientOrganizationId, clientEmail, clientPhone } = input;
 
   const orgData = await getOrganizationById(organizationId, userId);
   if (!orgData) return { success: false, error: 'Acesso negado' };
@@ -110,6 +111,19 @@ export async function sendQuoteToClient(
         error:
           'Cotação enviada, mas o e-mail não pôde ser enviado. Tente novamente ou compartilhe o link manualmente.',
       };
+    }
+
+    // Fire-and-forget WhatsApp — failure does NOT affect the result
+    if (clientPhone?.trim()) {
+      import('@/services/whatsapp.service').then(({ sendQuoteLinkWhatsApp }) =>
+        sendQuoteLinkWhatsApp(
+          clientPhone.trim(),
+          quote.name,
+          quoteLink,
+          quote.sellerOrganization?.name ?? 'SoulGlobal',
+          quoteId
+        ).catch((err) => console.warn('WhatsApp failed for quote', quoteId, err))
+      );
     }
 
     return { success: true };

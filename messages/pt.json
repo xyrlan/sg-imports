@@ -1355,7 +1355,10 @@
       "noOrganizationFound": "Nenhuma organização encontrada",
       "orClientEmail": "Ou e-mail do cliente (não cadastrado)",
       "cancel": "Cancelar",
-      "send": "Enviar"
+      "send": "Enviar",
+      "clientPhone": "WhatsApp do cliente (opcional)",
+      "whatsappGreeting": "Olá! A empresa {sellerName} enviou uma proposta de importação: {quoteName}.",
+      "whatsappLink": "Visualize os detalhes aqui: {quoteLink}"
     },
     "errors": {
       "variantNotFound": "Variante não encontrada",

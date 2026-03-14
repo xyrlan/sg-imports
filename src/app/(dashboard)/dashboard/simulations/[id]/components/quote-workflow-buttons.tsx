@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useLayoutEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -42,6 +42,7 @@ export function QuoteWorkflowButtons({
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [clientOrgId, setClientOrgId] = useState<string>('');
   const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -59,11 +60,13 @@ export function QuoteWorkflowButtons({
       formData.set('organizationId', organizationId);
       if (clientOrgId) formData.set('clientOrganizationId', clientOrgId);
       if (clientEmail?.trim()) formData.set('clientEmail', clientEmail.trim());
+      if (clientPhone?.trim()) formData.set('clientPhone', clientPhone.trim());
       const result = await sendQuoteToClientAction(null, formData);
       if (result.success) {
         setSendModalOpen(false);
         setClientOrgId('');
         setClientEmail('');
+        setClientPhone('');
         router.refresh();
         onMutate?.();
       } else {
@@ -185,6 +188,8 @@ export function QuoteWorkflowButtons({
         setClientOrgId={setClientOrgId}
         clientEmail={clientEmail}
         setClientEmail={setClientEmail}
+        clientPhone={clientPhone}
+        setClientPhone={setClientPhone}
         sellerOrgId={simulation.sellerOrganizationId}
         onSend={handleSend}
         isPending={isPending}
@@ -201,6 +206,8 @@ interface SendQuoteModalProps {
   setClientOrgId: (v: string) => void;
   clientEmail: string;
   setClientEmail: (v: string) => void;
+  clientPhone: string;
+  setClientPhone: (v: string) => void;
   sellerOrgId: string;
   onSend: () => void;
   isPending: boolean;
@@ -214,6 +221,8 @@ function SendQuoteModal({
   setClientOrgId,
   clientEmail,
   setClientEmail,
+  clientPhone,
+  setClientPhone,
   sellerOrgId,
   onSend,
   isPending,
@@ -223,12 +232,9 @@ function SendQuoteModal({
   const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
   const [filterText, setFilterText] = useState('');
   const { contains } = useFilter({ sensitivity: 'base' });
-  const triggerRef = useRef<HTMLDivElement>(null);
   const [triggerWidth, setTriggerWidth] = useState<number | null>(null);
-
-  useLayoutEffect(() => {
-    if (!triggerRef.current) return;
-    setTriggerWidth(triggerRef.current.offsetWidth);
+  const triggerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) setTriggerWidth(node.offsetWidth);
   }, []);
 
   const loadOrgs = async () => {
@@ -243,6 +249,9 @@ function SendQuoteModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
+              <Modal.Icon className="bg-default text-foreground">
+                <Send size={20} />
+              </Modal.Icon>
               <Modal.Heading>{t('sendModalTitle')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="space-y-4">
@@ -295,6 +304,10 @@ function SendQuoteModal({
               <TextField variant="primary" value={clientEmail} onChange={setClientEmail}>
                 <Label>{t('orClientEmail')}</Label>
                 <Input type="email" placeholder="cliente@empresa.com" />
+              </TextField>
+              <TextField variant="primary" value={clientPhone} onChange={setClientPhone}>
+                <Label>{t('clientPhone')}</Label>
+                <Input type="tel" placeholder="+55 (11) 99999-9999" />
               </TextField>
               {error && (
                 <p className="text-sm text-danger" role="alert">
