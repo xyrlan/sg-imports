@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Building2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
+import { useActionModal } from '@/hooks/use-action-modal';
 import { updateTerminalAction } from '../../actions';
 import type { Terminal } from '@/services/admin';
 
@@ -25,10 +25,10 @@ export function EditTerminalModal({
   const t = useTranslations('Admin.Settings');
   const [name, setName] = useState(terminal.name);
   const [code, setCode] = useState(terminal.code ?? '');
-  const [state, formAction, isPending] = useActionState(
-    updateTerminalAction.bind(null, terminal.id),
-    null,
-  );
+  const { state, formAction, isPending } = useActionModal({
+    action: updateTerminalAction.bind(null, terminal.id),
+    onSuccess: () => onOpenChange(false),
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -38,12 +38,6 @@ export function EditTerminalModal({
       });
     }
   }, [isOpen, terminal.name, terminal.code]);
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
 
   return (
     <Modal>
