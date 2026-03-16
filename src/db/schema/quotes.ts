@@ -32,6 +32,8 @@ export const quotes = pgTable('quotes', {
   publicToken: text('public_token').unique(),
   /** Email do cliente quando ainda não cadastrado */
   clientEmail: text('client_email'),
+  /** Telefone do cliente quando enviado por WhatsApp */
+  clientPhone: text('client_phone'),
 
   type: quoteTypeEnum('type').default('STANDARD').notNull(),
   status: quoteStatusEnum('status').default('DRAFT').notNull(),

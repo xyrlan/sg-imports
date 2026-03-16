@@ -53,7 +53,7 @@ export function Navbar() {
       href: '/dashboard/simulations',
       label: t('simulations'),
       icon: <ClipboardPen className="w-5 h-5" />,
-      roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'SELLER', 'VIEWER'],
+      roles: [ 'SELLER'],
     },
     {
       href: '/dashboard/proposals',

@@ -28,6 +28,7 @@ export default async function PublicQuotePage({
       userOrganizations={userOrgs.map((o) => ({
         id: o.organization.id,
         name: o.organization.name,
+        phone: o.organization.phone ?? null,
       }))}
     />
   );

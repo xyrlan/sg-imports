@@ -20,6 +20,9 @@ interface OnboardingFormProps {
   role: string;
   initialStep?: number;
   profileHasDocuments?: boolean;
+  redirectTo?: string;
+  organizationDefaults?: Record<string, string>;
+  addressDefaults?: Record<string, string>;
 }
 
 export function OnboardingForm({
@@ -27,6 +30,9 @@ export function OnboardingForm({
   role,
   initialStep = 1,
   profileHasDocuments = false,
+  redirectTo,
+  organizationDefaults,
+  addressDefaults,
 }: OnboardingFormProps) {
   const t = useTranslations('Onboarding');
   const [currentStep, setCurrentStep] = useState(initialStep);
@@ -82,7 +88,7 @@ export function OnboardingForm({
     if (step4State?.success && !step4ProcessedRef.current) {
       step4ProcessedRef.current = true;
       startTransition(() => {
-        completeOnboarding();
+        completeOnboarding(redirectTo);
       });
     }
   }, [step4State]);
@@ -114,6 +120,7 @@ export function OnboardingForm({
                 isPending={step1Pending}
                 error={step1State?.error}
                 translations={t}
+                defaultValues={organizationDefaults}
               />
             )}
 
@@ -127,6 +134,7 @@ export function OnboardingForm({
                 translations={t}
                 isPendingTransition={isPending}
                 role={role}
+                defaultValues={addressDefaults}
               />
             )}
 

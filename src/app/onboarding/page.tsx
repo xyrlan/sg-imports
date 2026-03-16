@@ -5,6 +5,8 @@ import {
 } from '@/services/auth.service';
 import { getOrganizationById } from '@/services/organization.service';
 import { getProfile } from '@/services/profile.service';
+import { getAddressById } from '@/services/address.service';
+import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
 import { UserHeaderWithLogout } from '@/components/auth/user-header-with-logout';
 import { OnboardingForm } from './onboarding-form';
 
@@ -18,7 +20,13 @@ import { OnboardingForm } from './onboarding-form';
  *
  * Note: Service fee config will be managed by admin in the dashboard.
  */
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const validatedNext = isSafeRedirect(next) ? next : undefined;
   const { user, userOrgs } = await requireAuthWithOrgs();
 
   if (userOrgs.length === 0) {
@@ -56,13 +64,19 @@ export default async function OnboardingPage() {
       // Check Step 3: Documents - if complete, redirect to dashboard
       if (profile?.documentPhotoUrl && profile?.addressProofUrl) {
         if (membership.role === 'SELLER' || organization.socialContractUrl) {
-          redirect('/dashboard');
+          redirect(getSafeRedirect(validatedNext, '/dashboard'));
         }
       }
     }
   }
 
   const profileHasDocuments = !!(profile?.documentPhotoUrl && profile?.addressProofUrl);
+
+  // Fetch address data for pre-filling when navigating back
+  const [billingAddress, deliveryAddress] = await Promise.all([
+    organization.billingAddressId ? getAddressById(organization.billingAddressId) : null,
+    organization.deliveryAddressId ? getAddressById(organization.deliveryAddressId) : null,
+  ]);
 
   // Step 6: Render onboarding form with detected initial step
   return (
@@ -79,6 +93,30 @@ export default async function OnboardingPage() {
           role={membership.role}
           initialStep={initialStep}
           profileHasDocuments={profileHasDocuments}
+          redirectTo={validatedNext}
+          organizationDefaults={{
+            tradeName: organization.tradeName ?? '',
+            stateRegistry: organization.stateRegistry ?? '',
+            taxRegime: organization.taxRegime ?? '',
+            email: organization.email ?? '',
+            phone: organization.phone ?? '',
+          }}
+          addressDefaults={billingAddress ? {
+            postalCode: billingAddress.postalCode ?? '',
+            street: billingAddress.street ?? '',
+            number: billingAddress.number ?? '',
+            complement: billingAddress.complement ?? '',
+            neighborhood: billingAddress.neighborhood ?? '',
+            city: billingAddress.city ?? '',
+            state: billingAddress.state ?? '',
+            deliveryPostalCode: deliveryAddress?.postalCode ?? '',
+            deliveryStreet: deliveryAddress?.street ?? '',
+            deliveryNumber: deliveryAddress?.number ?? '',
+            deliveryComplement: deliveryAddress?.complement ?? '',
+            deliveryNeighborhood: deliveryAddress?.neighborhood ?? '',
+            deliveryCity: deliveryAddress?.city ?? '',
+            deliveryState: deliveryAddress?.state ?? '',
+          } : undefined}
         />
       </div>
     </div>

@@ -43,8 +43,8 @@ const sendQuoteToClientSchema = z
       .nullable()
       .transform((s) => (s && s.trim() ? s : null)),
   })
-  .refine((d) => d.clientOrganizationId || d.clientEmail, {
-    message: 'Informe a organização ou o e-mail do cliente',
+  .refine((d) => d.clientOrganizationId || d.clientEmail || d.clientPhone, {
+    message: 'Informe a organização, o e-mail ou o telefone do cliente',
   })
   .refine((d) => !d.clientEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.clientEmail), {
     message: 'E-mail inválido',
@@ -90,6 +90,7 @@ export async function sendQuoteToClientAction(
 
     if (!result.success) return { error: result.error };
     revalidatePath(`/dashboard/simulations/${validated.data.quoteId}`);
+    revalidatePath(`/dashboard/proposals/${validated.data.quoteId}`);
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err;
@@ -114,6 +115,7 @@ export async function pullQuoteBackToDraftAction(
     const result = await pullQuoteBackToDraft(quoteId, organizationId, user.id);
     if (!result.success) return { error: result.error };
     revalidatePath(`/dashboard/simulations/${quoteId}`);
+    revalidatePath(`/dashboard/proposals/${quoteId}`);
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err;
@@ -139,6 +141,7 @@ export async function rejectQuoteAction(
     const result = await rejectQuote(quoteId, organizationId, user.id, reason);
     if (!result.success) return { error: result.error };
     revalidatePath(`/dashboard/simulations/${quoteId}`);
+    revalidatePath(`/dashboard/proposals/${quoteId}`);
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err;
@@ -164,6 +167,7 @@ export async function initiateContractSigningAction(
     const result = await initiateContractSigning(quoteId, organizationId, user.id);
     if (!result.success) return { error: result.error };
     revalidatePath(`/dashboard/simulations/${quoteId}`);
+    revalidatePath(`/dashboard/proposals/${quoteId}`);
     return { success: true, signUrl: result.signUrl };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err;

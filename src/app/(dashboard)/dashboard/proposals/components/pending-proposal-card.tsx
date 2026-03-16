@@ -37,7 +37,7 @@ export function PendingProposalCard({ proposal }: PendingProposalCardProps) {
           </div>
         </div>
         <NextLink
-          href={`/dashboard/simulations/${proposal.id}`}
+          href={`/dashboard/proposals/${proposal.id}`}
           className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           {t('viewDetails')}

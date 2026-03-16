@@ -49,5 +49,5 @@ export async function linkQuoteToClientOrganizationAction(
   if (!result.success) return { error: result.error ?? t('linkFailed') };
 
   await setOrganizationCookie(clientOrganizationId);
-  redirect(`/dashboard/simulations/${quoteId}`);
+  redirect(`/dashboard/proposals/${quoteId}`);
 }

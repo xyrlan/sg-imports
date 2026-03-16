@@ -38,13 +38,13 @@ export const quoteContractSigned = inngest.createFunction(
 
       const shipmentUrl = quote.generatedShipmentId
         ? `/dashboard?shipment=${quote.generatedShipmentId}`
-        : `/dashboard/simulations/${quoteId}`;
+        : null;
 
       await notifyOrganizationMembers(
         quote.sellerOrganizationId,
         'Contrato assinado',
         `O cliente assinou o contrato da proposta "${quote.name}". O pedido foi criado automaticamente.`,
-        shipmentUrl,
+        shipmentUrl ?? `/dashboard/simulations/${quoteId}`,
         'SUCCESS'
       );
 
@@ -53,7 +53,7 @@ export const quoteContractSigned = inngest.createFunction(
           quote.clientOrganizationId,
           'Pedido criado',
           `Seu pedido referente à proposta "${quote.name}" foi criado com sucesso.`,
-          shipmentUrl,
+          shipmentUrl ?? `/dashboard/proposals/${quoteId}`,
           'SUCCESS'
         );
       }

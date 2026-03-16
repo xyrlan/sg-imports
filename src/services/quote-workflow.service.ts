@@ -6,7 +6,7 @@
 import Decimal from 'decimal.js';
 import { db } from '@/db';
 import { quotes, quoteItems, organizations, shipments, memberships, profiles } from '@/db/schema';
-import { eq, and, ne, inArray } from 'drizzle-orm';
+import { eq, and, ne, or, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { getOrganizationById } from '@/services/organization.service';
 import { getSimulationById } from '@/services/simulation.service';
 import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
@@ -68,6 +68,7 @@ export async function sendQuoteToClient(
         clientOrganizationId,
         status: 'SENT',
         clientEmail: null,
+        clientPhone: null,
         publicToken: null,
         updatedAt: new Date(),
       })
@@ -79,18 +80,19 @@ export async function sendQuoteToClient(
       clientOrganizationId,
       'Nova proposta de importação',
       'Você recebeu uma nova proposta de importação. Revise o custo posto e aceite quando estiver de acordo.',
-      `/dashboard/simulations/${quoteId}`,
+      `/dashboard/proposals/${quoteId}`,
       'INFO'
     );
     return { success: true };
   }
 
-  if (clientEmail?.trim()) {
+  if (clientEmail?.trim() || clientPhone?.trim()) {
     const publicToken = randomBytes(24).toString('base64url');
     const [updated] = await db
       .update(quotes)
       .set({
-        clientEmail: clientEmail.trim(),
+        clientEmail: clientEmail?.trim() || null,
+        clientPhone: clientPhone?.trim() || null,
         publicToken,
         status: 'SENT',
         updatedAt: new Date(),
@@ -101,39 +103,61 @@ export async function sendQuoteToClient(
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const quoteLink = `${baseUrl}/quote/${publicToken}`;
-    const emailSent = await sendQuoteLinkEmail(
-      clientEmail.trim(),
-      quote.name,
-      quoteLink,
-      quote.sellerOrganization?.name ?? 'SoulGlobal',
-      quoteId
-    );
 
-    if (!emailSent) {
-      return {
-        success: false,
-        error:
-          'Cotação enviada, mas o e-mail não pôde ser enviado. Tente novamente ou compartilhe o link manualmente.',
-      };
+    // Send email if provided
+    if (clientEmail?.trim()) {
+      const emailSent = await sendQuoteLinkEmail(
+        clientEmail.trim(),
+        quote.name,
+        quoteLink,
+        quote.sellerOrganization?.name ?? 'SoulGlobal',
+        quoteId
+      );
+
+      if (!emailSent) {
+        return {
+          success: false,
+          error:
+            'Cotação enviada, mas o e-mail não pôde ser enviado. Tente novamente ou compartilhe o link manualmente.',
+        };
+      }
     }
 
-    // Fire-and-forget WhatsApp — failure does NOT affect the result
+    // Send WhatsApp if phone provided — fire-and-forget when email also sent, blocking when phone-only
     if (clientPhone?.trim()) {
-      import('@/services/whatsapp.service').then(({ sendQuoteLinkWhatsApp }) =>
-        sendQuoteLinkWhatsApp(
+      const sendWhatsApp = async () => {
+        const { sendQuoteLinkWhatsApp } = await import('@/services/whatsapp.service');
+        return sendQuoteLinkWhatsApp(
           clientPhone.trim(),
           quote.name,
           quoteLink,
           quote.sellerOrganization?.name ?? 'SoulGlobal',
           quoteId
-        ).catch((err) => console.warn('WhatsApp failed for quote', quoteId, err))
-      );
+        );
+      };
+
+      if (clientEmail?.trim()) {
+        // Fire-and-forget when email was already sent
+        sendWhatsApp().catch((err) => console.warn('WhatsApp failed for quote', quoteId, err));
+      } else {
+        // Phone-only: WhatsApp is the primary delivery channel
+        try {
+          await sendWhatsApp();
+        } catch (err) {
+          console.warn('WhatsApp failed for quote', quoteId, err);
+          return {
+            success: false,
+            error:
+              'Cotação enviada, mas o WhatsApp não pôde ser enviado. Tente novamente ou compartilhe o link manualmente.',
+          };
+        }
+      }
     }
 
     return { success: true };
   }
 
-  return { success: false, error: 'Informe a organização ou o e-mail do cliente' };
+  return { success: false, error: 'Informe a organização, o e-mail ou o telefone do cliente' };
 }
 
 // ==========================================
@@ -172,6 +196,7 @@ export async function pullQuoteBackToDraft(
       status: 'DRAFT',
       clientOrganizationId: null,
       clientEmail: null,
+      clientPhone: null,
       publicToken: null,
       rejectionReason: null,
       zapSignDocToken: null,
@@ -455,6 +480,7 @@ export interface PublicQuoteData {
     name: string;
     status: string;
     clientEmail: string | null;
+    clientPhone: string | null;
     sellerOrganizationName: string;
     isRecalculationNeeded: boolean;
   };
@@ -530,6 +556,7 @@ export async function getQuoteByPublicToken(
       name: quote.name,
       status: quote.status,
       clientEmail: quote.clientEmail,
+      clientPhone: quote.clientPhone,
       sellerOrganizationName: quote.sellerOrganization?.name ?? '—',
       isRecalculationNeeded: quote.isRecalculationNeeded ?? false,
     },
@@ -562,7 +589,9 @@ export async function linkQuoteToClientOrganization(
   });
 
   if (!quote) return { success: false, error: 'Cotação não encontrada' };
-  if (!quote.clientEmail?.trim()) return { success: false, error: 'Cotação já vinculada' };
+  if (!quote.clientEmail?.trim() && !quote.clientPhone?.trim()) {
+    return { success: false, error: 'Cotação já vinculada' };
+  }
 
   const membership = await db.query.memberships.findFirst({
     where: and(
@@ -578,10 +607,25 @@ export async function linkQuoteToClientOrganization(
     columns: { email: true },
   });
 
+  // Match by email
   const userEmail = profile?.email?.toLowerCase().trim();
-  const clientEmail = quote.clientEmail.toLowerCase().trim();
-  if (!userEmail || userEmail !== clientEmail) {
-    return { success: false, error: 'O e-mail da sua conta não corresponde ao e-mail da proposta' };
+  const quoteEmail = quote.clientEmail?.toLowerCase().trim();
+  const emailMatches = !!userEmail && !!quoteEmail && userEmail === quoteEmail;
+
+  // Match by phone — fetch org phone for comparison
+  let phoneMatches = false;
+  if (quote.clientPhone?.trim()) {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, clientOrganizationId),
+      columns: { phone: true },
+    });
+    const orgPhone = org?.phone?.replace(/\D/g, '');
+    const quotePhone = quote.clientPhone.replace(/\D/g, '');
+    phoneMatches = !!orgPhone && !!quotePhone && orgPhone === quotePhone;
+  }
+
+  if (!emailMatches && !phoneMatches) {
+    return { success: false, error: 'O e-mail ou telefone da sua conta não corresponde ao da proposta' };
   }
 
   if (quote.clientOrganizationId) {
@@ -593,6 +637,7 @@ export async function linkQuoteToClientOrganization(
     .set({
       clientOrganizationId,
       clientEmail: null,
+      clientPhone: null,
       publicToken: null,
       updatedAt: new Date(),
     })
@@ -603,9 +648,92 @@ export async function linkQuoteToClientOrganization(
     clientOrganizationId,
     'Proposta vinculada',
     'Uma proposta de importação foi vinculada à sua organização. Revise e aceite quando estiver de acordo.',
-    `/dashboard/simulations/${quoteId}`,
+    `/dashboard/proposals/${quoteId}`,
     'INFO'
   );
 
   return { success: true };
+}
+
+// ==========================================
+// AUTO-LINK PENDING QUOTES ON ONBOARDING
+// ==========================================
+
+/** Normaliza telefone removendo tudo que não é dígito */
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+/**
+ * Vincula automaticamente cotações pendentes à organização do cliente
+ * após o onboarding, usando match por email ou telefone.
+ */
+export async function linkPendingQuotesToOrganization(input: {
+  userEmail?: string | null;
+  orgPhone?: string | null;
+  organizationId: string;
+  userId: string;
+}): Promise<{ linkedCount: number }> {
+  const { userEmail, orgPhone, organizationId, userId } = input;
+
+  if (!userEmail && !orgPhone) return { linkedCount: 0 };
+
+  // Build match conditions: email OR phone
+  const matchConditions: ReturnType<typeof sql>[] = [];
+  if (userEmail) {
+    matchConditions.push(
+      sql`lower(trim(${quotes.clientEmail})) = ${userEmail.toLowerCase().trim()}`
+    );
+  }
+  if (orgPhone) {
+    const normalizedPhone = normalizePhone(orgPhone);
+    if (normalizedPhone.length >= 8) {
+      matchConditions.push(
+        sql`regexp_replace(${quotes.clientPhone}, '\\D', '', 'g') = ${normalizedPhone}`
+      );
+    }
+  }
+
+  if (matchConditions.length === 0) return { linkedCount: 0 };
+
+  const pendingQuotes = await db
+    .select({ id: quotes.id })
+    .from(quotes)
+    .where(
+      and(
+        isNull(quotes.clientOrganizationId),
+        isNotNull(quotes.publicToken),
+        eq(quotes.status, 'SENT'),
+        or(...matchConditions)
+      )
+    );
+
+  if (pendingQuotes.length === 0) return { linkedCount: 0 };
+
+  const quoteIds = pendingQuotes.map((q) => q.id);
+
+  await db
+    .update(quotes)
+    .set({
+      clientOrganizationId: organizationId,
+      clientEmail: null,
+      clientPhone: null,
+      publicToken: null,
+      updatedAt: new Date(),
+    })
+    .where(inArray(quotes.id, quoteIds));
+
+  // Notify organization members about linked quotes
+  const { notifyOrganizationMembers } = await import('@/services/notification.service');
+  for (const q of pendingQuotes) {
+    await notifyOrganizationMembers(
+      organizationId,
+      'Proposta vinculada',
+      'Uma proposta de importação foi vinculada à sua organização. Revise e aceite quando estiver de acordo.',
+      `/dashboard/proposals/${q.id}`,
+      'INFO'
+    );
+  }
+
+  return { linkedCount: pendingQuotes.length };
 }

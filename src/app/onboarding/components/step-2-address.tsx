@@ -14,6 +14,18 @@ interface Step2AddressProps {
   translations: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   isPendingTransition?: boolean;
   role: string;
+  defaultValues?: Record<string, string>;
+}
+
+function hasDeliveryDifference(defaults?: Record<string, string>): boolean {
+  if (!defaults) return false;
+  return (
+    defaults.deliveryPostalCode !== defaults.postalCode ||
+    defaults.deliveryStreet !== defaults.street ||
+    defaults.deliveryNeighborhood !== defaults.neighborhood ||
+    defaults.deliveryCity !== defaults.city ||
+    defaults.deliveryState !== defaults.state
+  );
 }
 
 export function Step2Address({
@@ -25,23 +37,24 @@ export function Step2Address({
   translations: t,
   isPendingTransition = false,
   role,
+  defaultValues,
 }: Step2AddressProps) {
   const isSeller = role === 'SELLER';
 
   // Billing address state
-  const [postalCode, setPostalCode] = useState('');
-  const [street, setStreet] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
+  const [postalCode, setPostalCode] = useState(defaultValues?.postalCode ?? '');
+  const [street, setStreet] = useState(defaultValues?.street ?? '');
+  const [neighborhood, setNeighborhood] = useState(defaultValues?.neighborhood ?? '');
+  const [city, setCity] = useState(defaultValues?.city ?? '');
+  const [state, setState] = useState(defaultValues?.state ?? '');
 
   // Delivery address state (OWNER only, when different from billing)
-  const [sameAsDelivery, setSameAsDelivery] = useState(true);
-  const [deliveryPostalCode, setDeliveryPostalCode] = useState('');
-  const [deliveryStreet, setDeliveryStreet] = useState('');
-  const [deliveryNeighborhood, setDeliveryNeighborhood] = useState('');
-  const [deliveryCity, setDeliveryCity] = useState('');
-  const [deliveryState, setDeliveryState] = useState('');
+  const [sameAsDelivery, setSameAsDelivery] = useState(!hasDeliveryDifference(defaultValues));
+  const [deliveryPostalCode, setDeliveryPostalCode] = useState(defaultValues?.deliveryPostalCode ?? '');
+  const [deliveryStreet, setDeliveryStreet] = useState(defaultValues?.deliveryStreet ?? '');
+  const [deliveryNeighborhood, setDeliveryNeighborhood] = useState(defaultValues?.deliveryNeighborhood ?? '');
+  const [deliveryCity, setDeliveryCity] = useState(defaultValues?.deliveryCity ?? '');
+  const [deliveryState, setDeliveryState] = useState(defaultValues?.deliveryState ?? '');
 
   const { fetchCEP, isLoading: fetchingCEP, error: cepError } = useCepFetch({
     onSuccess: (data) => {
@@ -147,12 +160,12 @@ export function Step2Address({
           <div className="grid grid-cols-2 gap-4">
             <TextField variant="primary" isDisabled={isPending} isRequired>
               <Label>{t('Step2.number')}</Label>
-              <Input name="number" placeholder={t('Step2.numberPlaceholder')} />
+              <Input name="number" placeholder={t('Step2.numberPlaceholder')} defaultValue={defaultValues?.number} />
             </TextField>
 
             <TextField variant="primary" isDisabled={isPending}>
               <Label>{t('Step2.complement')}</Label>
-              <Input name="complement" placeholder={t('Step2.complementPlaceholder')} />
+              <Input name="complement" placeholder={t('Step2.complementPlaceholder')} defaultValue={defaultValues?.complement} />
             </TextField>
           </div>
 
@@ -252,12 +265,12 @@ export function Step2Address({
             <div className="grid grid-cols-2 gap-4">
               <TextField variant="primary" isDisabled={isPending} isRequired>
                 <Label>{t('Step2.number')}</Label>
-                <Input name="deliveryNumber" placeholder={t('Step2.numberPlaceholder')} />
+                <Input name="deliveryNumber" placeholder={t('Step2.numberPlaceholder')} defaultValue={defaultValues?.deliveryNumber} />
               </TextField>
 
               <TextField variant="primary" isDisabled={isPending}>
                 <Label>{t('Step2.complement')}</Label>
-                <Input name="deliveryComplement" placeholder={t('Step2.complementPlaceholder')} />
+                <Input name="deliveryComplement" placeholder={t('Step2.complementPlaceholder')} defaultValue={defaultValues?.deliveryComplement} />
               </TextField>
             </div>
 

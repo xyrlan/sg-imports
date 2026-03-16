@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { type ReactNode, useActionState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Card, Button, Chip } from '@heroui/react';
@@ -9,42 +9,61 @@ import { formatCurrency } from '@/lib/utils';
 import type { PublicQuoteData } from '@/services/quote-workflow.service';
 import { linkQuoteToClientOrganizationAction } from '../actions';
 
+export interface QuoteDisplayData {
+  quote: {
+    id: string;
+    name: string;
+    status: string;
+    sellerOrganizationName: string;
+    isRecalculationNeeded: boolean;
+  };
+  items: Array<{
+    id: string;
+    name: string;
+    sku: string | null;
+    quantity: number;
+    priceUsd: string;
+    landedCostTotalSnapshot: string;
+  }>;
+  summary: {
+    totalFobUsd: number;
+    totalLandedCostBrl: number;
+  };
+}
+
 interface PublicQuoteViewProps {
   data: PublicQuoteData;
   publicToken: string;
   user: { id: string; email: string | null } | null;
-  userOrganizations: { id: string; name: string }[];
+  userOrganizations: { id: string; name: string; phone: string | null }[];
 }
 
-export function PublicQuoteView({
-  data,
-  publicToken,
-  user,
-  userOrganizations,
-}: PublicQuoteViewProps) {
+interface QuoteDetailViewProps {
+  data: QuoteDisplayData;
+  backHref: string;
+  actions: ReactNode;
+}
+
+/**
+ * Shared read-only quote layout: header, items table/cards, summary, and action slot.
+ * Used by both the public quote page and the authenticated proposal detail page.
+ */
+export function QuoteDetailView({ data, backHref, actions }: QuoteDetailViewProps) {
   const t = useTranslations('Quote.Public');
   const tStatus = useTranslations('Simulations.Status');
-  const [state, formAction, isPending] = useActionState(
-    linkQuoteToClientOrganizationAction,
-    null
-  );
-
-  const clientEmail = data.quote.clientEmail?.toLowerCase().trim();
-  const userEmail = user?.email?.toLowerCase().trim();
-  const emailMatches = !!clientEmail && !!userEmail && clientEmail === userEmail;
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-4xl space-y-6 pb-48 md:pb-0">
         <div className="flex items-center justify-between">
-          <Link href="/login">
+          <Link href={backHref}>
             <Button variant="ghost" size="sm" className="inline-flex items-center gap-2">
               <ArrowLeft className="size-4" />
               {t('back')}
             </Button>
           </Link>
           <Chip size="sm" color="default" variant="soft">
-            {tStatus(data.quote.status as 'SENT')}
+            {tStatus(data.quote.status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'PENDING_SIGNATURE' | 'CONVERTED')}
           </Chip>
         </div>
 
@@ -142,78 +161,132 @@ export function PublicQuoteView({
         </Card>
 
         <div className="flex flex-col gap-4 fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:z-auto md:border md:border-border md:rounded-lg md:bg-muted/30 md:p-6 md:shadow-none">
-          <h2 className="font-semibold">{t('nextSteps')}</h2>
-
-          {!user ? (
-            <div className="flex flex-wrap gap-3">
-              <Link href={`/login?next=/quote/${publicToken}`}>
-                <Button variant="primary" className="inline-flex items-center gap-2">
-                  <LogIn className="size-4" />
-                  {t('login')}
-                </Button>
-              </Link>
-              <Link href={`/register/owner?next=/quote/${publicToken}`}>
-                <Button variant="outline" className="inline-flex items-center gap-2">
-                  <UserPlus className="size-4" />
-                  {t('createAccount')}
-                </Button>
-              </Link>
-            </div>
-          ) : !emailMatches ? (
-            <p className="text-sm text-muted-foreground">{t('emailMismatch')}</p>
-          ) : userOrganizations.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('noOrganization')}</p>
-          ) : (
-            <form action={formAction} className="flex flex-col gap-3">
-              <input type="hidden" name="quoteId" value={data.quote.id} />
-              <input type="hidden" name="publicToken" value={publicToken} />
-              {userOrganizations.length === 1 ? (
-                <input
-                  type="hidden"
-                  name="clientOrganizationId"
-                  value={userOrganizations[0].id}
-                />
-              ) : (
-                <div className="space-y-2">
-                  <label htmlFor="clientOrganizationId" className="text-sm font-medium">
-                    {t('selectOrganization')}
-                  </label>
-                  <select
-                    id="clientOrganizationId"
-                    name="clientOrganizationId"
-                    required
-                    aria-describedby={state?.error ? 'clientOrg-error' : undefined}
-                    aria-invalid={!!state?.error}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">{t('selectOrganizationPlaceholder')}</option>
-                    {userOrganizations.map((org) => (
-                      <option key={org.id} value={org.id}>
-                        {org.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {state?.error && (
-                <p id="clientOrg-error" className="text-sm text-danger" role="alert">
-                  {state.error}
-                </p>
-              )}
-              <Button
-                type="submit"
-                variant="primary"
-                isDisabled={isPending}
-                isPending={isPending}
-                className="inline-flex items-center gap-2 self-start"
-              >
-                <Link2 className="size-4" />
-                {t('linkToMyOrganization')}
-              </Button>
-            </form>
-          )}
+          {actions}
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Public (unauthenticated) quote view — wraps QuoteDetailView with login/link actions.
+ */
+export function PublicQuoteView({
+  data,
+  publicToken,
+  user,
+  userOrganizations,
+}: PublicQuoteViewProps) {
+  return (
+    <QuoteDetailView
+      data={data}
+      backHref="/login"
+      actions={
+        <PublicQuoteActions
+          data={data}
+          publicToken={publicToken}
+          user={user}
+          userOrganizations={userOrganizations}
+        />
+      }
+    />
+  );
+}
+
+function PublicQuoteActions({
+  data,
+  publicToken,
+  user,
+  userOrganizations,
+}: PublicQuoteViewProps) {
+  const t = useTranslations('Quote.Public');
+  const [state, formAction, isPending] = useActionState(
+    linkQuoteToClientOrganizationAction,
+    null
+  );
+
+  const clientEmail = data.quote.clientEmail?.toLowerCase().trim();
+  const userEmail = user?.email?.toLowerCase().trim();
+  const emailMatches = !!clientEmail && !!userEmail && clientEmail === userEmail;
+
+  const quotePhone = data.quote.clientPhone?.replace(/\D/g, '');
+  const phoneMatches = !!quotePhone && userOrganizations.some(
+    (org) => org.phone && org.phone.replace(/\D/g, '') === quotePhone
+  );
+  const canLink = emailMatches || phoneMatches;
+
+  return (
+    <>
+      <h2 className="font-semibold">{t('nextSteps')}</h2>
+
+      {!user ? (
+        <div className="flex flex-wrap gap-3">
+          <Link href={`/login?next=/quote/${publicToken}`}>
+            <Button variant="primary" className="inline-flex items-center gap-2">
+              <LogIn className="size-4" />
+              {t('login')}
+            </Button>
+          </Link>
+          <Link href={`/register/owner?next=/quote/${publicToken}`}>
+            <Button variant="outline" className="inline-flex items-center gap-2">
+              <UserPlus className="size-4" />
+              {t('createAccount')}
+            </Button>
+          </Link>
+        </div>
+      ) : !canLink ? (
+        <p className="text-sm text-muted-foreground">{t('emailMismatch')}</p>
+      ) : userOrganizations.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t('noOrganization')}</p>
+      ) : (
+        <form action={formAction} className="flex flex-col gap-3">
+          <input type="hidden" name="quoteId" value={data.quote.id} />
+          <input type="hidden" name="publicToken" value={publicToken} />
+          {userOrganizations.length === 1 ? (
+            <input
+              type="hidden"
+              name="clientOrganizationId"
+              value={userOrganizations[0].id}
+            />
+          ) : (
+            <div className="space-y-2">
+              <label htmlFor="clientOrganizationId" className="text-sm font-medium">
+                {t('selectOrganization')}
+              </label>
+              <select
+                id="clientOrganizationId"
+                name="clientOrganizationId"
+                required
+                aria-describedby={state?.error ? 'clientOrg-error' : undefined}
+                aria-invalid={!!state?.error}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">{t('selectOrganizationPlaceholder')}</option>
+                {userOrganizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {state?.error && (
+            <p id="clientOrg-error" className="text-sm text-danger" role="alert">
+              {state.error}
+            </p>
+          )}
+          <Button
+            type="submit"
+            variant="primary"
+            isDisabled={isPending}
+            isPending={isPending}
+            className="inline-flex items-center gap-2 self-start"
+          >
+            <Link2 className="size-4" />
+            {t('linkToMyOrganization')}
+          </Button>
+        </form>
+      )}
+    </>
   );
 }

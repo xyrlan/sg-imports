@@ -24,7 +24,7 @@ export function getProposalColumns(
       header: t('name'),
       cell: (info) => (
         <Link
-          href={`/dashboard/simulations/${info.row.original.id}`}
+          href={`/dashboard/proposals/${info.row.original.id}`}
           className="font-medium hover:underline text-primary"
         >
           {info.getValue()}

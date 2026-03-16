@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/app/(auth)/schemas';
 import { getUserOrganizations } from '@/services/organization.service';
 import { setOrganizationCookie } from '@/app/(dashboard)/actions';
-import { getSafeRedirect } from '@/lib/safe-redirect';
+import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
 
 export interface LoginState {
   error?: string;
@@ -59,7 +59,7 @@ export async function loginAction(
     const organizations = await getUserOrganizations(data.user.id);
 
     if (organizations.length === 0) {
-      redirect('/create-organization');
+      redirect('/create-organization' + (isSafeRedirect(next) ? '?next=' + encodeURIComponent(next!) : ''));
     }
     if (organizations.length === 1) {
       await setOrganizationCookie(organizations[0].organization.id);

@@ -28,6 +28,7 @@ interface SimulationDetailContentProps {
   hsCodes: HsCodeOption[];
   financialSummary?: QuoteFinancialSummary | null;
   defaultDestinationState?: string | null;
+  backHref?: string;
 }
 
 export function SimulationDetailContent({
@@ -38,6 +39,7 @@ export function SimulationDetailContent({
   hsCodes,
   financialSummary = null,
   defaultDestinationState = null,
+  backHref = '/dashboard/simulations',
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
@@ -84,7 +86,7 @@ export function SimulationDetailContent({
       )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/simulations">
+          <Link href={backHref}>
             <Button variant="ghost" size="sm" className="inline-flex items-center gap-2">
               <ArrowLeft className="size-4" />
               {t('back')}

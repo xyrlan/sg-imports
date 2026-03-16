@@ -5,6 +5,7 @@ import {
   COOKIE_ORG_NAME,
   COOKIE_SIG_NAME,
 } from '@/lib/cookie-signature';
+import { isSafeRedirect } from '@/lib/safe-redirect';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -73,7 +74,10 @@ export async function updateSession(request: NextRequest) {
     !isLoggingOut &&
     !isPublicQuote
   ) {
-    return redirectTo('/onboarding', request, supabaseResponse);
+    const next = request.nextUrl.searchParams.get('next') || (isSafeRedirect(pathname) ? pathname : null);
+    return redirectTo('/onboarding', request, supabaseResponse, {
+      searchParams: next ? { next } : undefined,
+    });
   }
 
   // Onboarded but no org (or invalid signature)
@@ -109,10 +113,17 @@ function redirectTo(
   path: string,
   request: NextRequest,
   responseWithCookies: NextResponse,
-  options?: { clearOrgCookies?: boolean }
+  options?: { clearOrgCookies?: boolean; searchParams?: Record<string, string> }
 ) {
   const url = request.nextUrl.clone();
   url.pathname = path;
+  // Clear inherited search params to prevent leaking unrelated params
+  url.search = '';
+  if (options?.searchParams) {
+    for (const [key, value] of Object.entries(options.searchParams)) {
+      url.searchParams.set(key, value);
+    }
+  }
   const res = NextResponse.redirect(url);
 
   if (options?.clearOrgCookies) {

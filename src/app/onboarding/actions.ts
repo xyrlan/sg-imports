@@ -9,6 +9,8 @@ import { createServiceFeeConfig, getOrCreateServiceFeeConfig } from '@/services/
 import { setOrganizationCookie, getOrganizationCookie } from '@/app/(dashboard)/actions';
 import { uploadProfileDocument, uploadOrganizationDocument } from '@/services/upload.service';
 import { updateProfile, getProfile } from '@/services/profile.service';
+import { getSafeRedirect } from '@/lib/safe-redirect';
+import { linkPendingQuotesToOrganization } from '@/services/quote-workflow.service';
 import { organizationDetailsSchema, addressSchema, serviceFeeConfigSchema } from './schemas';
 
 export interface ActionState {
@@ -54,10 +56,10 @@ export async function updateOrganizationDetails(
     // Extract form data
     const rawData = {
       tradeName: formData.get('tradeName') as string,
-      stateRegistry: formData.get('stateRegistry') as string || undefined,
-      taxRegime: formData.get('taxRegime') as string || undefined,
-      email: formData.get('email') as string || undefined,
-      phone: formData.get('phone') as string || undefined,
+      stateRegistry: formData.get('stateRegistry') as string,
+      taxRegime: formData.get('taxRegime') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
     };
 
     // Validate with Zod
@@ -301,7 +303,7 @@ export async function uploadDocumentsAction(
  * Server Action: Complete Onboarding
  * Finalizes onboarding and redirects to dashboard
  */
-export async function completeOnboarding(): Promise<void> {
+export async function completeOnboarding(next?: string): Promise<void> {
   try {
     const user = await requireAuth();
     const orgId = await getCurrentOrganizationId();
@@ -336,9 +338,17 @@ export async function completeOnboarding(): Promise<void> {
 
     await updateUserMetadata({ onboarded: true });
 
+    // Auto-link pending quotes by email or phone match
+    await linkPendingQuotesToOrganization({
+      userEmail: user.email,
+      orgPhone: orgData.organization.phone,
+      organizationId: orgId,
+      userId: user.id,
+    });
+
     // Revalidate and redirect with hint for AuthSessionRefresher
     revalidatePath('/dashboard', 'layout');
-    redirect('/dashboard?from=onboarding');
+    redirect(getSafeRedirect(next, '/dashboard?from=onboarding'));
   } catch (error) {
     // NEXT_REDIRECT is thrown by redirect() - re-throw, do not treat as error
     if (error && typeof error === 'object' && 'digest' in error) {

@@ -6,10 +6,10 @@ import { z } from 'zod';
  */
 export const organizationDetailsSchema = z.object({
   tradeName: z.string().min(2, 'Onboarding.Errors.requiredField'),
-  stateRegistry: z.string().optional(),
-  taxRegime: z.enum(['SIMPLES_NACIONAL', 'LUCRO_PRESUMIDO', 'LUCRO_REAL']).optional(),
-  email: z.string().email('Onboarding.Errors.invalidEmail').optional().or(z.literal('')),
-  phone: z.string().optional(),
+  stateRegistry: z.string().min(1, 'Onboarding.Errors.requiredField'),
+  taxRegime: z.enum(['SIMPLES_NACIONAL', 'LUCRO_PRESUMIDO', 'LUCRO_REAL'], { error: 'Onboarding.Errors.requiredField' }),
+  email: z.string().email('Onboarding.Errors.invalidEmail'),
+  phone: z.string().min(1, 'Onboarding.Errors.requiredField'),
 });
 
 export type OrganizationDetailsData = z.infer<typeof organizationDetailsSchema>;
