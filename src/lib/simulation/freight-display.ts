@@ -1,6 +1,6 @@
 /**
  * Pure functions for freight display logic.
- * Extracted from useFreightModality for Server Components and reuse.
+ * Extracted from use-freight-modality for Server Components and reuse.
  */
 
 import type { ShippingMetadata } from '@/db/types';
@@ -87,7 +87,7 @@ export interface FreightDisplayResult {
 
 /**
  * Pure computation of freight display values from quote/simulation.
- * Use for read-only display (e.g. SimulationFinancialSummary) instead of useFreightModality.
+ * Use for read-only display (e.g. SimulationFinancialSummary) instead of useFreightModality hook.
  */
 export function computeFreightDisplayFromQuote(quote: QuoteForFreight): FreightDisplayResult {
   const totalCbm = toNum(quote.totalCbm);
