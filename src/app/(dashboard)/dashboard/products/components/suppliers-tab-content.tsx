@@ -10,7 +10,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { AddSupplierModal } from './add-supplier-modal';
 import { EditSupplierModal } from './edit-supplier-modal';
-import { deleteSupplierAction } from '../actions';
+import { deleteSupplierAction } from './supplier-actions';
 import type { Supplier } from '@/services/admin';
 
 const supplierColumnHelper = createColumnHelper<Supplier>();

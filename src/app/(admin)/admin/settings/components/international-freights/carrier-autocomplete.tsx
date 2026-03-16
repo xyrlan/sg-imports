@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Autocomplete, EmptyState, ListBox, SearchField, Spinner } from '@heroui/react';
-import { getCarrierByIdAction, searchCarriersAction } from '../../actions';
+import { getCarrierByIdAction, searchCarriersAction } from '../carriers/actions';
 import type { Carrier } from '@/services/admin';
 
 const CARRIERS_PAGE_SIZE = 20;

@@ -25,7 +25,7 @@ import {
   rejectQuoteAction,
   initiateContractSigningAction,
   getOrganizationsForQuoteTargetAction,
-} from '../../actions';
+} from './quote-actions';
 import type { Simulation } from '@/services/simulation.service';
 
 interface QuoteWorkflowButtonsProps {

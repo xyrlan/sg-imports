@@ -23,7 +23,7 @@ import { CarrierAutocomplete } from '../international-freights/carrier-autocompl
 import {
   createPricingRuleAction,
   updatePricingRuleAction,
-} from '../../actions';
+} from './actions';
 import type { PricingRuleWithRelations, Port } from './types';
 
 const CURRENCIES = ['BRL', 'USD', 'CNY'] as const;

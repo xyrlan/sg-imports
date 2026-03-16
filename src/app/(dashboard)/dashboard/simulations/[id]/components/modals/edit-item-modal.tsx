@@ -7,7 +7,7 @@ import { Button, Modal, toast } from '@heroui/react';
 import { Box } from 'lucide-react';
 import { CatalogItemEditForm } from '../shared/catalog-item-edit-form';
 import { SimulatedProductQuickForm } from '../shared/simulated-product-quick-form';
-import { updateSimulationItemAction } from '../../../actions';
+import { updateSimulationItemAction } from '../../actions';
 import type { ProductSnapshot } from '@/db/types';
 import type { HsCodeOption } from '@/services/simulation.service';
 import type { SimulationItem } from '@/services/simulation.service';

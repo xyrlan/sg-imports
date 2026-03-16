@@ -8,7 +8,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
-import { getAuditLogsAction } from '../../actions';
+import { getAuditLogsAction } from './actions';
 import type { AuditLogEntry } from '@/services/admin';
 import { AuditLogFilters } from './audit-log-filters';
 import { AUDIT_TABLE_KEYS } from './audit-log-constants';

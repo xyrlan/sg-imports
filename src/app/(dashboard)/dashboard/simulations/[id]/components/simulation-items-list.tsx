@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/ui/data-table';
 import { getSimulationItemColumns } from './simulation-item-columns';
 import { EditItemModal } from './modals/edit-item-modal';
-import { removeSimulationItemAction } from '../../actions';
+import { removeSimulationItemAction } from '../actions';
 import type { HsCodeOption, SimulationItem } from '@/services/simulation.service';
 import { Card, toast } from '@heroui/react';
 

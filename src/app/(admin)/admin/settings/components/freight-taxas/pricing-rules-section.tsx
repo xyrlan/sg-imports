@@ -9,7 +9,7 @@ import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { PricingRuleFormModal } from './pricing-rule-form-modal';
 import { CarrierRulesGroup } from './carrier-rules-group';
 import { DeletePricingRuleDialog } from './delete-pricing-rule-dialog';
-import { deletePricingRuleAction } from '../../actions';
+import { deletePricingRuleAction } from './actions';
 import type { PricingRuleWithRelations, Port } from './types';
 
 interface FreightTaxasSectionProps {

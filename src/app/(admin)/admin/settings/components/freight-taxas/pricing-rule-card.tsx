@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Button, Card, Chip } from '@heroui/react';
 import { Calendar, Copy, DollarSign, Edit, Trash2 } from 'lucide-react';
 import { getValidityStatus } from './constants';
-import { resolveEffectivePricingAction } from '../../actions';
+import { resolveEffectivePricingAction } from './actions';
 import type { PricingRuleWithRelations } from './types';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {

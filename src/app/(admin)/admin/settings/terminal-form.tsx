@@ -7,7 +7,7 @@ import { TextField, Input, Label, Button, Card } from '@heroui/react';
 import { ArrowLeft } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useTranslations } from 'next-intl';
-import { createTerminalAction } from './actions';
+import { createTerminalAction } from './components/terminals/actions';
 
 interface TerminalFormProps {
   initialData?: { name: string; code?: string | null };

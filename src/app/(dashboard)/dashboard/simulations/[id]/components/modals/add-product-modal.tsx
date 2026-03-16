@@ -4,7 +4,7 @@ import { useId, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Modal, Tabs, Input, TextField, Label, toast, ListBox, Description } from '@heroui/react';
 import { Plus, Check } from 'lucide-react';
-import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../../actions';
+import { addSimulationItemFromCatalogAction, addSimulatedProductAction } from '../../actions';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductWithVariants } from '@/services/product.service';
 import type { HsCodeOption } from '@/services/simulation.service';
