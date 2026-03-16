@@ -19,6 +19,7 @@ import { NavbarProformaQuoteSelect } from './navbar-proforma-quote-select';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { Logo } from '../logo';
 import { NavbarMobileMenu } from './navbar-mobile-menu';
+import { useEffect, useState } from 'react';
 
 export interface NavbarLink {
   href: string;
@@ -75,6 +76,18 @@ export function Navbar() {
     (link) => !link.roles || link.roles.includes(userRole) || isSuperAdmin
   );
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    queueMicrotask(() => {
+      setIsMobile(mq.matches);
+    });
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-default-300 bg-background">
       <nav className="mx-auto flex h-16 max-w-full items-center justify-between px-4">
@@ -83,6 +96,7 @@ export function Navbar() {
           <NextLink
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             href="/dashboard"
+            hidden={isMobile}
           >
             <Logo />
           </NextLink>
@@ -92,7 +106,7 @@ export function Navbar() {
             orientation="vertical"
           />
 
-          <NavbarProfileDropdown />
+          <NavbarProfileDropdown isMobile={isMobile} />
 
           {canSelectOrganization && (
             <>

@@ -270,6 +270,7 @@
     "Profile": {
       "noOrganization": "Sem Organização",
       "adminDashboard": "Painel Admin",
+      "dashboard": "Home",
       "myProfile": "Meu Perfil",
       "settings": "Configurações",
       "logout": "Sair",

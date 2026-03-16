@@ -3,28 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dropdown, Avatar, Header, Label, Separator } from '@heroui/react';
-import { User, Settings, LogOut, Shield, Building2, Plus } from 'lucide-react';
+import { User, Settings, LogOut, Shield, Building2, Plus, Home } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useOrganization, useOrganizationState } from '@/contexts/organization-context';
 import { signOutAction } from '@/app/actions/auth';
 
-export function NavbarProfileDropdown() {
+export function NavbarProfileDropdown({ isMobile }: { isMobile: boolean }) {
   const t = useTranslations('Navbar.Profile');
   const tOrg = useTranslations('Organization');
   const router = useRouter();
   const { membership, currentOrganization, profile } = useOrganizationState();
   const { availableOrganizations, switchOrganization } = useOrganization();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 639px)');
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -81,10 +73,10 @@ export function NavbarProfileDropdown() {
 
         <Dropdown.Menu onAction={(key) => {
           const keyStr = key.toString();
-          if (keyStr === 'my-profile') {
+          if (keyStr === 'dashboard') {
+            router.push('/dashboard');
+          } else if (keyStr === 'my-profile') {
             router.push('/dashboard/profile');
-          } else if (keyStr === 'settings') {
-            router.push('/dashboard/settings');
           } else if (keyStr === 'admin-dashboard') {
             router.push('/admin');
           } else if (keyStr === 'org-create-new') {
@@ -107,6 +99,16 @@ export function NavbarProfileDropdown() {
               </div>
             </Dropdown.Item>
           )}
+            <Dropdown.Item
+              id="dashboard"
+              isDisabled={isLoggingOut}
+              textValue={t('dashboard')}
+            >
+              <div className="flex items-center gap-2">
+                <Home className="w-4 h-4" />
+                <Label>{t('dashboard')}</Label>
+              </div>
+            </Dropdown.Item>
           <Dropdown.Item
             id="my-profile"
             isDisabled={isLoggingOut}
@@ -115,17 +117,6 @@ export function NavbarProfileDropdown() {
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
               <Label>{t('myProfile')}</Label>
-            </div>
-          </Dropdown.Item>
-
-          <Dropdown.Item
-            id="settings"
-            isDisabled={isLoggingOut}
-            textValue={t('settings')}
-          >
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <Label>{t('settings')}</Label>
             </div>
           </Dropdown.Item>
 
