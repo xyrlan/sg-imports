@@ -78,7 +78,7 @@ export function getSimulationColumns(
         const status = info.getValue();
         return (
           <span className="text-sm text-muted">
-            {status ? tStatus(status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'CONVERTED') : '—'}
+            {status ? tStatus(status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'PENDING_SIGNATURE' | 'CONVERTED') : '—'}
           </span>
         );
       },

@@ -42,7 +42,7 @@ export const quoteTypeEnum = pgEnum('quote_type', [
   'PROFORMA',   // Criado pelo Admin como modelo/sugestão
   'SIMULATION'  // Rascunho mão-livre (itens não cadastrados)
 ]);
-export const quoteStatusEnum = pgEnum('quote_status', ['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CONVERTED']);
+export const quoteStatusEnum = pgEnum('quote_status', ['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'PENDING_SIGNATURE', 'CONVERTED']);
 export const shipmentStatusEnum = pgEnum('shipment_status', ['PENDING', 'PRODUCTION', 'BOOKED', 'IN_TRANSIT', 'CUSTOMS_CLEARANCE', 'RELEASED', 'DELIVERED', 'CANCELED']);
 export const containerTypeEnum = pgEnum('container_type', ['GP_20', 'GP_40', 'HC_40', 'RF_20', 'RF_40']);
 export const shipmentStepEnum = pgEnum('shipment_step', [
@@ -334,6 +334,13 @@ export const quotes = pgTable('quotes', {
 
   /** Flag: set when PTAX fetch or recalc fails; UI shows banner to recalculate */
   isRecalculationNeeded: boolean('is_recalculation_needed').default(false).notNull(),
+
+  // ZapSign — assinatura digital do contrato
+  zapSignDocToken: text('zap_sign_doc_token'),       // Token do documento na ZapSign
+  zapSignSignerToken: text('zap_sign_signer_token'), // Token do signatário (para construir URL de assinatura)
+
+  /** Motivo da rejeição pelo cliente */
+  rejectionReason: text('rejection_reason'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

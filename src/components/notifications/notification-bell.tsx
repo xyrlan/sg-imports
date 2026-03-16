@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button, Dropdown, Spinner } from '@heroui/react';
+import { Button, cn, Dropdown, Spinner } from '@heroui/react';
 import { Bell, CheckCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -78,7 +78,7 @@ export function NotificationBell() {
             : t('ariaLabel')
         }
       >
-        <Bell className="w-5 h-5 text-foreground" aria-hidden />
+        <Bell className={cn("w-5 h-5 text-foreground", unreadCount > 0 && "animate-pulse")} aria-hidden />
         {unreadCount > 0 && (
           <span
             className="absolute -top-0.5 -right-0.5 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger text-[10px] font-medium text-danger-foreground px-1"

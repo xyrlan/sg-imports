@@ -7,21 +7,23 @@ import Link from 'next/link';
 import {
   Autocomplete,
   Button,
+  Chip,
   EmptyState,
   Input,
   Label,
   ListBox,
   Modal,
   SearchField,
+  TextArea,
   TextField,
   useFilter,
 } from '@heroui/react';
-import { Send, RotateCcw, Check, Package, ExternalLink } from 'lucide-react';
+import { Send, RotateCcw, ExternalLink, FileSignature, XCircle } from 'lucide-react';
 import {
   sendQuoteToClientAction,
   pullQuoteBackToDraftAction,
-  acceptQuoteAction,
-  convertQuoteToShipmentAction,
+  rejectQuoteAction,
+  initiateContractSigningAction,
   getOrganizationsForQuoteTargetAction,
 } from '../../actions';
 import type { Simulation } from '@/services/simulation.service';
@@ -46,9 +48,12 @@ export function QuoteWorkflowButtons({
   const [sendError, setSendError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectError, setRejectError] = useState<string | null>(null);
+  const [signError, setSignError] = useState<string | null>(null);
+
   const isSeller = simulation.sellerOrganizationId === organizationId;
   const isClient = simulation.clientOrganizationId === organizationId;
-  const canAccept = isClient && !simulation.isRecalculationNeeded;
   const isStale = Boolean(simulation.isRecalculationNeeded);
 
   const handleSend = async () => {
@@ -90,26 +95,32 @@ export function QuoteWorkflowButtons({
     }
   };
 
-  const handleAccept = async () => {
+  const handleReject = async (reason: string) => {
+    setRejectError(null);
     setIsPending(true);
     try {
-      const result = await acceptQuoteAction(simulation.id, organizationId);
+      const result = await rejectQuoteAction(simulation.id, organizationId, reason);
       if (result.success) {
+        setRejectModalOpen(false);
         router.refresh();
         onMutate?.();
+      } else {
+        setRejectError(result.error ?? 'Falha ao rejeitar');
       }
     } finally {
       setIsPending(false);
     }
   };
 
-  const handleConvert = async () => {
+  const handleSignContract = async () => {
+    setSignError(null);
     setIsPending(true);
     try {
-      const result = await convertQuoteToShipmentAction(simulation.id, organizationId);
-      if (result.success && result.shipmentId) {
-        router.push(`/dashboard?shipment=${result.shipmentId}`);
-        onMutate?.();
+      const result = await initiateContractSigningAction(simulation.id, organizationId);
+      if (result.success && result.signUrl) {
+        window.location.href = result.signUrl;
+      } else {
+        setSignError(result.error ?? 'Falha ao iniciar assinatura');
       }
     } finally {
       setIsPending(false);
@@ -129,55 +140,93 @@ export function QuoteWorkflowButtons({
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        {simulation.status === 'DRAFT' && isSeller && (
-          <Button
-            variant="outline"
-            size="sm"
-            onPress={() => setSendModalOpen(true)}
-            className="inline-flex gap-2"
-          >
-            <Send className="size-4" />
-            {t('sendToClient')}
-          </Button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          {simulation.status === 'DRAFT' && isSeller && (
+            <Button
+              variant="outline"
+              size="sm"
+              onPress={() => setSendModalOpen(true)}
+              className="inline-flex gap-2"
+            >
+              <Send className="size-4" />
+              {t('sendToClient')}
+            </Button>
+          )}
+
+          {simulation.status === 'SENT' && isSeller && (
+            <Button
+              variant="outline"
+              size="sm"
+              isPending={isPending}
+              onPress={handlePullBack}
+              className="inline-flex gap-2"
+            >
+              <RotateCcw className="size-4" />
+              {t('pullBack')}
+            </Button>
+          )}
+
+          {simulation.status === 'SENT' && isClient && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                isPending={isPending}
+                onPress={() => setRejectModalOpen(true)}
+                className="inline-flex gap-2 border-danger text-danger"
+              >
+                <XCircle className="size-4" />
+                {t('rejectQuote')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                isDisabled={isStale}
+                isPending={isPending}
+                onPress={handleSignContract}
+                className="inline-flex gap-2"
+                aria-label={isStale ? t('staleCannotAccept') : t('signContract')}
+              >
+                <FileSignature className="size-4" />
+                {t('signContract')}
+              </Button>
+            </>
+          )}
+
+          {simulation.status === 'REJECTED' && isSeller && (
+            <Button
+              variant="outline"
+              size="sm"
+              isPending={isPending}
+              onPress={handlePullBack}
+              className="inline-flex gap-2"
+            >
+              <RotateCcw className="size-4" />
+              {t('pullBackFromRejected')}
+            </Button>
+          )}
+
+          {simulation.status === 'PENDING_SIGNATURE' && (isSeller || isClient) && (
+            <Chip size="sm" variant="secondary" color="warning">
+              {t('awaitingSignature')}
+            </Chip>
+          )}
+        </div>
+
+        {simulation.status === 'REJECTED' && isSeller && simulation.rejectionReason && (
+          <div className="rounded-lg border border-warning bg-warning/10 px-3 py-2 text-sm text-warning-600">
+            <p className="font-medium">{t('rejectedBy')}</p>
+            <p className="text-default-600">
+              {t('rejectionReasonLabel', { reason: simulation.rejectionReason })}
+            </p>
+          </div>
         )}
-        {simulation.status === 'SENT' && isSeller && (
-          <Button
-            variant="outline"
-            size="sm"
-            isPending={isPending}
-            onPress={handlePullBack}
-            className="inline-flex gap-2"
-          >
-            <RotateCcw className="size-4" />
-            {t('pullBack')}
-          </Button>
-        )}
-        {simulation.status === 'SENT' && isClient && (
-          <Button
-            variant="primary"
-            size="sm"
-            isDisabled={isStale}
-            isPending={isPending}
-            onPress={handleAccept}
-            className="inline-flex gap-2"
-            aria-label={isStale ? t('staleCannotAccept') : t('accept')}
-          >
-            <Check className="size-4" />
-            {t('accept')}
-          </Button>
-        )}
-        {simulation.status === 'APPROVED' && (isSeller || isClient) && (
-          <Button
-            variant="primary"
-            size="sm"
-            isPending={isPending}
-            onPress={handleConvert}
-            className="inline-flex gap-2"
-          >
-            <Package className="size-4" />
-            {t('generateOrder')}
-          </Button>
+
+        {signError && (
+          <p className="text-sm text-danger" role="alert">
+            {signError}
+          </p>
         )}
       </div>
 
@@ -195,7 +244,70 @@ export function QuoteWorkflowButtons({
         isPending={isPending}
         error={sendError}
       />
+
+      <RejectQuoteModal
+        open={rejectModalOpen}
+        onOpenChange={setRejectModalOpen}
+        onReject={handleReject}
+        isPending={isPending}
+        error={rejectError}
+      />
     </>
+  );
+}
+
+interface RejectQuoteModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onReject: (reason: string) => void;
+  isPending: boolean;
+  error: string | null;
+}
+
+function RejectQuoteModal({ open, onOpenChange, onReject, isPending, error }: RejectQuoteModalProps) {
+  const t = useTranslations('Simulations.Workflow');
+  const [reason, setReason] = useState('');
+
+  return (
+    <Modal>
+      <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange} isDismissable={!isPending}>
+        <Modal.Container>
+          <Modal.Dialog>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Icon className="bg-danger/10 text-danger">
+                <XCircle size={20} />
+              </Modal.Icon>
+              <Modal.Heading>{t('rejectModalTitle')}</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="space-y-4 p-0.5">
+              <p className="text-sm text-default-500">{t('rejectModalDescription')}</p>
+              <TextField variant="primary" value={reason} onChange={setReason}>
+                <Label>{t('rejectionReason')}</Label>
+                <TextArea placeholder={t('rejectionReasonPlaceholder')} rows={3} />
+              </TextField>
+              {error && (
+                <p className="text-sm text-danger" role="alert">{error}</p>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="ghost" onPress={() => onOpenChange(false)}>
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                className="bg-danger text-white"
+                isPending={isPending}
+                isDisabled={!reason.trim()}
+                onPress={() => onReject(reason.trim())}
+              >
+                {t('confirmReject')}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }
 

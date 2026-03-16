@@ -93,7 +93,7 @@ export function SimulationDetailContent({
           <div>
             <h1 className="text-2xl font-bold">{simulation.name}</h1>
             <Chip size="sm" color="default" variant="soft">
-              {simulation.status ? tStatus(simulation.status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'CONVERTED') : '—'}
+              {simulation.status ? tStatus(simulation.status as 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'PENDING_SIGNATURE' | 'CONVERTED') : '—'}
             </Chip>
           </div>
         </div>

@@ -1,12 +1,12 @@
 /**
  * Quote Workflow Service — Etapas B, C, D do fluxo de cotação
- * sendQuoteToClient, pullQuoteBackToDraft, acceptQuote, convertQuoteToShipment
+ * sendQuoteToClient, pullQuoteBackToDraft, rejectQuote, initiateContractSigning, convertQuoteToShipment
  */
 
 import Decimal from 'decimal.js';
 import { db } from '@/db';
 import { quotes, quoteItems, organizations, shipments, memberships, profiles } from '@/db/schema';
-import { eq, and, ne } from 'drizzle-orm';
+import { eq, and, ne, inArray } from 'drizzle-orm';
 import { getOrganizationById } from '@/services/organization.service';
 import { getSimulationById } from '@/services/simulation.service';
 import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
@@ -138,7 +138,7 @@ export interface PullQuoteBackToDraftResult {
 }
 
 /**
- * Puxar cotação de volta para DRAFT (apenas Seller, status SENT).
+ * Puxar cotação de volta para DRAFT (apenas Seller, status SENT ou REJECTED).
  */
 export async function pullQuoteBackToDraft(
   quoteId: string,
@@ -152,6 +152,50 @@ export async function pullQuoteBackToDraft(
     where: and(
       eq(quotes.id, quoteId),
       eq(quotes.sellerOrganizationId, organizationId),
+      inArray(quotes.status, ['SENT', 'REJECTED', 'PENDING_SIGNATURE'])
+    ),
+  });
+
+  if (!quote) return { success: false, error: 'Cotação não encontrada ou não pode ser puxada de volta' };
+
+  await db
+    .update(quotes)
+    .set({
+      status: 'DRAFT',
+      clientOrganizationId: null,
+      clientEmail: null,
+      publicToken: null,
+      rejectionReason: null,
+      zapSignDocToken: null,
+      zapSignSignerToken: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(quotes.id, quoteId));
+
+  return { success: true };
+}
+
+export interface RejectQuoteResult {
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Etapa C1: Cliente rejeita a cotação.
+ */
+export async function rejectQuote(
+  quoteId: string,
+  organizationId: string,
+  userId: string,
+  reason: string
+): Promise<RejectQuoteResult> {
+  const orgData = await getOrganizationById(organizationId, userId);
+  if (!orgData) return { success: false, error: 'Acesso negado' };
+
+  const quote = await db.query.quotes.findFirst({
+    where: and(
+      eq(quotes.id, quoteId),
+      eq(quotes.clientOrganizationId, organizationId),
       eq(quotes.status, 'SENT')
     ),
   });
@@ -160,34 +204,45 @@ export async function pullQuoteBackToDraft(
 
   await db
     .update(quotes)
-    .set({ status: 'DRAFT', clientOrganizationId: null, clientEmail: null, publicToken: null, updatedAt: new Date() })
+    .set({ status: 'REJECTED', rejectionReason: reason, updatedAt: new Date() })
     .where(eq(quotes.id, quoteId));
+
+  const { notifyOrganizationMembers } = await import('@/services/notification.service');
+  await notifyOrganizationMembers(
+    quote.sellerOrganizationId,
+    'Proposta rejeitada',
+    `O cliente rejeitou a proposta "${quote.name}". Motivo: ${reason}`,
+    `/dashboard/simulations/${quoteId}`,
+    'WARNING'
+  );
 
   return { success: true };
 }
 
-export interface AcceptQuoteResult {
+export interface InitiateContractSigningResult {
   success: boolean;
+  signUrl?: string;
   error?: string;
 }
 
 /**
- * Etapa C: Cliente aceita a cotação.
- * - Bloqueia se isRecalculationNeeded
- * - Snapshot atômico nos quote_items
+ * Etapa C2: Cliente inicia assinatura do contrato.
+ * - Calcula landed cost final
+ * - Cria documento no ZapSign
+ * - Atualiza status para PENDING_SIGNATURE
  */
-export async function acceptQuote(
+export async function initiateContractSigning(
   quoteId: string,
   organizationId: string,
   userId: string
-): Promise<AcceptQuoteResult> {
+): Promise<InitiateContractSigningResult> {
   const data = await getSimulationById(quoteId, organizationId, userId);
   if (!data) return { success: false, error: 'Cotação não encontrada' };
 
   const { simulation } = data;
   if (simulation.status !== 'SENT') return { success: false, error: 'Cotação não está aguardando aceite' };
   if (simulation.clientOrganizationId !== organizationId) {
-    return { success: false, error: 'Apenas o cliente pode aceitar esta cotação' };
+    return { success: false, error: 'Apenas o cliente pode assinar esta cotação' };
   }
   if (simulation.isRecalculationNeeded) {
     return { success: false, error: 'Esta cotação está desatualizada. Solicite uma atualização ao Seller.' };
@@ -198,12 +253,43 @@ export async function acceptQuote(
     return { success: false, error: calcResult.errors?.[0] ?? 'Falha ao calcular custo' };
   }
 
+  // Fetch signer info and orderType from client organization
+  const clientOrg = await db.query.organizations.findFirst({
+    where: eq(organizations.id, organizationId),
+    columns: { name: true, orderType: true },
+  });
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, userId),
+    columns: { fullName: true, email: true },
+  });
+
+  const signerName = profile?.fullName || clientOrg?.name || 'Cliente';
+  const signerEmail = profile?.email || '';
+
+  if (!signerEmail) {
+    return { success: false, error: 'E-mail do assinante não encontrado' };
+  }
+
+  const { createDocumentFromTemplate } = await import('@/services/zapsign.service');
+  const orderType = clientOrg?.orderType ?? 'ORDER';
+  const docResult = await createDocumentFromTemplate(signerName, signerEmail, orderType);
+
+  if (!docResult.success) {
+    return { success: false, error: docResult.error };
+  }
+
   await db
     .update(quotes)
-    .set({ status: 'APPROVED', isRecalculationNeeded: false, updatedAt: new Date() })
+    .set({
+      status: 'PENDING_SIGNATURE',
+      zapSignDocToken: docResult.docToken,
+      zapSignSignerToken: docResult.signerToken,
+      isRecalculationNeeded: false,
+      updatedAt: new Date(),
+    })
     .where(eq(quotes.id, quoteId));
 
-  return { success: true };
+  return { success: true, signUrl: docResult.signUrl };
 }
 
 export interface ConvertQuoteToShipmentResult {
@@ -264,6 +350,70 @@ export async function convertQuoteToShipment(
     .where(eq(quotes.id, quoteId));
 
   return { success: true, shipmentId: shipment.id };
+}
+
+/**
+ * System-level conversion: called by Inngest webhook handler (no auth required).
+ * Converts a PENDING_SIGNATURE quote into a Shipment after contract is signed.
+ * Idempotent: wrapped in a transaction to prevent duplicate shipments on retry.
+ */
+export async function convertQuoteToShipmentSystem(
+  quoteId: string
+): Promise<ConvertQuoteToShipmentResult> {
+  return db.transaction(async (tx) => {
+    const quote = await tx.query.quotes.findFirst({
+      where: and(eq(quotes.id, quoteId), eq(quotes.status, 'PENDING_SIGNATURE')),
+      with: { items: true },
+    });
+
+    if (!quote) {
+      // Check if already converted (idempotent)
+      const existing = await tx.query.quotes.findFirst({
+        where: and(eq(quotes.id, quoteId), eq(quotes.status, 'CONVERTED')),
+        columns: { generatedShipmentId: true },
+      });
+      if (existing?.generatedShipmentId) {
+        return { success: true, shipmentId: existing.generatedShipmentId };
+      }
+      return { success: false, error: 'Cotação não encontrada ou status inválido' };
+    }
+
+    if (quote.generatedShipmentId) {
+      return { success: true, shipmentId: quote.generatedShipmentId };
+    }
+
+    const items = quote.items ?? [];
+    const clientOrgId = quote.clientOrganizationId ?? quote.sellerOrganizationId;
+    const totalProductsUsd = items.reduce(
+      (sum, i) => sum.plus(new Decimal(i.priceUsd ?? 0).times(i.quantity)),
+      new Decimal(0)
+    );
+    const totalCostsBrl = items.reduce(
+      (sum, i) => sum.plus(new Decimal(i.landedCostTotalSnapshot ?? 0)),
+      new Decimal(0)
+    );
+
+    const [shipment] = await tx
+      .insert(shipments)
+      .values({
+        quoteId,
+        sellerOrganizationId: quote.sellerOrganizationId,
+        clientOrganizationId: clientOrgId,
+        shipmentType: (quote.shippingModality as 'SEA_FCL' | 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_FCL',
+        totalProductsUsd: totalProductsUsd.toFixed(2),
+        totalCostsBrl: totalCostsBrl.toFixed(2),
+      })
+      .returning();
+
+    if (!shipment) return { success: false, error: 'Falha ao criar pedido' };
+
+    await tx
+      .update(quotes)
+      .set({ generatedShipmentId: shipment.id, status: 'CONVERTED', updatedAt: new Date() })
+      .where(eq(quotes.id, quoteId));
+
+    return { success: true, shipmentId: shipment.id };
+  });
 }
 
 /**

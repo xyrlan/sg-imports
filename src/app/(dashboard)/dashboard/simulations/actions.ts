@@ -17,8 +17,8 @@ import {
 import {
   sendQuoteToClient,
   pullQuoteBackToDraft,
-  acceptQuote,
-  convertQuoteToShipment,
+  rejectQuote,
+  initiateContractSigning,
   getOrganizationsForQuoteTarget,
 } from '@/services/quote-workflow.service';
 import {
@@ -907,54 +907,52 @@ export async function pullQuoteBackToDraftAction(
   }
 }
 
-export interface AcceptQuoteResult {
+export interface RejectQuoteActionResult {
   success?: boolean;
   error?: string;
 }
 
-export async function acceptQuoteAction(
+export async function rejectQuoteAction(
   quoteId: string,
-  organizationId: string
-): Promise<AcceptQuoteResult> {
+  organizationId: string,
+  reason: string
+): Promise<RejectQuoteActionResult> {
   try {
     const user = await requireAuthOrRedirect();
     const access = await getOrganizationById(organizationId, user.id);
     if (!access) return { error: 'Acesso negado' };
 
-    const result = await acceptQuote(quoteId, organizationId, user.id);
+    const result = await rejectQuote(quoteId, organizationId, user.id, reason);
     if (!result.success) return { error: result.error };
     revalidatePath(`/dashboard/simulations/${quoteId}`);
     return { success: true };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err;
-    return { error: err instanceof Error ? err.message : 'Falha ao aceitar' };
+    return { error: err instanceof Error ? err.message : 'Falha ao rejeitar' };
   }
 }
 
-export interface ConvertQuoteToShipmentResult {
+export interface InitiateContractSigningActionResult {
   success?: boolean;
-  shipmentId?: string;
+  signUrl?: string;
   error?: string;
 }
 
-export async function convertQuoteToShipmentAction(
+export async function initiateContractSigningAction(
   quoteId: string,
   organizationId: string
-): Promise<ConvertQuoteToShipmentResult> {
+): Promise<InitiateContractSigningActionResult> {
   try {
     const user = await requireAuthOrRedirect();
     const access = await getOrganizationById(organizationId, user.id);
     if (!access) return { error: 'Acesso negado' };
 
-    const result = await convertQuoteToShipment(quoteId, organizationId, user.id);
+    const result = await initiateContractSigning(quoteId, organizationId, user.id);
     if (!result.success) return { error: result.error };
     revalidatePath(`/dashboard/simulations/${quoteId}`);
-    if (result.shipmentId) {
-      revalidatePath(`/dashboard/shipments/${result.shipmentId}`);
-    }
-    return { success: true, shipmentId: result.shipmentId };
+    return { success: true, signUrl: result.signUrl };
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err;
-    return { error: err instanceof Error ? err.message : 'Falha ao gerar pedido' };
+    return { error: err instanceof Error ? err.message : 'Falha ao iniciar assinatura' };
   }
 }

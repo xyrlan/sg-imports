@@ -1289,6 +1289,7 @@
       "SENT": "Enviado",
       "APPROVED": "Aprovado",
       "REJECTED": "Rejeitado",
+      "PENDING_SIGNATURE": "Aguardando Assinatura",
       "CONVERTED": "Convertido"
     },
     "Actions": {
@@ -1358,7 +1359,20 @@
       "send": "Enviar",
       "clientPhone": "WhatsApp do cliente (opcional)",
       "whatsappGreeting": "Olá! A empresa {sellerName} enviou uma proposta de importação: {quoteName}.",
-      "whatsappLink": "Visualize os detalhes aqui: {quoteLink}"
+      "whatsappLink": "Visualize os detalhes aqui: {quoteLink}",
+      "rejectQuote": "Recusar Proposta",
+      "signContract": "Assinar Contrato",
+      "rejectModalTitle": "Recusar Proposta",
+      "rejectModalDescription": "Informe o motivo da recusa para que o vendedor possa ajustar a proposta.",
+      "rejectionReason": "Motivo da recusa",
+      "rejectionReasonPlaceholder": "Descreva o motivo...",
+      "confirmReject": "Confirmar Recusa",
+      "awaitingSignature": "Aguardando Assinatura",
+      "rejectedBy": "Proposta recusada pelo cliente",
+      "rejectionReasonLabel": "Motivo: {reason}",
+      "pullBackFromRejected": "Reabrir como Rascunho",
+      "contractSigningFailed": "Falha ao criar contrato para assinatura. Tente novamente.",
+      "staleCannotSign": "Esta cotação está desatualizada. Solicite uma atualização ao vendedor."
     },
     "errors": {
       "variantNotFound": "Variante não encontrada",
