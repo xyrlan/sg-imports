@@ -13,6 +13,10 @@ import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simu
 import { randomBytes } from 'crypto';
 import { sendQuoteLinkEmail } from '@/services/email.service';
 
+// ==========================================
+// QUOTE SENDING
+// ==========================================
+
 export interface SendQuoteToClientInput {
   quoteId: string;
   organizationId: string;
@@ -132,6 +136,10 @@ export async function sendQuoteToClient(
   return { success: false, error: 'Informe a organização ou o e-mail do cliente' };
 }
 
+// ==========================================
+// QUOTE STATUS MANAGEMENT
+// ==========================================
+
 export interface PullQuoteBackToDraftResult {
   success: boolean;
   error?: string;
@@ -218,6 +226,10 @@ export async function rejectQuote(
 
   return { success: true };
 }
+
+// ==========================================
+// CONTRACT & CONVERSION
+// ==========================================
 
 export interface InitiateContractSigningResult {
   success: boolean;
@@ -416,6 +428,10 @@ export async function convertQuoteToShipmentSystem(
   });
 }
 
+// ==========================================
+// QUERY HELPERS
+// ==========================================
+
 /**
  * Lista organizações disponíveis para envio (exclui a do Seller).
  */
@@ -430,7 +446,7 @@ export async function getOrganizationsForQuoteTarget(
 }
 
 // ==========================================
-// Public Quote (unregistered client)
+// PUBLIC QUOTE ACCESS
 // ==========================================
 
 export interface PublicQuoteData {
