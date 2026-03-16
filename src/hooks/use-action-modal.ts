@@ -18,7 +18,7 @@ export function useActionModal<TState extends ActionResult = ActionResult>({
   action,
   onSuccess,
 }: UseActionModalOptions<TState>) {
-  const [state, formAction, isPending] = useActionState(action, null as TState);
+  const [state, formAction, isPending] = useActionState(action, null as unknown as Awaited<TState>);
 
   useEffect(() => {
     if (state?.ok && !isPending) {
