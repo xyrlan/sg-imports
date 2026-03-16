@@ -1,10 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, getOrganizationCookie } from '@/services/auth.service';
 import { OrganizationProvider } from '@/contexts/organization-context';
-import { ProformaQuoteProvider } from '@/contexts/proforma-quote-context';
 import { getUserOrganizations, getOrganizationById } from '@/services/organization.service';
-import { getProformaQuotesByOrganization } from '@/services/quote.service';
-import { getProformaQuoteCookie } from '@/app/(dashboard)/actions';
 import { Navbar } from '@/components/layout';
 import { AuthSessionRefresher } from '@/components/auth/auth-session-refresher';
 import { Suspense, type ReactNode } from 'react';
@@ -61,36 +58,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     isLoading: false,
   };
 
-  const canSelectProforma =
-    currentOrgData.role === 'SELLER' || userProfile?.systemRole === 'SUPER_ADMIN';
-
-  let proformaInitialData = {
-    currentQuote: null as Awaited<ReturnType<typeof getProformaQuotesByOrganization>>[number] | null,
-    availableQuotes: [] as Awaited<ReturnType<typeof getProformaQuotesByOrganization>>,
-    isLoading: false,
-  };
-
-  if (canSelectProforma) {
-    const availableQuotes = await getProformaQuotesByOrganization(
-      currentOrgData.organization.id,
-      user.id
-    );
-    const activeQuoteId = await getProformaQuoteCookie();
-    const currentQuote =
-      activeQuoteId && availableQuotes.some((q) => q.id === activeQuoteId)
-        ? availableQuotes.find((q) => q.id === activeQuoteId) ?? null
-        : null;
-
-    proformaInitialData = {
-      currentQuote,
-      availableQuotes,
-      isLoading: false,
-    };
-  }
-
   return (
     <OrganizationProvider initialData={initialData}>
-      <ProformaQuoteProvider initialData={proformaInitialData}>
         <Suspense fallback={null}>
           <AuthSessionRefresher />
         </Suspense>
@@ -100,7 +69,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             {children}
           </main>
         </div>
-      </ProformaQuoteProvider>
     </OrganizationProvider>
   );
 }

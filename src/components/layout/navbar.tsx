@@ -33,19 +33,10 @@ export function Navbar() {
   const userRole = membership?.role || 'VIEWER';
   const isSuperAdmin = profile?.systemRole === 'SUPER_ADMIN';
 
-  // Proforma select: only SELLER (org role) or SUPER_ADMIN (system role bypass)
-  const canSelectProforma = userRole === 'SELLER' || isSuperAdmin;
-
   const canSelectOrganization = userRole !== 'SELLER' || isSuperAdmin ;
 
   // Define navigation links based on user role
   const navLinks: NavbarLink[] = [
-    {
-      href: '/dashboard/quotes',
-      label: t('quotes'),
-      icon: <FileText className="w-5 h-5" />,
-      roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'VIEWER'],
-    },
     {
       href: '/dashboard/orders',
       label: t('orders'),
@@ -56,7 +47,7 @@ export function Navbar() {
       href: '/dashboard/shipments',
       label: t('shipments'),
       icon: <ShipIcon className="w-5 h-5" />,
-      roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'CUSTOMS_BROKER', 'VIEWER'],
+      roles: ['CUSTOMS_BROKER'],
     },
     {
       href: '/dashboard/simulations',
@@ -68,13 +59,13 @@ export function Navbar() {
       href: '/dashboard/products',
       label: t('products'),
       icon: <PackageOpen className="w-5 h-5" />,
-      roles: ['ADMIN', 'ADMIN_EMPLOYEE', 'SELLER', 'OWNER'],
+      roles: ['SELLER'],
     },
   ];
 
   // Filter links based on user role
   const filteredLinks = navLinks.filter(
-    (link) => !link.roles || link.roles.includes(userRole)
+    (link) => !link.roles || link.roles.includes(userRole) || isSuperAdmin
   );
 
   return (
@@ -109,16 +100,7 @@ export function Navbar() {
 
           )}
 
-          <Separator
-            className="h-8 hidden md:block"
-            orientation="vertical"
-          />
 
-          {canSelectProforma && (
-            <div className="hidden sm:flex">
-              <NavbarProformaQuoteSelect />
-            </div>
-          )}
         </div>
 
         {/* Right Content - Navigation Links */}

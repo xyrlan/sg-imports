@@ -254,7 +254,7 @@ function SendQuoteModal({
               </Modal.Icon>
               <Modal.Heading>{t('sendModalTitle')}</Modal.Heading>
             </Modal.Header>
-            <Modal.Body className="space-y-4">
+            <Modal.Body className="space-y-4 p-0.5">
               <p className="text-sm text-default-500">{t('sendModalDescription')}</p>
               <div className='flex flex-col gap-2'>
                 <Label>{t('clientOrganization')}</Label>
