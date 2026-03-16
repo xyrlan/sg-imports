@@ -44,7 +44,7 @@ export function NavbarOrganizationSelect() {
     <div className="flex items-center gap-1">
       <Select
         aria-label={t('select')}
-        className="max-w-64"
+        className="max-w-64 w-max min-w-64"
         value={currentOrganization?.id}
         isDisabled={isLoading || isSwitching}
         placeholder={t('select')}
@@ -85,7 +85,7 @@ export function NavbarOrganizationSelect() {
                 textValue={t('createNew')}
                 onPress={() => router.push('/dashboard/organizations/new')}
               >
-                <div className="flex items-center gap-2 text-accent">
+                <div className="flex items-center gap-2 text-field-foreground">
                   <Plus className="w-4 h-4" />
                   <span className="text-sm font-medium">{t('createNew')}</span>
                 </div>

@@ -18,8 +18,9 @@ import { NavbarOrganizationSelect } from './navbar-organization-select';
 import { NavbarProformaQuoteSelect } from './navbar-proforma-quote-select';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { Logo } from '../logo';
+import { NavbarMobileMenu } from './navbar-mobile-menu';
 
-interface NavbarLink {
+export interface NavbarLink {
   href: string;
   label: string;
   icon: React.ReactNode;
@@ -128,7 +129,12 @@ export function Navbar() {
 
           <NotificationBell />
         </div>
-        
+
+        {/* Mobile Menu */}
+        <div className="flex lg:hidden">
+          <NavbarMobileMenu links={filteredLinks} />
+        </div>
+
       </nav>
     </header>
   );

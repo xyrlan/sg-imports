@@ -1,19 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dropdown, Avatar, Label } from '@heroui/react';
-import { User, Settings, LogOut, Shield } from 'lucide-react';
+import { Dropdown, Avatar, Header, Label, Separator } from '@heroui/react';
+import { User, Settings, LogOut, Shield, Building2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { useOrganizationState } from '@/contexts/organization-context';
+import { useOrganization, useOrganizationState } from '@/contexts/organization-context';
 import { signOutAction } from '@/app/actions/auth';
 
 export function NavbarProfileDropdown() {
   const t = useTranslations('Navbar.Profile');
+  const tOrg = useTranslations('Organization');
   const router = useRouter();
   const { membership, currentOrganization, profile } = useOrganizationState();
+  const { availableOrganizations, switchOrganization } = useOrganization();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -32,6 +43,20 @@ export function NavbarProfileDropdown() {
   const isSuperAdmin = profile?.systemRole === 'SUPER_ADMIN';
   const initials = organizationName.charAt(0).toUpperCase() + (organizationName.charAt(1) || '').toUpperCase();
 
+  const canSelectOrganization = userRole !== 'SELLER' || isSuperAdmin;
+  const showOrgSection = isMobile && canSelectOrganization;
+  const showOrgList = showOrgSection && availableOrganizations.length > 1;
+
+  const handleOrganizationSwitch = async (orgId: string) => {
+    if (orgId === currentOrganization?.id) return;
+    try {
+      await switchOrganization(orgId);
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to switch organization:', error);
+    }
+  };
+
   return (
     <Dropdown>
       <Dropdown.Trigger className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none">
@@ -46,7 +71,7 @@ export function NavbarProfileDropdown() {
         </div>
       </Dropdown.Trigger>
 
-      <Dropdown.Popover placement="bottom start">
+      <Dropdown.Popover placement="bottom start" className="min-w-64">
         <div className="px-3 pt-3 pb-1">
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold">{userFullName}</p>
@@ -55,13 +80,18 @@ export function NavbarProfileDropdown() {
         </div>
 
         <Dropdown.Menu onAction={(key) => {
-          if (key === 'my-profile') {
+          const keyStr = key.toString();
+          if (keyStr === 'my-profile') {
             router.push('/dashboard/profile');
-          } else if (key === 'settings') {
+          } else if (keyStr === 'settings') {
             router.push('/dashboard/settings');
-          } else if (key === 'admin-dashboard') {
+          } else if (keyStr === 'admin-dashboard') {
             router.push('/admin');
-          } else if (key === 'logout') {
+          } else if (keyStr === 'org-create-new') {
+            router.push('/dashboard/organizations/new');
+          } else if (keyStr.startsWith('org-')) {
+            handleOrganizationSwitch(keyStr.replace('org-', ''));
+          } else if (keyStr === 'logout') {
             handleSignOut();
           }
         }}>
@@ -98,6 +128,39 @@ export function NavbarProfileDropdown() {
               <Label>{t('settings')}</Label>
             </div>
           </Dropdown.Item>
+
+          {showOrgSection && (
+            <>
+              <Separator />
+              <Dropdown.Section>
+                {showOrgList && (
+                  <>
+                    <Header>{tOrg('myOrganizations')}</Header>
+                    {availableOrganizations
+                      .filter((org) => org.organization.id !== currentOrganization?.id)
+                      .map((org) => (
+                        <Dropdown.Item
+                          key={`org-${org.organization.id}`}
+                          id={`org-${org.organization.id}`}
+                          textValue={org.organization.name}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-muted" />
+                            <Label>{org.organization.name}</Label>
+                          </div>
+                        </Dropdown.Item>
+                      ))}
+                  </>
+                )}
+                <Dropdown.Item id="org-create-new" textValue={tOrg('createNew')}>
+                  <div className="flex items-center gap-2 text-field-foreground">
+                    <Plus className="w-4 h-4" />
+                    <Label>{tOrg('createNew')}</Label>
+                  </div>
+                </Dropdown.Item>
+              </Dropdown.Section>
+            </>
+          )}
 
           <Dropdown.Item
             id="logout"

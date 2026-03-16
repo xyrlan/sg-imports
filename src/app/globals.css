@@ -3,12 +3,155 @@
 
 
 @layer components {
+  /* ===========================
+   * Accordion
+   * =========================== */
   .accordion {
-    @apply  bg-background-secondary;
+    @apply bg-background-secondary;
   }
 
   .accordion__trigger {
-    @apply cursor-pointer;
+    @apply cursor-pointer transition-colors duration-150;
+  }
+
+  .accordion__trigger:hover {
+    background-color: var(--surface-tertiary);
+  }
+
+  .accordion__item + .accordion__item {
+    border-top: 1px solid var(--separator);
+  }
+
+  .accordion__content {
+    @apply px-4 pb-4;
+  }
+
+  /* ===========================
+   * Card — subtle border + shadow refinement
+   * =========================== */
+  .card {
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px 0 oklch(0% 0 0 / 0.06), 0 1px 2px -1px oklch(0% 0 0 / 0.06);
+  }
+
+  /* ===========================
+   * Modal / AlertDialog — consistent spacing
+   * =========================== */
+  .modal__header {
+    @apply mb-4;
+  }
+
+  .modal__icon {
+    background-color: var(--default);
+    color: var(--foreground);
+  }
+
+  .alert-dialog__icon--danger {
+    background-color: oklch(from var(--danger) l c h / 0.15);
+    color: var(--danger);
+  }
+
+  /* ===========================
+   * Chip — soft color variant refinements
+   * =========================== */
+  .chip--success.chip--soft {
+    background-color: oklch(from var(--success) l c h / 0.15);
+    color: var(--success);
+  }
+
+  .chip--danger.chip--soft {
+    background-color: oklch(from var(--danger) l c h / 0.15);
+    color: var(--danger);
+  }
+
+  .chip--warning.chip--soft {
+    background-color: oklch(from var(--warning) l c h / 0.15);
+    color: var(--warning);
+  }
+
+  /* ===========================
+   * Button — focus ring consistency
+   * =========================== */
+  .button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .button:disabled,
+  .button[aria-disabled="true"] {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* ===========================
+   * TextField / Input — focus ring consistency
+   * =========================== */
+  .input:focus-visible,
+  .text-area:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -1px;
+  }
+
+  .select__trigger:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -1px;
+  }
+
+  /* ===========================
+   * Tabs — active state refinement
+   * =========================== */
+  .tabs__trigger {
+    @apply transition-colors duration-150;
+    color: var(--muted);
+  }
+
+  .tabs__trigger:hover {
+    color: var(--foreground);
+  }
+
+  .tabs__trigger[data-selected] {
+    color: var(--foreground);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ===========================
+   * Toast — status-colored left border
+   * =========================== */
+  .toast--success {
+    border-left: 3px solid var(--success);
+  }
+
+  .toast--danger {
+    border-left: 3px solid var(--danger);
+  }
+
+  .toast--warning {
+    border-left: 3px solid var(--warning);
+  }
+
+  /* ===========================
+   * Utility Classes
+   * =========================== */
+  .page-header {
+    @apply flex items-center justify-between pb-4 mb-6 border-b;
+    border-color: var(--separator);
+  }
+
+  .form-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 text-xs font-medium;
+  }
+
+  .status-badge__dot {
+    @apply size-2 rounded-full;
+    background-color: currentColor;
+  }
+
+  .content-empty {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+    color: var(--muted);
   }
 }
 
@@ -35,20 +178,20 @@
   /* Theme Colors (Light Mode) */
   --accent: oklch(37.17% 0.0392 257.28);
   --accent-foreground: oklch(99.11% 0 0);
-  --background: oklch(97.02% 0.0165 257.28);
+  --background: oklch(98.00% 0.0165 257.28);
   --border: oklch(90.00% 0.0165 257.28);
   --danger: oklch(65.32% 0.2405 26.15);
   --danger-foreground: oklch(99.11% 0 0);
-  --default: oklch(94.00% 0.0165 257.28);
+  --default: oklch(92.00% 0.0165 257.28);
   --default-foreground: oklch(21.03% 0.0059 257.28);
-  --field-background: oklch(95.24% 0.0132 257.28);
+  --field-background: oklch(94.00% 0.0132 257.28);
   --field-border: var(--border);
   --field-border-width: 1px;
   --field-foreground: oklch(21.03% 0.0165 257.28);
-  --field-placeholder: oklch(55.17% 0.0330 257.28);
+  --field-placeholder: oklch(52.00% 0.0330 257.28);
   --focus: oklch(37.17% 0.0392 257.28);
   --foreground: oklch(21.03% 0.0165 257.28);
-  --muted: oklch(55.17% 0.0330 257.28);
+  --muted: oklch(50.00% 0.0330 257.28);
   --overlay: oklch(100.00% 0.0050 257.28);
   --overlay-foreground: oklch(21.03% 0.0165 257.28);
   --scrollbar: oklch(87.10% 0.0165 257.28);
@@ -79,33 +222,33 @@
   --accent-foreground: oklch(99.11% 0 0);
   /* Secondary button/Chip use accent-soft-foreground (default: --accent). Override for dark mode readability. */
   --color-accent-soft-foreground: var(--foreground);
-  --background: oklch(12.00% 0.0165 257.28);
-  --border: oklch(28.00% 0.0165 257.28);
+  --background: oklch(10.00% 0.0165 257.28);
+  --border: oklch(35.00% 0.0165 257.28);
   --danger: oklch(59.40% 0.2032 25.04);
   --danger-foreground: oklch(99.11% 0 0);
-  --default: oklch(27.40% 0.0165 257.28);
+  --default: oklch(33.00% 0.0165 257.28);
   --default-foreground: oklch(99.11% 0 0);
-  --field-background: oklch(25.70% 0.0248 257.28);
+  --field-background: oklch(20.00% 0.0248 257.28);
   --field-border: var(--border);
   --field-border-width: 1px;
   --field-foreground: oklch(99.11% 0.0165 257.28);
   --field-placeholder: oklch(70.50% 0.0330 257.28);
   --focus: oklch(37.17% 0.0392 257.28);
   --foreground: oklch(99.11% 0.0165 257.28);
-  --muted: oklch(70.50% 0.0330 257.28);
+  --muted: oklch(65.00% 0.0330 257.28);
   --overlay: oklch(21.03% 0.0330 257.28);
   --overlay-foreground: oklch(99.11% 0.0165 257.28);
-  --scrollbar: oklch(70.50% 0.0165 257.28);
+  --scrollbar: oklch(65.00% 0.0165 257.28);
   --segment: oklch(39.64% 0.0165 257.28);
   --segment-foreground: oklch(99.11% 0.0165 257.28);
-  --separator: oklch(25.00% 0.0165 257.28);
+  --separator: oklch(28.00% 0.0165 257.28);
   --success: oklch(73.29% 0.1999 151.22);
   --success-foreground: oklch(21.03% 0.0059 151.22);
-  --surface: oklch(21.03% 0.0330 257.28);
+  --surface: oklch(18.00% 0.0330 257.28);
   --surface-foreground: oklch(99.11% 0.0165 257.28);
-  --surface-secondary: oklch(25.70% 0.0248 257.28);
+  --surface-secondary: oklch(24.00% 0.0248 257.28);
   --surface-secondary-foreground: oklch(99.11% 0.0165 257.28);
-  --surface-tertiary: oklch(27.21% 0.0248 257.28);
+  --surface-tertiary: oklch(29.00% 0.0248 257.28);
   --surface-tertiary-foreground: oklch(99.11% 0.0165 257.28);
   --warning: oklch(82.03% 0.1434 76.75);
   --warning-foreground: oklch(21.03% 0.0059 76.75);
