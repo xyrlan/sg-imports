@@ -253,6 +253,7 @@
     "shipments": "Embarques",
     "products": "Produtos",
     "simulations": "Simulações",
+    "proposals": "Propostas",
     "Notifications": {
       "title": "Notificações",
       "empty": "Nenhuma notificação",
@@ -1531,6 +1532,34 @@
       "hsCode": "Código HS / NCM",
       "supplierName": "Nome do fornecedor",
       "supplierNamePlaceholder": "Nome do fornecedor (opcional)"
+    }
+  },
+  "Proposals": {
+    "title": "Propostas Recebidas",
+    "description": "Veja e responda às propostas enviadas para sua organização",
+    "Pending": {
+      "title": "Aguardando Resposta",
+      "empty": "Nenhuma proposta pendente no momento.",
+      "from": "De",
+      "receivedOn": "Recebido em",
+      "viewDetails": "Ver Detalhes"
+    },
+    "History": {
+      "title": "Histórico",
+      "empty": "Nenhuma proposta anterior.",
+      "searchPlaceholder": "Buscar propostas..."
+    },
+    "Columns": {
+      "name": "Proposta",
+      "seller": "Fornecedor",
+      "receivedAt": "Recebido em",
+      "status": "Status"
+    },
+    "Status": {
+      "APPROVED": "Aprovada",
+      "REJECTED": "Rejeitada",
+      "PENDING_SIGNATURE": "Aguardando Assinatura",
+      "CONVERTED": "Convertida em Pedido"
     }
   }
 }

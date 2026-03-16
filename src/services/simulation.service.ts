@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import { db, type DbTransaction } from '@/db';
 import { quotes, quoteItems, memberships, productVariants, products, hsCodes } from '@/db/schema';
-import { eq, and, or, desc, asc, sql, inArray, isNotNull } from 'drizzle-orm';
+import { eq, and, or, ne, desc, asc, sql, inArray, isNotNull } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { ProductSnapshot, ShippingMetadata } from '@/db/types';
 import { getOrganizationById } from '@/services/organization.service';
@@ -166,6 +166,52 @@ export async function getSimulationsByOrganization(
     data,
     paging: { totalCount, page, pageSize },
   };
+}
+
+export type ProposalWithSeller = Simulation & {
+  sellerOrganization: { id: string; name: string } | null;
+};
+
+export interface GetProposalsResult {
+  pending: ProposalWithSeller[];
+  history: ProposalWithSeller[];
+}
+
+/**
+ * Fetch proposals (SIMULATION quotes) where the organization is the client.
+ * Excludes DRAFTs. Splits into pending (SENT) and history (everything else).
+ */
+export async function getProposalsForClient(
+  organizationId: string,
+  userId: string
+): Promise<GetProposalsResult> {
+  const membership = await db.query.memberships.findFirst({
+    where: and(
+      eq(memberships.organizationId, organizationId),
+      eq(memberships.profileId, userId)
+    ),
+  });
+
+  if (!membership) {
+    return { pending: [], history: [] };
+  }
+
+  const data = await db.query.quotes.findMany({
+    where: and(
+      eq(quotes.clientOrganizationId, organizationId),
+      eq(quotes.type, 'SIMULATION'),
+      ne(quotes.status, 'DRAFT')
+    ),
+    with: {
+      sellerOrganization: { columns: { id: true, name: true } },
+    },
+    orderBy: desc(quotes.updatedAt),
+  });
+
+  const pending = data.filter((q) => q.status === 'SENT') as ProposalWithSeller[];
+  const history = data.filter((q) => q.status !== 'SENT') as ProposalWithSeller[];
+
+  return { pending, history };
 }
 
 /**

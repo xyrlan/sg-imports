@@ -56,6 +56,12 @@ export function Navbar() {
       roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'SELLER', 'VIEWER'],
     },
     {
+      href: '/dashboard/proposals',
+      label: t('proposals'),
+      icon: <FileText className="w-5 h-5" />,
+      roles: ['OWNER', 'ADMIN', 'ADMIN_EMPLOYEE', 'VIEWER'],
+    },
+    {
       href: '/dashboard/products',
       label: t('products'),
       icon: <PackageOpen className="w-5 h-5" />,

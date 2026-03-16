@@ -35,7 +35,7 @@ export function PublicQuoteView({
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6 pb-48 md:pb-0">
         <div className="flex items-center justify-between">
           <Link href="/login">
             <Button variant="ghost" size="sm" className="inline-flex items-center gap-2">
@@ -63,7 +63,8 @@ export function PublicQuoteView({
           </div>
         )}
 
-        <Card>
+        {/* Desktop table — hidden on mobile */}
+        <Card className="hidden md:block">
           <Card.Header>
             <Card.Title>{t('items')}</Card.Title>
           </Card.Header>
@@ -99,6 +100,31 @@ export function PublicQuoteView({
           </Card.Content>
         </Card>
 
+        {/* Mobile cards — visible only on mobile */}
+        <div className="md:hidden space-y-3">
+          <h2 className="font-semibold">{t('items')}</h2>
+          {data.items.map((item) => (
+            <Card key={item.id} className="p-4">
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-sm leading-tight">{item.name}</p>
+                  {item.sku && (
+                    <span className="text-xs text-muted-foreground shrink-0">{item.sku}</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t('qty')}: {item.quantity}</span>
+                  <span>{formatCurrency(Number(item.priceUsd), 'en-US', 'USD')}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm font-semibold border-t border-border/50 pt-2">
+                  <span className="text-muted-foreground">{t('totalBrl')}</span>
+                  <span>{formatCurrency(Number(item.landedCostTotalSnapshot), 'pt-BR', 'BRL')}</span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
         <Card>
           <Card.Header>
             <Card.Title>{t('summary')}</Card.Title>
@@ -115,7 +141,7 @@ export function PublicQuoteView({
           </Card.Content>
         </Card>
 
-        <div className="flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-6">
+        <div className="flex flex-col gap-4 fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:z-auto md:border md:border-border md:rounded-lg md:bg-muted/30 md:p-6 md:shadow-none">
           <h2 className="font-semibold">{t('nextSteps')}</h2>
 
           {!user ? (
