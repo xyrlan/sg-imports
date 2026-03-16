@@ -9,7 +9,7 @@ import { RefreshCw } from 'lucide-react';
 import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
-import { syncCarriersFromShipsGoAction } from '../../actions';
+import { syncCarriersFromShipsGoAction } from './actions';
 import type { Carrier } from '@/services/admin';
 
 const carrierColumnHelper = createColumnHelper<Carrier>();

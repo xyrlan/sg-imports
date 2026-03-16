@@ -11,7 +11,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddCurrencyExchangeBrokerModal } from './add-currency-exchange-broker-modal';
 import { EditCurrencyExchangeBrokerModal } from './edit-currency-exchange-broker-modal';
-import { deleteCurrencyExchangeBrokerAction } from '../../actions';
+import { deleteCurrencyExchangeBrokerAction } from './actions';
 import type { CurrencyExchangeBroker } from '@/services/admin';
 
 const brokerColumnHelper = createColumnHelper<CurrencyExchangeBroker>();

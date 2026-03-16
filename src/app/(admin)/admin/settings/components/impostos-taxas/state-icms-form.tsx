@@ -4,7 +4,7 @@ import { useActionState, useState, useMemo, useEffect } from 'react';
 import { Button, Card, Label, NumberField, Radio, RadioGroup, toast } from '@heroui/react';
 import { Search } from 'lucide-react';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
-import { updateStateIcmsAction } from '../../actions';
+import { updateStateIcmsAction } from './actions';
 import { STATE_REGIONS } from '../../constants';
 import type { StateIcmsRate } from '@/services/admin';
 import type { TranslateFn } from '../../constants';

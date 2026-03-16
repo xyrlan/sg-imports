@@ -17,7 +17,7 @@ import {
   createInternationalFreightAction,
   updateInternationalFreightAction,
   deleteInternationalFreightAction,
-} from '../../actions';
+} from './actions';
 import type {
   InternationalFreightWithPorts,
   Port,

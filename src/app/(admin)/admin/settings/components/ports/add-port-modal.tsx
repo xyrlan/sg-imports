@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Button, Input, Label, ListBox, Modal, Select, TextField } from '@heroui/react';
 import { Anchor } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
-import { createPortAction } from '../../actions';
+import { useActionModal } from '@/hooks/use-action-modal';
+import { createPortAction } from './actions';
 import { getCountryFromCode } from '@/lib/country-codes';
 
 interface AddPortModalProps {
@@ -24,7 +24,10 @@ export function AddPortModal({
   const [code, setCode] = useState('');
   const [country, setCountry] = useState('');
   const [type, setType] = useState<'PORT' | 'AIRPORT'>('PORT');
-  const [state, formAction, isPending] = useActionState(createPortAction, null);
+  const { state, formAction, isPending } = useActionModal({
+    action: createPortAction,
+    onSuccess: () => onOpenChange(false),
+  });
 
   const handleCodeChange = (value: string) => {
     setCode(value);
@@ -33,12 +36,6 @@ export function AddPortModal({
       if (autoCountry) setCountry(autoCountry);
     }
   };
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
 
   useEffect(() => {
     if (isOpen) {

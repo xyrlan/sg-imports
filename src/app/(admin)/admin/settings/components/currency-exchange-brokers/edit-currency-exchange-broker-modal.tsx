@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Landmark } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
-import { updateCurrencyExchangeBrokerAction } from '../../actions';
+import { useActionModal } from '@/hooks/use-action-modal';
+import { updateCurrencyExchangeBrokerAction } from './actions';
 import type { CurrencyExchangeBroker } from '@/services/admin';
 
 interface EditCurrencyExchangeBrokerModalProps {
@@ -24,22 +24,16 @@ export function EditCurrencyExchangeBrokerModal({
 }: EditCurrencyExchangeBrokerModalProps) {
   const t = useTranslations('Admin.Settings');
   const [name, setName] = useState(broker.name);
-  const [state, formAction, isPending] = useActionState(
-    updateCurrencyExchangeBrokerAction.bind(null, broker.id),
-    null,
-  );
+  const { state, formAction, isPending } = useActionModal({
+    action: updateCurrencyExchangeBrokerAction.bind(null, broker.id),
+    onSuccess: () => onOpenChange(false),
+  });
 
   useEffect(() => {
     if (isOpen) {
       queueMicrotask(() => setName(broker.name));
     }
   }, [isOpen, broker.name]);
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
 
   return (
     <Modal>

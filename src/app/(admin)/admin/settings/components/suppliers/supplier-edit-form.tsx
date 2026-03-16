@@ -12,7 +12,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { AddSubSupplierModal } from './add-sub-supplier-modal';
 import { EditSubSupplierModal } from './edit-sub-supplier-modal';
-import { deleteSubSupplierAction } from '../../actions';
+import { deleteSubSupplierAction } from './actions';
 import type { SupplierWithSubSuppliers, SubSupplier } from '@/services/admin';
 
 const subSupplierColumnHelper = createColumnHelper<SubSupplier>();

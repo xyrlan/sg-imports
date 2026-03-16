@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Landmark } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
-import { createCurrencyExchangeBrokerAction } from '../../actions';
+import { useActionModal } from '@/hooks/use-action-modal';
+import { createCurrencyExchangeBrokerAction } from './actions';
 
 interface AddCurrencyExchangeBrokerModalProps {
   isOpen: boolean;
@@ -20,16 +19,10 @@ export function AddCurrencyExchangeBrokerModal({
   trigger,
 }: AddCurrencyExchangeBrokerModalProps) {
   const t = useTranslations('Admin.Settings');
-  const [state, formAction, isPending] = useActionState(
-    createCurrencyExchangeBrokerAction,
-    null,
-  );
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
+  const { state, formAction, isPending } = useActionModal({
+    action: createCurrencyExchangeBrokerAction,
+    onSuccess: () => onOpenChange(false),
+  });
 
   return (
     <Modal>

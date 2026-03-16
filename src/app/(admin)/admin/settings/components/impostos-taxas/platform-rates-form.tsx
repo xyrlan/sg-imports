@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from 'react';
 import { Card, Button, toast } from '@heroui/react';
 import { RATE_TYPES } from '../../constants';
-import { updateAllPlatformRatesAction } from '../../actions';
+import { updateAllPlatformRatesAction } from './actions';
 import { PlatformRateFormRow } from './platform-rate-form';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import type { GlobalPlatformRate } from '@/services/admin';

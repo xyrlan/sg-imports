@@ -4,7 +4,7 @@ import { useActionState, useState, useEffect } from 'react';
 import { Label, Button, Card, NumberField, toast } from '@heroui/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
-import { updateSiscomexFeeAction } from '../../actions';
+import { updateSiscomexFeeAction } from './actions';
 import type { SiscomexFeeConfig } from '@/services/admin';
 import type { TranslateFn } from '../../constants';
 

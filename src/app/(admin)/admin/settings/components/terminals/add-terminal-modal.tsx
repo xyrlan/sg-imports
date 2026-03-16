@@ -5,7 +5,7 @@ import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Building2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionModal } from '@/hooks/use-action-modal';
-import { createTerminalAction } from '../../actions';
+import { createTerminalAction } from './actions';
 
 interface AddTerminalModalProps {
   isOpen: boolean;

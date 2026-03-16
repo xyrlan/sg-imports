@@ -12,7 +12,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { ListBox } from '@heroui/react';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddSupplierModal } from './add-supplier-modal';
-import { deleteSupplierAction } from '../../actions';
+import { deleteSupplierAction } from './actions';
 import type { Supplier, SupplierWithSubSuppliers } from '@/services/admin';
 import { SupplierEditForm } from './supplier-edit-form';
 import { EditSupplierModal } from './edit-supplier-modal';

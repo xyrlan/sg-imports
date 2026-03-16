@@ -11,7 +11,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddPortModal } from './add-port-modal';
 import { EditPortModal } from './edit-port-modal';
-import { deletePortAction } from '../../actions';
+import { deletePortAction } from './actions';
 import type { Port } from '@/services/admin';
 
 const portColumnHelper = createColumnHelper<Port>();

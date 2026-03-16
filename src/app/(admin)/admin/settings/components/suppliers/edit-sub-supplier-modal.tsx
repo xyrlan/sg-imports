@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Users } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
-import { updateSubSupplierAction } from '../../actions';
+import { useActionModal } from '@/hooks/use-action-modal';
+import { updateSubSupplierAction } from './actions';
 import type { SubSupplier } from '@/services/admin';
 
 interface EditSubSupplierModalProps {
@@ -28,10 +28,10 @@ export function EditSubSupplierModal({
   const [countryCode, setCountryCode] = useState(subSupplier.countryCode ?? '');
   const [email, setEmail] = useState(subSupplier.email ?? '');
   const [address, setAddress] = useState(subSupplier.address ?? '');
-  const [state, formAction, isPending] = useActionState(
-    updateSubSupplierAction.bind(null, subSupplier.id),
-    null,
-  );
+  const { state, formAction, isPending } = useActionModal({
+    action: updateSubSupplierAction.bind(null, subSupplier.id),
+    onSuccess: () => onOpenChange(false),
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -44,12 +44,6 @@ export function EditSubSupplierModal({
       });
     }
   }, [isOpen, subSupplier]);
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
 
   return (
     <Modal>

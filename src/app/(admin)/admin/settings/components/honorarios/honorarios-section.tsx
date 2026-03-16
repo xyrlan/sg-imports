@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Label, NumberField, Button, Card, Switch } from '@heroui/react';
 import { FormError } from '@/components/ui/form-error';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
-import { updateHonorariosAction } from '../../actions';
+import { updateHonorariosAction } from './actions';
 import type { GlobalServiceFeeConfig } from '@/services/admin';
 
 function parseDecimal(value: string | null | undefined): number {
