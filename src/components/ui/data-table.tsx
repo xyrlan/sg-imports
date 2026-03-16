@@ -2,6 +2,7 @@
 'use no memo';
 
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   useReactTable,
   getCoreRowModel,
@@ -201,6 +202,7 @@ function DataTableFilterDropdown<TData>({
   table: Table<TData>;
   filters: FacetedFilterDef[];
 }) {
+  const t = useTranslations('Common.DataTable');
   const [isOpen, setIsOpen] = useState(false);
 
   // Count total active filters across all faceted filter groups
@@ -300,7 +302,7 @@ function DataTableFilterDropdown<TData>({
                   className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
                 >
                   <X className="size-3" />
-                  Limpar filtros
+                  {t('clearFilters')}
                 </button>
               </div>
             )}
@@ -312,6 +314,7 @@ function DataTableFilterDropdown<TData>({
 }
 
 function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
+  const t = useTranslations('Common.DataTable');
   const pageIndex = table.getState().pagination.pageIndex;
   const pageCount = table.getPageCount();
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
@@ -323,10 +326,10 @@ function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
       <div className="text-sm text-muted">
         {selectedCount > 0 ? (
           <span>
-            {selectedCount} de {totalRows} selecionado(s)
+            {t('selected', { selected: selectedCount, total: totalRows })}
           </span>
         ) : (
-          <span>{totalRows} resultado(s)</span>
+          <span>{t('results', { total: totalRows })}</span>
         )}
       </div>
 
@@ -334,7 +337,7 @@ function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
       <div className="flex items-center gap-2">
         {/* Page size selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted">Linhas:</span>
+          <span className="text-sm text-muted">{t('rows')}</span>
           <select
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
@@ -350,7 +353,7 @@ function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
 
         {/* Page indicator */}
         <span className="text-sm text-muted min-w-[100px] text-center">
-          Pag. {pageIndex + 1} de {pageCount || 1}
+          {t('pageOf', { current: pageIndex + 1, total: pageCount || 1 })}
         </span>
 
         {/* Navigation buttons */}
@@ -434,6 +437,7 @@ export function DataTable<TData>({
   onPaginationChange,
   onRowSelectionChange,
 }: DataTableProps<TData>) {
+  const t = useTranslations('Common.DataTable');
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -562,7 +566,7 @@ export function DataTable<TData>({
                     colSpan={allColumns.length}
                     className="px-4 py-12 text-center text-muted"
                   >
-                    Nenhum resultado encontrado.
+                    {t('noResults')}
                   </td>
                 </tr>
               )}

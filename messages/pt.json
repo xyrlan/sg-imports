@@ -1561,5 +1561,16 @@
       "PENDING_SIGNATURE": "Aguardando Assinatura",
       "CONVERTED": "Convertida em Pedido"
     }
+  },
+  "Common": {
+    "DataTable": {
+      "clearFilters": "Limpar filtros",
+      "rows": "Linhas:",
+      "page": "Pag.",
+      "noResults": "Nenhum resultado encontrado.",
+      "selected": "{selected} de {total} selecionado(s)",
+      "results": "{total} resultado(s)",
+      "pageOf": "Pag. {current} de {total}"
+    }
   }
 }
