@@ -1,10 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, Modal, TextField } from '@heroui/react';
-import { Truck } from 'lucide-react';
-import { FormError } from '@/components/ui/form-error';
-import { useActionModal } from '@/hooks/use-action-modal';
+import { SupplierFormModal } from '@/components/shared/supplier-form-modal';
 import { createSupplierAction } from './supplier-actions';
 
 interface AddSupplierModalProps {
@@ -21,63 +18,30 @@ export function AddSupplierModal({
   trigger,
 }: AddSupplierModalProps) {
   const t = useTranslations('Products.Suppliers');
-  const { state, formAction, isPending } = useActionModal({
-    action: createSupplierAction,
-    onSuccess: () => onOpenChange(false),
-  });
 
   return (
-    <Modal>
-      {trigger}
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
-        <Modal.Container>
-          <Modal.Dialog>
-            <Modal.CloseTrigger />
-            <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
-                <Truck className="size-5" />
-              </Modal.Icon>
-              <Modal.Heading>{t('addSupplier')}</Modal.Heading>
-            </Modal.Header>
-            <form action={formAction}>
-              <input type="hidden" name="organizationId" value={organizationId} />
-              <Modal.Body className="p-2">
-                <div className="space-y-4">
-                  <TextField variant="primary" isRequired>
-                    <Label>{t('name')}</Label>
-                    <Input name="name" placeholder={t('namePlaceholder')} />
-                  </TextField>
-                  <TextField variant="primary">
-                    <Label>{t('taxId')}</Label>
-                    <Input name="taxId" placeholder={t('taxIdPlaceholder')} />
-                  </TextField>
-                  <TextField variant="primary">
-                    <Label>{t('countryCode')}</Label>
-                    <Input name="countryCode" placeholder={t('countryCodePlaceholder')} />
-                  </TextField>
-                  <TextField variant="primary">
-                    <Label>{t('email')}</Label>
-                    <Input name="email" placeholder={t('emailPlaceholder')} />
-                  </TextField>
-                  <TextField variant="primary">
-                    <Label>{t('address')}</Label>
-                    <Input name="address" placeholder={t('addressPlaceholder')} />
-                  </TextField>
-                  {state?.error && <FormError message={state.error} />}
-                </div>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button type="button" variant="outline" slot="close">
-                  {t('cancel')}
-                </Button>
-                <Button type="submit" variant="primary" isPending={isPending}>
-                  {isPending ? t('saving') : t('save')}
-                </Button>
-              </Modal.Footer>
-            </form>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+    <SupplierFormModal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      trigger={trigger}
+      action={createSupplierAction}
+      organizationId={organizationId}
+      labels={{
+        heading: t('addSupplier'),
+        name: t('name'),
+        namePlaceholder: t('namePlaceholder'),
+        taxId: t('taxId'),
+        taxIdPlaceholder: t('taxIdPlaceholder'),
+        countryCode: t('countryCode'),
+        countryCodePlaceholder: t('countryCodePlaceholder'),
+        email: t('email'),
+        emailPlaceholder: t('emailPlaceholder'),
+        address: t('address'),
+        addressPlaceholder: t('addressPlaceholder'),
+        cancel: t('cancel'),
+        save: t('save'),
+        saving: t('saving'),
+      }}
+    />
   );
 }
