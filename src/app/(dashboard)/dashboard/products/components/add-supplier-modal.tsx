@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Truck } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
-import { createSupplierAction } from '../actions';
+import { useActionModal } from '@/hooks/use-action-modal';
+import { createSupplierAction } from './supplier-actions';
 
 interface AddSupplierModalProps {
   organizationId: string;
@@ -22,13 +21,10 @@ export function AddSupplierModal({
   trigger,
 }: AddSupplierModalProps) {
   const t = useTranslations('Products.Suppliers');
-  const [state, formAction, isPending] = useActionState(createSupplierAction, null);
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
+  const { state, formAction, isPending } = useActionModal({
+    action: createSupplierAction,
+    onSuccess: () => onOpenChange(false),
+  });
 
   return (
     <Modal>

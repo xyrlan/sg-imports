@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Button, Input, Label, Modal, TextField } from '@heroui/react';
 import { Truck } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
-import { useActionState } from 'react';
-import { updateSupplierAction } from '../actions';
+import { useActionModal } from '@/hooks/use-action-modal';
+import { updateSupplierAction } from './supplier-actions';
 import type { Supplier } from '@/services/admin';
 
 interface EditSupplierModalProps {
@@ -28,10 +28,10 @@ export function EditSupplierModal({
   const [countryCode, setCountryCode] = useState(supplier.countryCode ?? '');
   const [email, setEmail] = useState(supplier.email ?? '');
   const [address, setAddress] = useState(supplier.address ?? '');
-  const [state, formAction, isPending] = useActionState(
-    updateSupplierAction.bind(null, supplier.id),
-    null,
-  );
+  const { state, formAction, isPending } = useActionModal({
+    action: updateSupplierAction.bind(null, supplier.id),
+    onSuccess: () => onOpenChange(false),
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -44,12 +44,6 @@ export function EditSupplierModal({
       });
     }
   }, [isOpen, supplier]);
-
-  useEffect(() => {
-    if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
-    }
-  }, [state?.ok, isPending, onOpenChange]);
 
   return (
     <Modal>
