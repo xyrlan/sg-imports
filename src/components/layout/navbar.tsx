@@ -19,7 +19,7 @@ import { NavbarProformaQuoteSelect } from './navbar-proforma-quote-select';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { Logo } from '../logo';
 import { NavbarMobileMenu } from './navbar-mobile-menu';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export interface NavbarLink {
   href: string;
@@ -88,12 +88,13 @@ export function Navbar() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-default-300 bg-background">
       <nav className="mx-auto flex h-16 max-w-full items-center justify-between px-4">
         {/* Left Content */}
         <div className="flex items-center gap-4">
-          <NextLink
+       {/* <NextLink
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             href="/dashboard"
             hidden={isMobile}
@@ -104,7 +105,7 @@ export function Navbar() {
           <Separator
             className="h-8 hidden md:block"
             orientation="vertical"
-          />
+          /> */}
 
           <NavbarProfileDropdown isMobile={isMobile} />
 

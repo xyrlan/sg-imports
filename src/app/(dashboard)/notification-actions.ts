@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { requireAuthOrRedirect } from '@/services/auth.service';
 import {
   getUnreadCount,
@@ -11,20 +12,32 @@ import {
 
 /**
  * Get unread notification count for the current user.
+ * Returns 0 on failure to prevent page crashes during navigation.
  */
 export async function getUnreadCountAction(): Promise<number> {
-  const user = await requireAuthOrRedirect();
-  return getUnreadCount(user.id);
+  try {
+    const user = await requireAuthOrRedirect();
+    return getUnreadCount(user.id);
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return 0;
+  }
 }
 
 /**
  * Get latest notifications for the current user.
+ * Returns empty array on failure to prevent page crashes during navigation.
  */
 export async function getLatestNotificationsAction(
   limit = 10
 ): Promise<Awaited<ReturnType<typeof getLatest>>> {
-  const user = await requireAuthOrRedirect();
-  return getLatest(user.id, limit);
+  try {
+    const user = await requireAuthOrRedirect();
+    return getLatest(user.id, limit);
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return [];
+  }
 }
 
 export type MarkAsReadActionResult =

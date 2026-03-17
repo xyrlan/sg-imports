@@ -94,7 +94,7 @@ export function SettingsContentShell({ children }: SettingsContentShellProps) {
   ];
 
   return (
-    <div className="flex min-h-[700px] gap-4">
+    <div className="flex flex-col lg:flex-row lg:min-h-[700px] gap-4">
       <SettingsSidebar
         sections={sections}
         activeSection={activeSection}

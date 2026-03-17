@@ -25,8 +25,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <div className="min-h-screen bg-background">
       <AdminSidebar />
-      {/* Main content offset by sidebar collapsed width */}
-      <main className="ml-[83px] min-h-screen p-6">
+      {/* Main content: top padding on mobile for the top bar, left margin on desktop for sidebar */}
+      <main className="pt-16 px-4 pb-6 lg:p-6 lg:ml-[83px] lg:min-h-screen">
         {children}
       </main>
     </div>

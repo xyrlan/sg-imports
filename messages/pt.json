@@ -397,7 +397,9 @@
       "management": "Usuários e Organizações",
       "products": "Produtos",
       "settings": "Configurações",
-      "backToDashboard": "Voltar ao Dashboard"
+      "backToDashboard": "Voltar ao Dashboard",
+      "openMenu": "Abrir menu",
+      "closeMenu": "Fechar menu"
     },
     "Management": {
       "title": "Usuários e Organizações",
