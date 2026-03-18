@@ -1,8 +1,13 @@
 'use client';
 
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { FileText } from 'lucide-react';
+import { Button, Chip } from '@heroui/react';
+import { FileText, ExternalLink } from 'lucide-react';
+import { FileUpload } from '@/components/ui/file-upload';
 import type { ShipmentDetail } from '../shipment-utils';
+import { uploadShipmentDocumentAction } from '../../[id]/actions';
 
 // ============================================
 // Props
@@ -14,11 +19,431 @@ interface DocumentPreparationStepProps {
 }
 
 // ============================================
+// Helpers
+// ============================================
+
+interface SupplierInfo {
+  id: string;
+  name: string;
+}
+
+function deriveUniqueSuppliers(shipment: ShipmentDetail): SupplierInfo[] {
+  const items = shipment.quote?.items ?? [];
+  const seen = new Set<string>();
+  const suppliers: SupplierInfo[] = [];
+
+  for (const item of items) {
+    const supplier = item.variant?.product?.supplier;
+    if (supplier && !seen.has(supplier.id)) {
+      seen.add(supplier.id);
+      suppliers.push({ id: supplier.id, name: supplier.name });
+    }
+  }
+
+  return suppliers;
+}
+
+// ============================================
+// Sub-components
+// ============================================
+
+interface ExchangeSummaryCardProps {
+  shipment: ShipmentDetail;
+}
+
+function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
+  const t = useTranslations('Admin.Shipments.Steps.DocumentPreparation');
+
+  const paidMerchandiseTxns = (shipment.transactions ?? []).filter(
+    (tx) => tx.type === 'MERCHANDISE' && tx.status === 'PAID',
+  );
+
+  // Group by supplierId from exchange contracts
+  const supplierMap = new Map<string, { name: string; totalUsd: number; rateSum: number; rateCount: number }>();
+
+  // Build a supplier name lookup from quote items
+  const supplierNames = new Map<string, string>();
+  for (const item of shipment.quote?.items ?? []) {
+    const supplier = item.variant?.product?.supplier;
+    if (supplier) supplierNames.set(supplier.id, supplier.name);
+  }
+
+  let totalContracts = 0;
+
+  for (const tx of paidMerchandiseTxns) {
+    for (const ec of tx.exchangeContracts ?? []) {
+      totalContracts++;
+      const supplierId = ec.supplierId ?? 'unknown';
+      const supplierName =
+        ec.supplier?.name ?? supplierNames.get(supplierId) ?? supplierId;
+
+      const usd = parseFloat(ec.amountUsd ?? '0');
+      const rate = parseFloat(ec.exchangeRate ?? '0');
+
+      const existing = supplierMap.get(supplierId);
+      if (existing) {
+        existing.totalUsd += usd;
+        if (rate > 0) {
+          existing.rateSum += rate;
+          existing.rateCount += 1;
+        }
+      } else {
+        supplierMap.set(supplierId, {
+          name: supplierName,
+          totalUsd: usd,
+          rateSum: rate > 0 ? rate : 0,
+          rateCount: rate > 0 ? 1 : 0,
+        });
+      }
+    }
+  }
+
+  const supplierRows = Array.from(supplierMap.entries());
+
+  return (
+    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-default-700">{t('exchangeSummary')}</p>
+        <span className="text-xs text-default-500">
+          {t('numContracts')}: {totalContracts}
+        </span>
+      </div>
+
+      {supplierRows.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-default-200">
+                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                  Fornecedor
+                </th>
+                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                  {t('totalPaid')} (USD)
+                </th>
+                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                  {t('avgRate')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {supplierRows.map(([id, data]) => (
+                <tr key={id} className="border-b border-default-100 last:border-0">
+                  <td className="py-2 px-2 text-default-700">{data.name}</td>
+                  <td className="py-2 px-2 text-default-700 font-medium">
+                    ${data.totalUsd.toFixed(2)}
+                  </td>
+                  <td className="py-2 px-2 text-default-600">
+                    {data.rateCount > 0
+                      ? (data.rateSum / data.rateCount).toFixed(4)
+                      : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-xs text-default-400">—</p>
+      )}
+    </div>
+  );
+}
+
+interface SupplierDocumentsCardProps {
+  shipment: ShipmentDetail;
+  supplier: SupplierInfo;
+  readOnly: boolean;
+}
+
+function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumentsCardProps) {
+  const t = useTranslations('Admin.Shipments.Steps.DocumentPreparation');
+  const router = useRouter();
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+  const [packingFile, setPackingFile] = useState<File | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const existingInvoice = (shipment.documents ?? []).find(
+    (d) =>
+      d.type === 'COMMERCIAL_INVOICE' &&
+      (d.metadata as Record<string, unknown> | null)?.supplierId === supplier.id,
+  );
+
+  const existingPackingList = (shipment.documents ?? []).find(
+    (d) =>
+      d.type === 'PACKING_LIST' &&
+      (d.metadata as Record<string, unknown> | null)?.supplierId === supplier.id,
+  );
+
+  const uploadDocument = (type: string, file: File | null) => {
+    if (!file) return;
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('shipmentId', shipment.id);
+      formData.set('type', type);
+      formData.set('name', file.name);
+      formData.set('file', file);
+      formData.set('supplierId', supplier.id);
+      await uploadShipmentDocumentAction(formData);
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+      <p className="text-sm font-semibold text-default-700">{supplier.name}</p>
+
+      {/* Commercial Invoice */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-default-500">{t('invoice')}</p>
+          {existingInvoice && (
+            <Chip size="sm" variant="soft" color="success">
+              {t('uploaded')}
+            </Chip>
+          )}
+        </div>
+        {existingInvoice ? (
+          <a
+            href={existingInvoice.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {existingInvoice.name}
+          </a>
+        ) : !readOnly ? (
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <FileUpload
+                label=""
+                name={`invoice-${supplier.id}`}
+                onFileSelect={setInvoiceFile}
+                acceptedFormats="PDF (máx. 10MB)"
+              />
+            </div>
+            {invoiceFile && (
+              <Button
+                size="sm"
+                variant="primary"
+                onPress={() => uploadDocument('COMMERCIAL_INVOICE', invoiceFile)}
+                isPending={isPending}
+              >
+                {t('save')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-default-400">—</span>
+        )}
+      </div>
+
+      {/* Packing List */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-default-500">{t('packingList')}</p>
+          {existingPackingList && (
+            <Chip size="sm" variant="soft" color="success">
+              {t('uploaded')}
+            </Chip>
+          )}
+        </div>
+        {existingPackingList ? (
+          <a
+            href={existingPackingList.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {existingPackingList.name}
+          </a>
+        ) : !readOnly ? (
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <FileUpload
+                label=""
+                name={`packing-${supplier.id}`}
+                onFileSelect={setPackingFile}
+                acceptedFormats="PDF (máx. 10MB)"
+              />
+            </div>
+            {packingFile && (
+              <Button
+                size="sm"
+                variant="primary"
+                onPress={() => uploadDocument('PACKING_LIST', packingFile)}
+                isPending={isPending}
+              >
+                {t('save')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-default-400">—</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface OtherDocumentsCardProps {
+  shipment: ShipmentDetail;
+  readOnly: boolean;
+}
+
+function OtherDocumentsCard({ shipment, readOnly }: OtherDocumentsCardProps) {
+  const t = useTranslations('Admin.Shipments.Steps.DocumentPreparation');
+  const router = useRouter();
+  const [isAdding, setIsAdding] = useState(false);
+  const [docName, setDocName] = useState('');
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const otherDocuments = (shipment.documents ?? []).filter((d) => d.type === 'OTHER');
+
+  const handleSave = () => {
+    if (!docFile || !docName.trim()) return;
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('shipmentId', shipment.id);
+      formData.set('type', 'OTHER');
+      formData.set('name', docName.trim());
+      formData.set('file', docFile);
+      await uploadShipmentDocumentAction(formData);
+      setDocName('');
+      setDocFile(null);
+      setIsAdding(false);
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-default-700">{t('otherDocuments')}</p>
+        {!readOnly && !isAdding && (
+          <Button size="sm" variant="outline" onPress={() => setIsAdding(true)}>
+            {t('addDocument')}
+          </Button>
+        )}
+      </div>
+
+      {otherDocuments.length > 0 && (
+        <ul className="space-y-1">
+          {otherDocuments.map((doc) => (
+            <li key={doc.id}>
+              <a
+                href={doc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                {doc.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {isAdding && (
+        <div className="space-y-3 rounded-md border border-default-200 bg-white p-3">
+          <div className="space-y-1">
+            <label className="block text-xs text-default-500">{t('documentName')}</label>
+            <input
+              type="text"
+              value={docName}
+              onChange={(e) => setDocName(e.target.value)}
+              className="w-full rounded-md border border-default-300 px-3 py-1.5 text-sm"
+              placeholder={t('documentName')}
+            />
+          </div>
+          <FileUpload
+            label=""
+            name="otherDocFile"
+            onFileSelect={setDocFile}
+            acceptedFormats="PDF, JPG, PNG (máx. 10MB)"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onPress={() => {
+                setIsAdding(false);
+                setDocName('');
+                setDocFile(null);
+              }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              onPress={handleSave}
+              isPending={isPending}
+              isDisabled={!docFile || !docName.trim()}
+            >
+              {t('save')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ChecklistCardProps {
+  shipment: ShipmentDetail;
+  suppliers: SupplierInfo[];
+}
+
+function ChecklistCard({ shipment, suppliers }: ChecklistCardProps) {
+  const t = useTranslations('Admin.Shipments.Steps.DocumentPreparation');
+
+  let pendingCount = 0;
+
+  for (const supplier of suppliers) {
+    const hasInvoice = (shipment.documents ?? []).some(
+      (d) =>
+        d.type === 'COMMERCIAL_INVOICE' &&
+        (d.metadata as Record<string, unknown> | null)?.supplierId === supplier.id,
+    );
+    const hasPackingList = (shipment.documents ?? []).some(
+      (d) =>
+        d.type === 'PACKING_LIST' &&
+        (d.metadata as Record<string, unknown> | null)?.supplierId === supplier.id,
+    );
+    if (!hasInvoice) pendingCount++;
+    if (!hasPackingList) pendingCount++;
+  }
+
+  return (
+    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-2">
+      <p className="text-sm font-semibold text-default-700">{t('checklist')}</p>
+      {pendingCount > 0 ? (
+        <Chip size="sm" variant="soft" color="warning">
+          {t('pendingDocs', { count: pendingCount })}
+        </Chip>
+      ) : (
+        <Chip size="sm" variant="soft" color="success">
+          {t('allDocumentsOk')}
+        </Chip>
+      )}
+    </div>
+  );
+}
+
+// ============================================
 // Component
 // ============================================
 
-export function DocumentPreparationStep({ shipment: _shipment }: DocumentPreparationStepProps) {
+export function DocumentPreparationStep({
+  shipment,
+  readOnly = false,
+}: DocumentPreparationStepProps) {
   const t = useTranslations('Admin.Shipments.Steps.DocumentPreparation');
+  const suppliers = deriveUniqueSuppliers(shipment);
 
   return (
     <div className="space-y-4">
@@ -27,9 +452,24 @@ export function DocumentPreparationStep({ shipment: _shipment }: DocumentPrepara
         <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
       </div>
 
-      <div className="rounded-lg border border-dashed border-default-300 p-6 text-center">
-        <p className="text-sm text-default-400">{t('placeholder')}</p>
-      </div>
+      <ExchangeSummaryCard shipment={shipment} />
+
+      {suppliers.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-default-700">{t('documentsPerSupplier')}</p>
+          {suppliers.map((supplier) => (
+            <SupplierDocumentsCard
+              key={supplier.id}
+              shipment={shipment}
+              supplier={supplier}
+              readOnly={readOnly}
+            />
+          ))}
+        </div>
+      )}
+
+      <OtherDocumentsCard shipment={shipment} readOnly={readOnly} />
+      <ChecklistCard shipment={shipment} suppliers={suppliers} />
     </div>
   );
 }

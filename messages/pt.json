@@ -1193,16 +1193,20 @@
           "pending": "Pendente",
           "otherDocuments": "Outros Documentos",
           "addDocument": "Adicionar Documento",
+          "documentName": "Nome do documento",
+          "save": "Salvar",
+          "cancel": "Cancelar",
           "checklist": "Checklist",
+          "allDocumentsOk": "Todos os documentos enviados",
           "pendingDocs": "{count} documento(s) pendente(s)"
         },
         "CustomsClearance": {
           "title": "Desembaraço Aduaneiro",
           "invoice90": "Fatura 90%",
-          "totalCosts": "Custo Total",
+          "totalCosts": "Custo Total (BRL)",
           "paidFobBrl": "Pago FOB (BRL)",
           "remaining": "Restante",
-          "invoice90Value": "90%",
+          "invoice90Value": "Valor 90%",
           "generate90Invoice": "Gerar Fatura de 90%",
           "invoiceStatus": "Status da Fatura",
           "duimp": "DUIMP",
@@ -1210,7 +1214,9 @@
           "register": "Registrar",
           "siscomexData": "Dados Siscomex",
           "channel": "Canal",
-          "taxBreakdown": "Impostos"
+          "taxBreakdown": "Impostos",
+          "taxCategory": "Imposto",
+          "taxValue": "Valor (BRL)"
         },
         "Completion": {
           "title": "Conclusão",
@@ -1238,7 +1244,10 @@
           "minimumFloor": "Mínimo (piso)",
           "finalFee": "Honorários Final",
           "usedMinimum": "(usado mínimo)",
-          "generateServiceFeeInvoice": "Gerar Fatura de Honorários"
+          "generateServiceFeeInvoice": "Gerar Fatura de Honorários",
+          "save": "Salvar",
+          "loadingFee": "Calculando honorários...",
+          "serviceFeeAlreadyGenerated": "Fatura de honorários já gerada"
         }
       },
       "Modals": {
