@@ -2,21 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { FileCheck, DollarSign, Ship, FileText, Shield, CheckCircle, Check } from 'lucide-react';
+import { STEP_ORDER, type ShipmentStep } from '@/lib/shipment-constants';
 
-// ============================================
-// Types & Constants
-// ============================================
-
-export const STEP_ORDER = [
-  'CONTRACT_CREATION',
-  'MERCHANDISE_PAYMENT',
-  'SHIPPING_PREPARATION',
-  'DOCUMENT_PREPARATION',
-  'CUSTOMS_CLEARANCE',
-  'COMPLETION',
-] as const;
-
-export type ShipmentStep = (typeof STEP_ORDER)[number];
+// Re-export so existing consumers that import from this file continue to work
+export { STEP_ORDER, type ShipmentStep };
 
 const STEP_ICONS: Record<ShipmentStep, React.ReactNode> = {
   CONTRACT_CREATION: <FileCheck className="h-4 w-4" />,

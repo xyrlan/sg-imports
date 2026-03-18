@@ -11,7 +11,7 @@ import {
   type FacetedFilterDef,
 } from '@/components/ui/data-table';
 import { type getAllShipments } from '@/services/admin';
-import { STATUS_COLORS } from './shipment-utils';
+import { STATUS_COLORS, formatDateBR } from './shipment-utils';
 
 // ============================================
 // Types
@@ -20,20 +20,6 @@ import { STATUS_COLORS } from './shipment-utils';
 type ShipmentRow = Awaited<ReturnType<typeof getAllShipments>>[number];
 
 const columnHelper = createColumnHelper<ShipmentRow>();
-
-// ============================================
-// Helpers
-// ============================================
-
-function formatDate(value: Date | string | null | undefined): string {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 // ============================================
 // Props
@@ -100,7 +86,7 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
     }),
     columnHelper.accessor('eta', {
       header: t('columns.eta'),
-      cell: (info) => <span className="text-sm">{formatDate(info.getValue())}</span>,
+      cell: (info) => <span className="text-sm">{formatDateBR(info.getValue())}</span>,
     }),
     columnHelper.accessor('bookingNumber', {
       header: t('columns.booking'),
@@ -111,7 +97,7 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
     }),
     columnHelper.accessor('createdAt', {
       header: t('columns.created'),
-      cell: (info) => <span className="text-sm">{formatDate(info.getValue())}</span>,
+      cell: (info) => <span className="text-sm">{formatDateBR(info.getValue())}</span>,
     }),
   ];
 

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Chip } from '@heroui/react';
 import { DollarSign, Percent, CalendarClock, Ship } from 'lucide-react';
-import { STATUS_COLORS } from './shipment-utils';
+import { STATUS_COLORS, formatDateBR, formatUsd } from './shipment-utils';
 
 // ============================================
 // Props
@@ -21,28 +21,6 @@ interface ShipmentSummaryCardProps {
 // ============================================
 // Helpers
 // ============================================
-
-function formatUsd(value: string | null | undefined): string {
-  if (!value) return '—';
-  const num = parseFloat(value);
-  if (isNaN(num)) return '—';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
-}
-
-function formatDate(value: Date | null | undefined): string {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 function calcPaidPercent(
   totalProductsUsd: string | null | undefined,
@@ -105,7 +83,7 @@ export function ShipmentSummaryCard({
         </span>
         <div className="flex flex-col">
           <span className="text-xs text-default-400">{t('eta')}</span>
-          <span className="text-sm font-semibold text-default-700">{formatDate(eta)}</span>
+          <span className="text-sm font-semibold text-default-700">{formatDateBR(eta)}</span>
         </div>
       </div>
 

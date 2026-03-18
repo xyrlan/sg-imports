@@ -8,6 +8,7 @@ import { and, eq } from 'drizzle-orm';
 import { inngest } from '@/inngest/client';
 import { getTotalMerchandisePaidBrl } from '@/services/shipment.service';
 import { roundMoney } from '@/lib/currency';
+import { STEP_ORDER, type ShipmentStep } from '@/lib/shipment-constants';
 
 // ==========================================
 // STEP MACHINE CONSTANTS
@@ -22,17 +23,6 @@ const STEP_TO_STATUS = {
   CUSTOMS_CLEARANCE: 'CUSTOMS_CLEARANCE',
   COMPLETION: 'DELIVERED',
 } as const;
-
-const STEP_ORDER = [
-  'CONTRACT_CREATION',
-  'MERCHANDISE_PAYMENT',
-  'SHIPPING_PREPARATION',
-  'DOCUMENT_PREPARATION',
-  'CUSTOMS_CLEARANCE',
-  'COMPLETION',
-] as const;
-
-type ShipmentStep = (typeof STEP_ORDER)[number];
 
 function getNextStep(current: ShipmentStep): ShipmentStep | null {
   const idx = STEP_ORDER.indexOf(current);
