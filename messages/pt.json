@@ -1245,30 +1245,41 @@
           "title": "Gerar Fatura",
           "amount": "Valor",
           "description": "Descrição",
+          "descriptionPlaceholder": "Descrição opcional",
           "cancel": "Cancelar",
-          "generate": "Gerar Fatura"
+          "generate": "Gerar Fatura",
+          "generating": "Gerando..."
         },
         "RegisterPayment": {
           "title": "Registrar Pagamento",
           "amountUsd": "Valor (USD)",
+          "amountUsdPlaceholder": "0.00",
           "paymentDate": "Data do Pagamento",
-          "proof": "Comprovante",
+          "proof": "Comprovante de Pagamento",
           "cancel": "Cancelar",
-          "register": "Registrar"
+          "register": "Registrar",
+          "registering": "Registrando..."
         },
         "ExchangeContract": {
           "title": "Novo Contrato de Câmbio",
           "supplier": "Fornecedor",
+          "selectSupplier": "Selecione o fornecedor",
           "transaction": "Transação Vinculada",
+          "selectTransaction": "Selecione a transação",
           "contractNumber": "Nº Contrato",
+          "contractNumberPlaceholder": "Ex: 12345",
           "broker": "Corretora",
+          "selectBroker": "Selecione a corretora",
           "amountUsd": "Valor USD",
+          "amountUsdPlaceholder": "0.00",
           "exchangeRate": "Taxa de Câmbio",
+          "exchangeRatePlaceholder": "0.00",
           "closingDate": "Data de Fechamento",
           "swift": "Swift (PDF)",
           "contract": "Contrato (PDF)",
           "cancel": "Cancelar",
-          "save": "Salvar Contrato"
+          "save": "Salvar Contrato",
+          "saving": "Salvando..."
         }
       },
       "Errors": {
