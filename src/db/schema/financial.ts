@@ -10,6 +10,7 @@ import { transactionTypeEnum, paymentStatusEnum } from './enums';
 import { organizations } from './auth';
 import { shipments } from './shipments';
 import { currencyExchangeBrokers } from './admin-config';
+import { suppliers } from './products';
 
 // ==========================================
 // 7. FINANCIAL & EXCHANGE (O "Gap" do Legado Payment/ExchangeContract)
@@ -45,6 +46,7 @@ export const exchangeContracts = pgTable('exchange_contracts', {
   id: uuid('id').defaultRandom().primaryKey(),
   transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'cascade' }).notNull(),
   brokerId: uuid('broker_id').references(() => currencyExchangeBrokers.id),
+  supplierId: uuid('supplier_id').references(() => suppliers.id),
   contractNumber: text('contract_number').notNull(), // Número oficial do Banco Central
   brokerName: text('broker_name'), // Legado: Corretora (ex: Abrão, Travelex)
 

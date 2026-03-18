@@ -108,6 +108,10 @@ export const exchangeContractsRelations = relations(exchangeContracts, ({ one })
     fields: [exchangeContracts.brokerId],
     references: [currencyExchangeBrokers.id],
   }),
+  supplier: one(suppliers, {
+    fields: [exchangeContracts.supplierId],
+    references: [suppliers.id],
+  }),
 }));
 
 export const currencyExchangeBrokersRelations = relations(

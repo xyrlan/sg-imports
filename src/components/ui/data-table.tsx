@@ -69,6 +69,8 @@ export interface DataTableProps<TData> {
   onPaginationChange?: OnChangeFn<PaginationState>;
   /** Callback when row selection changes */
   onRowSelectionChange?: (selectedRows: TData[]) => void;
+  /** Callback when a row is clicked */
+  onRowClick?: (row: TData) => void;
 }
 
 /**
@@ -436,6 +438,7 @@ export function DataTable<TData>({
   pagination: controlledPagination,
   onPaginationChange,
   onRowSelectionChange,
+  onRowClick,
 }: DataTableProps<TData>) {
   const t = useTranslations('Common.DataTable');
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -546,9 +549,12 @@ export function DataTable<TData>({
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
-                    className={`transition-colors hover:bg-default-50 ${
-                      row.getIsSelected() ? 'bg-accent/5' : ''
-                    }`}
+                    onClick={() => onRowClick?.(row.original)}
+                    className={`
+                      border-b border-default-200 transition-colors
+                      ${onRowClick ? 'cursor-pointer hover:bg-default-100' : ''}
+                      ${row.getIsSelected() ? 'bg-accent/5' : ''}
+                    `}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-4 py-3">
