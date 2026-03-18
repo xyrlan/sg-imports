@@ -681,17 +681,15 @@ export async function generateServiceFeeInvoiceAction(
         totalCostsBrl: true,
       },
       with: {
-        transactions: {
-          columns: { exchangeRate: true },
-          where: (t, { and, isNotNull }) => and(isNotNull(t.exchangeRate)),
-        },
+        quote: { columns: { exchangeRateIof: true } },
       },
     });
 
     if (!shipment) return { success: false, error: 'Shipment not found.' };
 
-    // Use most recent exchange rate available, fallback to 1
-    const exchangeRate = parseFloat(shipment.transactions?.[0]?.exchangeRate ?? '1');
+    // Prefer the exchange rate recorded at simulation time (quote.exchangeRateIof).
+    // Falls back to 5.0 only when no linked quote exists (edge case: manually created shipments).
+    const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
 
     const feeResult = await calculateServiceFee({
       clientOrganizationId: shipment.clientOrganizationId,
@@ -742,16 +740,15 @@ export async function getServiceFeePreviewAction(shipmentId: string): Promise<{
         totalCostsBrl: true,
       },
       with: {
-        transactions: {
-          columns: { exchangeRate: true },
-          where: (t, { and, isNotNull }) => and(isNotNull(t.exchangeRate)),
-        },
+        quote: { columns: { exchangeRateIof: true } },
       },
     });
 
     if (!shipment) return { success: false, error: 'Shipment not found.' };
 
-    const exchangeRate = parseFloat(shipment.transactions?.[0]?.exchangeRate ?? '1');
+    // Prefer the exchange rate recorded at simulation time (quote.exchangeRateIof).
+    // Falls back to 5.0 only when no linked quote exists (edge case: manually created shipments).
+    const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
 
     const feeResult = await calculateServiceFee({
       clientOrganizationId: shipment.clientOrganizationId,
