@@ -7,6 +7,7 @@ import { Button, Chip } from '@heroui/react';
 import { FileText, ExternalLink } from 'lucide-react';
 import { FileUpload } from '@/components/ui/file-upload';
 import type { ShipmentDetail } from '../shipment-utils';
+import { ShipmentDocumentField } from '../shipment-document-field';
 import { uploadShipmentDocumentAction } from '../../[id]/actions';
 
 // ============================================
@@ -157,10 +158,6 @@ interface SupplierDocumentsCardProps {
 
 function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumentsCardProps) {
   const t = useTranslations('Admin.Shipments.Steps.DocumentPreparation');
-  const router = useRouter();
-  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
-  const [packingFile, setPackingFile] = useState<File | null>(null);
-  const [isPending, startTransition] = useTransition();
 
   const existingInvoice = (shipment.documents ?? []).find(
     (d) =>
@@ -173,20 +170,6 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
       d.type === 'PACKING_LIST' &&
       (d.metadata as Record<string, unknown> | null)?.supplierId === supplier.id,
   );
-
-  const uploadDocument = (type: string, file: File | null) => {
-    if (!file) return;
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.set('shipmentId', shipment.id);
-      formData.set('type', type);
-      formData.set('name', file.name);
-      formData.set('file', file);
-      formData.set('supplierId', supplier.id);
-      await uploadShipmentDocumentAction(formData);
-      router.refresh();
-    });
-  };
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
@@ -202,40 +185,17 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
             </Chip>
           )}
         </div>
-        {existingInvoice ? (
-          <a
-            href={existingInvoice.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            {existingInvoice.name}
-          </a>
-        ) : !readOnly ? (
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <FileUpload
-                label=""
-                name={`invoice-${supplier.id}`}
-                onFileSelect={setInvoiceFile}
-                acceptedFormats="PDF (máx. 10MB)"
-              />
-            </div>
-            {invoiceFile && (
-              <Button
-                size="sm"
-                variant="primary"
-                onPress={() => uploadDocument('COMMERCIAL_INVOICE', invoiceFile)}
-                isPending={isPending}
-              >
-                {t('save')}
-              </Button>
-            )}
-          </div>
-        ) : (
-          <span className="text-sm text-default-400">—</span>
-        )}
+        <ShipmentDocumentField
+          shipmentId={shipment.id}
+          documentType="COMMERCIAL_INVOICE"
+          label={t('invoice')}
+          existingDocument={
+            existingInvoice ? { url: existingInvoice.url, name: existingInvoice.name } : null
+          }
+          readOnly={readOnly}
+          acceptedFormats="PDF (máx. 10MB)"
+          extraFormData={{ supplierId: supplier.id }}
+        />
       </div>
 
       {/* Packing List */}
@@ -248,40 +208,19 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
             </Chip>
           )}
         </div>
-        {existingPackingList ? (
-          <a
-            href={existingPackingList.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            {existingPackingList.name}
-          </a>
-        ) : !readOnly ? (
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <FileUpload
-                label=""
-                name={`packing-${supplier.id}`}
-                onFileSelect={setPackingFile}
-                acceptedFormats="PDF (máx. 10MB)"
-              />
-            </div>
-            {packingFile && (
-              <Button
-                size="sm"
-                variant="primary"
-                onPress={() => uploadDocument('PACKING_LIST', packingFile)}
-                isPending={isPending}
-              >
-                {t('save')}
-              </Button>
-            )}
-          </div>
-        ) : (
-          <span className="text-sm text-default-400">—</span>
-        )}
+        <ShipmentDocumentField
+          shipmentId={shipment.id}
+          documentType="PACKING_LIST"
+          label={t('packingList')}
+          existingDocument={
+            existingPackingList
+              ? { url: existingPackingList.url, name: existingPackingList.name }
+              : null
+          }
+          readOnly={readOnly}
+          acceptedFormats="PDF (máx. 10MB)"
+          extraFormData={{ supplierId: supplier.id }}
+        />
       </div>
     </div>
   );

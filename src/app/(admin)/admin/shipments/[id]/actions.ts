@@ -15,10 +15,11 @@ import { uploadShipmentDocument } from '@/services/shipment-documents.service';
 import { calculateServiceFee } from '@/services/service-fee.service';
 import { generateAsaasInvoice } from '@/services/asaas.service';
 import { db } from '@/db';
-import { shipments, exchangeContracts, shipmentFreightReceipts, transactions, organizations } from '@/db/schema';
+import { shipments, exchangeContracts, shipmentFreightReceipts, transactions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { inngest } from '@/inngest/client';
 import * as shipsGo from '@/lib/shipsgo/client';
+import { roundMoney } from '@/lib/currency';
 import { z } from 'zod';
 
 // ============================================
@@ -203,7 +204,7 @@ export async function generateFobInvoiceAction(
     if (shipment.clientOrganization?.orderType === 'ORDER') {
       try {
         const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
-        const amountBrl = parseFloat(amountUsd) * exchangeRate;
+        const amountBrl = roundMoney(parseFloat(amountUsd) * exchangeRate);
 
         const asaasResult = await generateAsaasInvoice({
           organizationId: shipment.clientOrganizationId,
@@ -757,6 +758,7 @@ export async function generateServiceFeeInvoiceAction(
       },
       with: {
         quote: { columns: { exchangeRateIof: true } },
+        clientOrganization: { columns: { orderType: true } },
       },
     });
 
@@ -781,12 +783,7 @@ export async function generateServiceFeeInvoiceAction(
     });
 
     // Integrate with Asaas for ORDER-type organizations
-    const orgOrderType = await db.query.organizations.findFirst({
-      where: eq(organizations.id, shipment.clientOrganizationId),
-      columns: { orderType: true },
-    });
-
-    if (orgOrderType?.orderType === 'ORDER') {
+    if (shipment.clientOrganization?.orderType === 'ORDER') {
       try {
         const asaasResult = await generateAsaasInvoice({
           organizationId: shipment.clientOrganizationId,

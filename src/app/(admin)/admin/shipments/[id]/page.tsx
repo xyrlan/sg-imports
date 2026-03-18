@@ -9,10 +9,11 @@ export default async function AdminShipmentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const shipment = await getShipmentDetail(id);
+  const [shipment, totalPaidUsd] = await Promise.all([
+    getShipmentDetail(id),
+    getTotalMerchandisePaidUsd(id),
+  ]);
   if (!shipment) notFound();
-
-  const totalPaidUsd = await getTotalMerchandisePaidUsd(id);
 
   return <ShipmentDetailContent shipment={shipment} totalPaidUsd={totalPaidUsd} />;
 }

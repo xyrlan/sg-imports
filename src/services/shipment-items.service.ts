@@ -2,6 +2,7 @@ import { db } from '@/db';
 import { shipments, quoteItems } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { inngest } from '@/inngest/client';
+import { roundMoney } from '@/lib/currency';
 
 interface ItemEditPayload {
   shipmentId: string;
@@ -90,9 +91,11 @@ export async function applyItemChanges(
       columns: { quantity: true, priceUsd: true },
     });
 
-    const newTotalUsd = updatedItems.reduce(
-      (sum, item) => sum + (item.quantity ?? 0) * parseFloat(item.priceUsd ?? '0'),
-      0
+    const newTotalUsd = roundMoney(
+      updatedItems.reduce(
+        (sum, item) => sum + (item.quantity ?? 0) * parseFloat(item.priceUsd ?? '0'),
+        0,
+      ),
     );
 
     await tx.update(shipments).set({

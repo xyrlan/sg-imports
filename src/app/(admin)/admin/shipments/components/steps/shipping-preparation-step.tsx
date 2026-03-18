@@ -5,14 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, Checkbox } from '@heroui/react';
 import { Ship, ExternalLink } from 'lucide-react';
-import { FileUpload } from '@/components/ui/file-upload';
 import type { ShipmentDetail } from '../shipment-utils';
+import { ShipmentDocumentField } from '../shipment-document-field';
 import {
   updateBookingNumberAction,
   registerMblAction,
   togglePartLotAction,
   updateFreightSellPriceAction,
-  uploadShipmentDocumentAction,
 } from '../../[id]/actions';
 
 // ============================================
@@ -240,108 +239,31 @@ interface DocumentsCardProps {
 
 function DocumentsCard({ shipment, readOnly }: DocumentsCardProps) {
   const t = useTranslations('Admin.Shipments.Steps.ShippingPreparation');
-  const router = useRouter();
-  const [mblFile, setMblFile] = useState<File | null>(null);
-  const [hblFile, setHblFile] = useState<File | null>(null);
-  const [isPending, startTransition] = useTransition();
 
   const mblDocument = (shipment.documents ?? []).find((d) => d.type === 'MBL_DOCUMENT');
   const hblDocument = (shipment.documents ?? []).find((d) => d.type === 'HBL_DOCUMENT');
-
-  const uploadDocument = (type: string, file: File | null) => {
-    if (!file) return;
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.set('shipmentId', shipment.id);
-      formData.set('type', type);
-      formData.set('name', file.name);
-      formData.set('file', file);
-      await uploadShipmentDocumentAction(formData);
-      router.refresh();
-    });
-  };
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
       <p className="text-sm font-semibold text-default-700">{t('documents')}</p>
 
-      {/* MBL Document */}
-      <div className="space-y-1">
-        <p className="text-xs text-default-500">MBL</p>
-        {mblDocument ? (
-          <a
-            href={mblDocument.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            {mblDocument.name}
-          </a>
-        ) : !readOnly ? (
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <FileUpload
-                label=""
-                name="mblFile"
-                onFileSelect={setMblFile}
-                acceptedFormats="PDF (máx. 10MB)"
-              />
-            </div>
-            {mblFile && (
-              <Button
-                size="sm"
-                variant="primary"
-                onPress={() => uploadDocument('MBL_DOCUMENT', mblFile)}
-                isPending={isPending}
-              >
-                {t('save')}
-              </Button>
-            )}
-          </div>
-        ) : (
-          <span className="text-sm text-default-400">—</span>
-        )}
-      </div>
+      <ShipmentDocumentField
+        shipmentId={shipment.id}
+        documentType="MBL_DOCUMENT"
+        label="MBL"
+        existingDocument={mblDocument ? { url: mblDocument.url, name: mblDocument.name } : null}
+        readOnly={readOnly}
+        acceptedFormats="PDF (máx. 10MB)"
+      />
 
-      {/* HBL Document */}
-      <div className="space-y-1">
-        <p className="text-xs text-default-500">HBL</p>
-        {hblDocument ? (
-          <a
-            href={hblDocument.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            {hblDocument.name}
-          </a>
-        ) : !readOnly ? (
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <FileUpload
-                label=""
-                name="hblFile"
-                onFileSelect={setHblFile}
-                acceptedFormats="PDF (máx. 10MB)"
-              />
-            </div>
-            {hblFile && (
-              <Button
-                size="sm"
-                variant="primary"
-                onPress={() => uploadDocument('HBL_DOCUMENT', hblFile)}
-                isPending={isPending}
-              >
-                {t('save')}
-              </Button>
-            )}
-          </div>
-        ) : (
-          <span className="text-sm text-default-400">—</span>
-        )}
-      </div>
+      <ShipmentDocumentField
+        shipmentId={shipment.id}
+        documentType="HBL_DOCUMENT"
+        label="HBL"
+        existingDocument={hblDocument ? { url: hblDocument.url, name: hblDocument.name } : null}
+        readOnly={readOnly}
+        acceptedFormats="PDF (máx. 10MB)"
+      />
     </div>
   );
 }

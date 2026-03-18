@@ -4,11 +4,10 @@ import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, Chip } from '@heroui/react';
-import { CheckCircle, ExternalLink } from 'lucide-react';
-import { FileUpload } from '@/components/ui/file-upload';
+import { CheckCircle } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
+import { ShipmentDocumentField } from '../shipment-document-field';
 import {
-  uploadShipmentDocumentAction,
   saveCompletionCostsAction,
   generateBalanceInvoiceAction,
   generateServiceFeeInvoiceAction,
@@ -58,27 +57,9 @@ const FISCAL_DOC_TYPES: FiscalDocType[] = [
 
 function FiscalDocumentsCard({ shipment, readOnly }: FiscalDocumentsCardProps) {
   const t = useTranslations('Admin.Shipments.Steps.Completion');
-  const router = useRouter();
-  const [files, setFiles] = useState<Record<string, File | null>>({});
-  const [isPending, startTransition] = useTransition();
 
   const getDocument = (type: string) =>
     (shipment.documents ?? []).find((d) => d.type === type);
-
-  const handleUpload = (type: string) => {
-    const file = files[type];
-    if (!file) return;
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.set('shipmentId', shipment.id);
-      formData.set('type', type);
-      formData.set('name', file.name);
-      formData.set('file', file);
-      await uploadShipmentDocumentAction(formData);
-      setFiles((prev) => ({ ...prev, [type]: null }));
-      router.refresh();
-    });
-  };
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
@@ -89,40 +70,14 @@ function FiscalDocumentsCard({ shipment, readOnly }: FiscalDocumentsCardProps) {
         return (
           <div key={type} className="space-y-1">
             <p className="text-xs text-default-500">{t(labelKey)}</p>
-            {existing ? (
-              <a
-                href={existing.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-accent hover:underline text-sm"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                {existing.name}
-              </a>
-            ) : !readOnly ? (
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <FileUpload
-                    label=""
-                    name={`fiscal-${type}`}
-                    onFileSelect={(f) => setFiles((prev) => ({ ...prev, [type]: f }))}
-                    acceptedFormats={accept}
-                  />
-                </div>
-                {files[type] && (
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onPress={() => handleUpload(type)}
-                    isPending={isPending}
-                  >
-                    {t('save')}
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <span className="text-sm text-default-400">—</span>
-            )}
+            <ShipmentDocumentField
+              shipmentId={shipment.id}
+              documentType={type}
+              label={t(labelKey)}
+              existingDocument={existing ? { url: existing.url, name: existing.name } : null}
+              readOnly={readOnly}
+              acceptedFormats={accept}
+            />
           </div>
         );
       })}

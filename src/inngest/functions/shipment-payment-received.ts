@@ -1,7 +1,7 @@
 import { inngest } from '@/inngest/client';
 import { db } from '@/db';
 import { shipments, transactions } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { notifyOrganizationMembers } from '@/services/notification.service';
 import { getTranslations } from 'next-intl/server';
 
@@ -19,13 +19,14 @@ export const shipmentPaymentReceived = inngest.createFunction(
       const [updated] = await db
         .update(transactions)
         .set({ status: 'PAID', paidAt: new Date() })
-        .where(eq(transactions.id, transactionId))
+        .where(and(eq(transactions.id, transactionId), eq(transactions.status, 'PENDING')))
         .returning();
       return updated;
     });
 
     if (!txn) {
-      throw new Error(`Transaction ${transactionId} not found`);
+      // Transaction not found or already paid — idempotent no-op
+      return { success: true, transactionId, alreadyPaid: true };
     }
 
     await step.run('notify-admin', async () => {
