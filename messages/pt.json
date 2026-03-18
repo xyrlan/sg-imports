@@ -396,6 +396,7 @@
       "dashboard": "Painel",
       "management": "Usuários e Organizações",
       "products": "Produtos",
+      "shipments": "Pedidos",
       "settings": "Configurações",
       "backToDashboard": "Voltar ao Dashboard",
       "openMenu": "Abrir menu",
@@ -1073,6 +1074,91 @@
           "RF_20": "RF 20'",
           "RF_40": "RF 40'"
         }
+      }
+    },
+    "Shipments": {
+      "List": {
+        "title": "Pedidos",
+        "description": "Gerencie todos os pedidos de importação",
+        "columns": {
+          "code": "Código",
+          "client": "Cliente",
+          "status": "Status",
+          "step": "Etapa Atual",
+          "type": "Tipo",
+          "eta": "ETA",
+          "booking": "Booking",
+          "created": "Criação"
+        },
+        "filters": {
+          "status": "Status",
+          "step": "Etapa",
+          "type": "Tipo"
+        },
+        "empty": "Nenhum pedido encontrado"
+      },
+      "Detail": {
+        "title": "Pedido #{code}",
+        "back": "Voltar",
+        "cancel": "Cancelar Pedido",
+        "advanceStep": "Avançar Etapa",
+        "finalize": "Finalizar Pedido",
+        "confirmAdvance": "Tem certeza que deseja avançar para a próxima etapa?",
+        "confirmFinalize": "Tem certeza que deseja finalizar este pedido?",
+        "confirmCancel": "Tem certeza que deseja cancelar este pedido?",
+        "cancelReason": "Motivo do cancelamento",
+        "cancelConfirmation": "Entendo que esta ação não pode ser desfeita"
+      },
+      "Summary": {
+        "fobTotal": "FOB Total",
+        "paid": "Pago",
+        "eta": "ETA",
+        "modality": "Modalidade",
+        "status": "Status",
+        "type": "Tipo"
+      },
+      "Stepper": {
+        "CONTRACT_CREATION": "Contrato",
+        "MERCHANDISE_PAYMENT": "Pagamento FOB",
+        "SHIPPING_PREPARATION": "Embarque",
+        "DOCUMENT_PREPARATION": "Documentos",
+        "CUSTOMS_CLEARANCE": "Desembaraço",
+        "COMPLETION": "Conclusão"
+      },
+      "Steps": {
+        "ContractCreation": {
+          "title": "Criação do Contrato",
+          "contractSigned": "Contrato assinado",
+          "signatureDate": "Data da assinatura",
+          "viewQuote": "Ver proposta"
+        },
+        "MerchandisePayment": {
+          "title": "Pagamento da Mercadoria",
+          "placeholder": "Conteúdo do passo será implementado em breve."
+        },
+        "ShippingPreparation": {
+          "title": "Preparação de Embarque",
+          "placeholder": "Conteúdo do passo será implementado em breve."
+        },
+        "DocumentPreparation": {
+          "title": "Preparação de Documentos",
+          "placeholder": "Conteúdo do passo será implementado em breve."
+        },
+        "CustomsClearance": {
+          "title": "Desembaraço Aduaneiro",
+          "placeholder": "Conteúdo do passo será implementado em breve."
+        },
+        "Completion": {
+          "title": "Conclusão",
+          "placeholder": "Conteúdo do passo será implementado em breve."
+        }
+      },
+      "Errors": {
+        "advanceFailed": "Erro ao avançar etapa",
+        "cancelFailed": "Erro ao cancelar pedido",
+        "finalizeFailed": "Erro ao finalizar pedido",
+        "invalidData": "Dados inválidos",
+        "reasonRequired": "Motivo é obrigatório"
       }
     }
   },

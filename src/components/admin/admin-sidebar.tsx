@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Settings,
   Package,
+  ClipboardList,
   Menu,
   X,
 } from 'lucide-react';
@@ -43,6 +44,11 @@ export function AdminSidebar() {
       labelKey: 'dashboard',
       href: '/admin',
       icon: <LayoutDashboard className="size-5 shrink-0" />,
+    },
+    {
+      labelKey: 'shipments',
+      href: '/admin/shipments',
+      icon: <ClipboardList className="size-5 shrink-0" />,
     },
     {
       labelKey: 'management',
