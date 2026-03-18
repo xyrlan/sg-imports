@@ -1143,6 +1143,7 @@
           "registerPayment": "Registrar Pagamento",
           "exchangeContracts": "Contratos de Câmbio",
           "newExchangeContract": "Novo Contrato de Câmbio",
+          "save": "Salvar",
           "transactionTable": {
             "number": "#",
             "amountUsd": "Valor USD",
