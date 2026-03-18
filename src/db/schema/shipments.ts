@@ -54,7 +54,7 @@ export const shipments = pgTable('shipments', {
   // Passo 4: Customs Clearance
   duimpNumber: text('duimp_number'),
   duimpChannel: duimpChannelEnum('duimp_channel'),
-  duimpData: jsonb('duimp_data'),
+  duimpData: jsonb('duimp_data').$type<Record<string, unknown>>(),
 
   // Passo 5: Completion (denormalized caches — authoritative source is shipmentExpenses)
   icmsExitTaxes: decimal('icms_exit_taxes', { precision: 12, scale: 2 }),

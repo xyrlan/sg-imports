@@ -1,6 +1,7 @@
 import { db } from '@/db';
 import { serviceFeeConfigs, globalServiceFeeConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { roundMoney } from '@/lib/currency';
 
 interface ServiceFeeInput {
   clientOrganizationId: string;
@@ -47,15 +48,15 @@ export async function calculateServiceFee(input: ServiceFeeInput): Promise<Servi
     ? input.totalProductsUsd * input.exchangeRate
     : input.totalCostsBrl;
 
-  const percentageValue = roundBrl(baseValue * (percentage / 100));
-  const minimumValue = roundBrl(minimumWageBrl * multiplier);
+  const percentageValue = roundMoney(baseValue * (percentage / 100));
+  const minimumValue = roundMoney(minimumWageBrl * multiplier);
   const usedMinimum = percentageValue < minimumValue;
   const serviceFee = Math.max(percentageValue, minimumValue);
 
   return {
     serviceFee,
     calculationBase,
-    baseValue: roundBrl(baseValue),
+    baseValue: roundMoney(baseValue),
     percentage,
     percentageValue,
     minimumValue,
@@ -63,13 +64,3 @@ export async function calculateServiceFee(input: ServiceFeeInput): Promise<Servi
   };
 }
 
-/** Round to 2 decimal places using banker's rounding (HALF_EVEN) */
-function roundBrl(value: number): number {
-  const factor = 100;
-  const shifted = value * factor;
-  const floored = Math.floor(shifted);
-  const decimal = shifted - floored;
-  if (decimal > 0.5) return (floored + 1) / factor;
-  if (decimal < 0.5) return floored / factor;
-  return (floored % 2 === 0 ? floored : floored + 1) / factor;
-}

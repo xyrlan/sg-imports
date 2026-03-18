@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { inngest } from '@/inngest/client';
 import { db } from '@/db';
 import { shipments } from '@/db/schema';
@@ -8,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('x-shipsgo-webhook-token') ?? '';
     const expectedToken = process.env.SHIPSGO_WEBHOOK_TOKEN;
-    if (!expectedToken || token !== expectedToken) {
+    if (!expectedToken || token.length !== expectedToken.length || !timingSafeEqual(Buffer.from(token), Buffer.from(expectedToken))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

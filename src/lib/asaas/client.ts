@@ -2,6 +2,7 @@
  * Asaas Payment Gateway Client
  * @see https://docs.asaas.com/reference
  */
+import { timingSafeEqual } from 'crypto';
 
 const BASE_URL = process.env.ASAAS_BASE_URL ?? 'https://api.asaas.com/v3';
 const API_KEY = process.env.ASAAS_API_KEY;
@@ -80,5 +81,6 @@ export async function cancelPayment(paymentId: string): Promise<boolean> {
 export function validateWebhookToken(token: string): boolean {
   const expectedToken = process.env.ASAAS_WEBHOOK_TOKEN;
   if (!expectedToken) return false;
-  return token === expectedToken;
+  if (token.length !== expectedToken.length) return false;
+  return timingSafeEqual(Buffer.from(token), Buffer.from(expectedToken));
 }

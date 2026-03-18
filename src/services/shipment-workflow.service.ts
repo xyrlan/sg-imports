@@ -4,9 +4,10 @@
 
 import { db } from '@/db';
 import { shipments, shipmentStepHistory, transactions } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { inngest } from '@/inngest/client';
 import { getTotalMerchandisePaidBrl } from '@/services/shipment.service';
+import { roundMoney } from '@/lib/currency';
 
 // ==========================================
 // STEP MACHINE CONSTANTS
@@ -114,7 +115,7 @@ export async function generateInitialFobInvoice(shipmentId: string) {
 
   const fobUsd = parseFloat(shipment.totalProductsUsd ?? '0');
   const advancePct = parseFloat(shipment.fobAdvancePercentage ?? '30');
-  const advanceUsd = roundBrl(fobUsd * (advancePct / 100));
+  const advanceUsd = roundMoney(fobUsd * (advancePct / 100));
 
   // Both ORDER and DIRECT_ORDER create a MERCHANDISE transaction.
   // Asaas invoice generation for ORDER type is deferred to Phase 2.
@@ -146,7 +147,7 @@ export async function generate90Invoice(shipmentId: string) {
   const totalCostsBrl = parseFloat(shipment.totalCostsBrl ?? '0');
   const totalPaidBrl = await getTotalMerchandisePaidBrl(shipmentId);
   const remainingValue = totalCostsBrl - totalPaidBrl;
-  const invoice90 = roundBrl(remainingValue * 0.9);
+  const invoice90 = roundMoney(remainingValue * 0.9);
 
   return createShipmentTransaction({
     shipmentId,
@@ -191,12 +192,16 @@ export async function createShipmentTransaction(params: {
 
 /**
  * Mark transaction as paid and dispatch step evaluation via Inngest.
+ * Idempotent — only updates if the transaction is still PENDING.
  */
 export async function markTransactionPaid(transactionId: string, shipmentId: string) {
-  await db
+  const [updated] = await db
     .update(transactions)
     .set({ status: 'PAID', paidAt: new Date() })
-    .where(eq(transactions.id, transactionId));
+    .where(and(eq(transactions.id, transactionId), eq(transactions.status, 'PENDING')))
+    .returning();
+
+  if (!updated) return; // Already paid — idempotent no-op
 
   await inngest.send({
     name: 'shipment/step.evaluate',
@@ -277,21 +282,3 @@ export async function finalizeShipment(shipmentId: string, adminProfileId: strin
   return { success: true };
 }
 
-// ==========================================
-// UTILITIES
-// ==========================================
-
-/**
- * Banker's rounding (round half to even) for BRL monetary values.
- * Avoids systematic rounding bias on .5 cases.
- */
-function roundBrl(value: number): number {
-  const factor = 100;
-  const shifted = value * factor;
-  const floored = Math.floor(shifted);
-  const decimal = shifted - floored;
-  if (decimal > 0.5) return (floored + 1) / factor;
-  if (decimal < 0.5) return floored / factor;
-  // Exactly 0.5 — round to nearest even
-  return (floored % 2 === 0 ? floored : floored + 1) / factor;
-}
