@@ -1134,23 +1134,141 @@
         },
         "MerchandisePayment": {
           "title": "Pagamento da Mercadoria",
-          "placeholder": "Conteúdo do passo será implementado em breve."
+          "production": "Produção",
+          "productionReadyDate": "Data Estimada de Prontidão",
+          "fobAdvancePercentage": "% Adiantamento FOB",
+          "payments": "Pagamentos FOB",
+          "progress": "{paid} / {total} ({percent}%)",
+          "generateInvoice": "Gerar Fatura",
+          "registerPayment": "Registrar Pagamento",
+          "exchangeContracts": "Contratos de Câmbio",
+          "newExchangeContract": "Novo Contrato de Câmbio",
+          "transactionTable": {
+            "number": "#",
+            "amountUsd": "Valor USD",
+            "amountBrl": "Valor BRL",
+            "status": "Status",
+            "date": "Data",
+            "proof": "Comprovante"
+          },
+          "contractTable": {
+            "supplier": "Fornecedor",
+            "contractNumber": "Nº Contrato",
+            "broker": "Corretora",
+            "amountUsd": "USD",
+            "exchangeRate": "Taxa",
+            "swift": "Swift",
+            "contract": "Contrato"
+          }
         },
         "ShippingPreparation": {
           "title": "Preparação de Embarque",
-          "placeholder": "Conteúdo do passo será implementado em breve."
+          "bookingTracking": "Booking & Tracking",
+          "bookingNumber": "Número do Booking",
+          "mbl": "MBL",
+          "registerShipsGo": "Registrar na ShipsGo",
+          "shipsGoData": "Dados ShipsGo",
+          "carrier": "Transportadora",
+          "cargoType": "Tipo de Carga",
+          "partLot": "Part Lot",
+          "trackingLink": "Link de Rastreamento",
+          "containers": "Containers",
+          "freight": "Frete",
+          "freightCost": "Custo (simulação)",
+          "freightSellPrice": "Preço de Venda",
+          "documents": "Documentos",
+          "save": "Salvar"
         },
         "DocumentPreparation": {
           "title": "Preparação de Documentos",
-          "placeholder": "Conteúdo do passo será implementado em breve."
+          "exchangeSummary": "Resumo de Câmbio",
+          "totalPaid": "Total pago",
+          "avgRate": "Taxa média",
+          "numContracts": "Contratos",
+          "documentsPerSupplier": "Documentos por Fornecedor",
+          "invoice": "Invoice",
+          "packingList": "Packing List",
+          "uploaded": "Enviado",
+          "pending": "Pendente",
+          "otherDocuments": "Outros Documentos",
+          "addDocument": "Adicionar Documento",
+          "checklist": "Checklist",
+          "pendingDocs": "{count} documento(s) pendente(s)"
         },
         "CustomsClearance": {
           "title": "Desembaraço Aduaneiro",
-          "placeholder": "Conteúdo do passo será implementado em breve."
+          "invoice90": "Fatura 90%",
+          "totalCosts": "Custo Total",
+          "paidFobBrl": "Pago FOB (BRL)",
+          "remaining": "Restante",
+          "invoice90Value": "90%",
+          "generate90Invoice": "Gerar Fatura de 90%",
+          "invoiceStatus": "Status da Fatura",
+          "duimp": "DUIMP",
+          "duimpNumber": "Número da DUIMP",
+          "register": "Registrar",
+          "siscomexData": "Dados Siscomex",
+          "channel": "Canal",
+          "taxBreakdown": "Impostos"
         },
         "Completion": {
           "title": "Conclusão",
-          "placeholder": "Conteúdo do passo será implementado em breve."
+          "fiscalDocuments": "Documentos Fiscais",
+          "storageInvoice": "NF Armazenagem",
+          "salesInvoicePdf": "NF Venda (PDF)",
+          "salesInvoiceXml": "NF Venda (XML)",
+          "finalCosts": "Custos Finais",
+          "icmsExitTaxes": "ICMS e Tributos de Saída",
+          "storageCost": "Armazenagem",
+          "discounts": "Descontos",
+          "saveCosts": "Salvar",
+          "pl": "Cálculo Final (P&L)",
+          "totalRealized": "Total Realizado",
+          "estimatedCost": "Custo Estimado",
+          "finalBalance": "Saldo Final",
+          "clientOwes": "Cliente deve",
+          "refundPending": "Ressarcimento pendente",
+          "balanced": "Sem saldo pendente",
+          "generateBalanceInvoice": "Gerar Fatura do Saldo",
+          "serviceFee": "Honorários",
+          "base": "Base",
+          "percentage": "Percentual",
+          "calculatedValue": "Valor Calculado",
+          "minimumFloor": "Mínimo (piso)",
+          "finalFee": "Honorários Final",
+          "usedMinimum": "(usado mínimo)",
+          "generateServiceFeeInvoice": "Gerar Fatura de Honorários"
+        }
+      },
+      "Modals": {
+        "GenerateInvoice": {
+          "title": "Gerar Fatura",
+          "amount": "Valor",
+          "description": "Descrição",
+          "cancel": "Cancelar",
+          "generate": "Gerar Fatura"
+        },
+        "RegisterPayment": {
+          "title": "Registrar Pagamento",
+          "amountUsd": "Valor (USD)",
+          "paymentDate": "Data do Pagamento",
+          "proof": "Comprovante",
+          "cancel": "Cancelar",
+          "register": "Registrar"
+        },
+        "ExchangeContract": {
+          "title": "Novo Contrato de Câmbio",
+          "supplier": "Fornecedor",
+          "transaction": "Transação Vinculada",
+          "contractNumber": "Nº Contrato",
+          "broker": "Corretora",
+          "amountUsd": "Valor USD",
+          "exchangeRate": "Taxa de Câmbio",
+          "closingDate": "Data de Fechamento",
+          "swift": "Swift (PDF)",
+          "contract": "Contrato (PDF)",
+          "cancel": "Cancelar",
+          "save": "Salvar Contrato"
         }
       },
       "Errors": {
