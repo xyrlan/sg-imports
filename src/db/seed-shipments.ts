@@ -28,10 +28,11 @@ async function main() {
     process.exit(1);
   }
 
-  // Find product variants for quote items
+  // Find product variants and suppliers for quote items
   const variants = await db.query.productVariants.findMany({ limit: 5 });
-  if (variants.length === 0) {
-    console.error('❌ No product variants found. Run the main seed first.');
+  const suppliers = await db.query.suppliers.findMany({ limit: 5 });
+  if (variants.length === 0 || suppliers.length === 0) {
+    console.error('❌ No product variants or suppliers found. Run the main seed first.');
     process.exit(1);
   }
 
@@ -170,7 +171,7 @@ async function main() {
   // Exchange contract for the paid amount
   await db.insert(schema.exchangeContracts).values({
     transactionId: txn1a.id,
-    supplierId: variants[0].productId, // Using productId as proxy for supplierId
+    supplierId: suppliers[0].id,
     contractNumber: 'CC-2026/001',
     brokerName: 'Abrão Filho Câmbio',
     closedAt: new Date('2026-03-04'),
@@ -418,8 +419,8 @@ async function main() {
 
   // Some documents already uploaded
   await db.insert(schema.shipmentDocuments).values([
-    { shipmentId: shipment3.id, type: 'COMMERCIAL_INVOICE', name: 'Invoice - Shenzhen Global Export', url: 'https://placeholder.co/invoice-001.pdf', uploadedById: profile.id, metadata: { supplierId: variants[3].productId } },
-    { shipmentId: shipment3.id, type: 'PACKING_LIST', name: 'Packing List - Shenzhen Global Export', url: 'https://placeholder.co/pl-001.pdf', uploadedById: profile.id, metadata: { supplierId: variants[3].productId } },
+    { shipmentId: shipment3.id, type: 'COMMERCIAL_INVOICE', name: 'Invoice - Shenzhen Global Export', url: 'https://placeholder.co/invoice-001.pdf', uploadedById: profile.id, metadata: { supplierId: suppliers[0].id } },
+    { shipmentId: shipment3.id, type: 'PACKING_LIST', name: 'Packing List - Shenzhen Global Export', url: 'https://placeholder.co/pl-001.pdf', uploadedById: profile.id, metadata: { supplierId: suppliers[0].id } },
     { shipmentId: shipment3.id, type: 'MBL_DOCUMENT', name: 'MBL EGLV1234567890', url: 'https://placeholder.co/mbl-001.pdf', uploadedById: profile.id },
     { shipmentId: shipment3.id, type: 'HBL_DOCUMENT', name: 'HBL EGLV1234567890-H1', url: 'https://placeholder.co/hbl-001.pdf', uploadedById: profile.id },
   ]);
