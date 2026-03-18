@@ -169,6 +169,7 @@ export const shipmentFreightReceipts = pgTable('shipment_freight_receipts', {
   portOfLoadingId: uuid('port_of_loading_id').references(() => ports.id, { onDelete: 'restrict' }).notNull(),
   portOfDischargeId: uuid('port_of_discharge_id').references(() => ports.id, { onDelete: 'restrict' }).notNull(),
   freightValue: decimal('freight_value', { precision: 10, scale: 2 }).notNull(),
+  freightSellValue: decimal('freight_sell_value', { precision: 10, scale: 2 }),
   dolarQuotation: decimal('dolar_quotation', { precision: 10, scale: 4 }).notNull(),
   documentId: uuid('document_id').references(() => shipmentDocuments.id, { onDelete: 'set null' }),
   freightExpenses: jsonb('freight_expenses').$type<Record<string, unknown>[]>().default([]),
