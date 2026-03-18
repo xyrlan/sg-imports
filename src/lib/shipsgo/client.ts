@@ -82,3 +82,69 @@ export async function fetchCarriers(
 
   return res.json() as Promise<ShipsGoCarriersResponse>;
 }
+
+// ==========================================
+// TRACKING — Create & Fetch
+// ==========================================
+
+export interface CreateTrackingInput {
+  containerOrBookingNumber: string;
+  shippingLine: string;
+}
+
+export interface ShipsGoTracking {
+  id: string;
+  trackingUrl: string;
+  status: string;
+  containers: ShipsGoContainer[];
+  cargoType: string;
+  etd?: string;
+  eta?: string;
+  carrier?: string;
+}
+
+export interface ShipsGoContainer {
+  containerNumber: string;
+  type: string;
+  status: string;
+}
+
+export type CreateTrackingResult =
+  | { success: true; tracking: ShipsGoTracking }
+  | { success: false; error: string };
+
+export async function createTracking(input: CreateTrackingInput): Promise<CreateTrackingResult> {
+  try {
+    const res = await fetch(`${BASE_URL}/ocean/tracking`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        container_or_booking_number: input.containerOrBookingNumber,
+        shipping_line: input.shippingLine,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      return { success: false, error: `ShipsGo API error ${res.status}: ${text}` };
+    }
+
+    const data = (await res.json()) as ShipsGoTracking;
+    return { success: true, tracking: data };
+  } catch (error) {
+    return { success: false, error: `Failed to connect to ShipsGo: ${error}` };
+  }
+}
+
+export async function getTracking(shipsGoId: string): Promise<ShipsGoTracking | null> {
+  try {
+    const res = await fetch(`${BASE_URL}/ocean/tracking/${shipsGoId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) return null;
+    return (await res.json()) as ShipsGoTracking;
+  } catch {
+    return null;
+  }
+}
