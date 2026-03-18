@@ -121,6 +121,19 @@ export const currencyExchangeBrokersRelations = relations(
   }),
 );
 
+export const shipmentContainersRelations = relations(shipmentContainers, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentContainers.shipmentId], references: [shipments.id] }),
+}));
+
+export const shipmentExpensesRelations = relations(shipmentExpenses, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentExpenses.shipmentId], references: [shipments.id] }),
+}));
+
+export const shipmentStepHistoryRelations = relations(shipmentStepHistory, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentStepHistory.shipmentId], references: [shipments.id] }),
+  completedBy: one(profiles, { fields: [shipmentStepHistory.completedById], references: [profiles.id] }),
+}));
+
 export const shipmentDocumentsRelations = relations(shipmentDocuments, ({ one }) => ({
   shipment: one(shipments, { fields: [shipmentDocuments.shipmentId], references: [shipments.id] }),
   uploadedBy: one(profiles, { fields: [shipmentDocuments.uploadedById], references: [profiles.id] }),
