@@ -1577,5 +1577,76 @@
       "results": "{total} resultado(s)",
       "pageOf": "Pag. {current} de {total}"
     }
+  },
+  "Shipments": {
+    "Steps": {
+      "CONTRACT_CREATION": "Criação do Contrato",
+      "MERCHANDISE_PAYMENT": "Pagamento da Mercadoria",
+      "SHIPPING_PREPARATION": "Preparação de Embarque",
+      "DOCUMENT_PREPARATION": "Preparação de Documentos",
+      "CUSTOMS_CLEARANCE": "Desembaraço Aduaneiro",
+      "COMPLETION": "Conclusão"
+    },
+    "Status": {
+      "PENDING": "Pendente",
+      "PRODUCTION": "Em Produção",
+      "BOOKED": "Embarcado",
+      "IN_TRANSIT": "Em Trânsito",
+      "CUSTOMS_CLEARANCE": "Em Desembaraço",
+      "RELEASED": "Liberado",
+      "DELIVERED": "Entregue",
+      "FINISHED": "Finalizado",
+      "CANCELED": "Cancelado"
+    },
+    "DuimpChannel": {
+      "GREEN": "Verde",
+      "YELLOW": "Amarelo",
+      "RED": "Vermelho",
+      "GREY": "Cinza"
+    },
+    "Notifications": {
+      "fobComplete": "O pagamento FOB foi concluído. O pedido avançou para Preparação de Embarque.",
+      "paymentConfirmed": "Pagamento de {amount} confirmado para o pedido #{code}.",
+      "duimpRegistered": "DUIMP {number} registrada. Canal: {channel}.",
+      "duimpUrgent": "DUIMP — Canal de Atenção",
+      "customsCleared": "O desembaraço aduaneiro foi concluído. O pedido avançou para Conclusão.",
+      "shipmentFinalized": "Pedido #{code} finalizado com sucesso.",
+      "trackingUpdate": "Pedido #{code}: {message}",
+      "vesselDeparted": "O navio partiu do porto de origem.",
+      "vesselArrived": "O navio chegou ao porto de destino.",
+      "cargoDelivered": "A carga foi entregue.",
+      "invoiceGenerated": "Nova fatura gerada para o pedido #{code}.",
+      "amendmentGenerated": "Um aditivo contratual foi gerado. Por favor assine."
+    },
+    "Actions": {
+      "advanceStep": "Avançar Etapa",
+      "cancel": "Cancelar Pedido",
+      "finalize": "Finalizar Pedido",
+      "generateInvoice": "Gerar Fatura",
+      "registerPayment": "Registrar Pagamento",
+      "attachDocument": "Anexar Documento",
+      "registerDuimp": "Registrar DUIMP",
+      "registerBooking": "Registrar Booking",
+      "setFreightPrice": "Definir Preço do Frete"
+    },
+    "Labels": {
+      "productionReadyDate": "Data Estimada de Prontidão",
+      "fobAdvancePercentage": "% Adiantamento FOB",
+      "bookingNumber": "Número do Booking",
+      "masterBl": "MBL",
+      "houseBl": "HBL",
+      "isPartLot": "Part Lot",
+      "freightSellPrice": "Preço de Venda do Frete",
+      "duimpNumber": "Número da DUIMP",
+      "duimpChannel": "Canal de Parametrização",
+      "icmsExitTaxes": "ICMS e Tributos de Saída",
+      "storageCost": "Armazenagem",
+      "discounts": "Descontos",
+      "serviceFee": "Honorários",
+      "finalBalance": "Saldo Final",
+      "totalPaidFob": "Total Pago FOB",
+      "totalCosts": "Custo Total Estimado",
+      "exchangeSummary": "Resumo de Câmbio"
+    }
   }
 }
