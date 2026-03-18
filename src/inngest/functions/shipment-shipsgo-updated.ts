@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { shipments, shipmentStepHistory } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { notifyOrganizationMembers } from '@/services/notification.service';
+import { getTranslations } from 'next-intl/server';
 
 export const shipmentShipsgoUpdated = inngest.createFunction(
   {
@@ -58,18 +59,21 @@ export const shipmentShipsgoUpdated = inngest.createFunction(
 
         if (!shipment) return;
 
-        const messages: Record<string, string> = {
-          VESSEL_DEPARTED: 'O navio partiu do porto de origem.',
-          VESSEL_ARRIVED: 'O navio chegou ao porto de destino.',
-          DELIVERED: 'A carga foi entregue.',
+        const t = await getTranslations('Shipments.Notifications');
+
+        const eventMessageKey: Record<string, 'vesselDeparted' | 'vesselArrived' | 'cargoDelivered'> = {
+          VESSEL_DEPARTED: 'vesselDeparted',
+          VESSEL_ARRIVED: 'vesselArrived',
+          DELIVERED: 'cargoDelivered',
         };
 
-        const msg = messages[eventType] ?? `Atualização de tracking: ${eventType}`;
+        const msgKey = eventMessageKey[eventType];
+        const msg = msgKey ? t(msgKey) : eventType;
 
         await notifyOrganizationMembers(
           shipment.sellerOrganizationId,
-          'Atualização de rastreamento',
-          `Pedido #${shipment.code}: ${msg}`,
+          t('titles.trackingUpdate'),
+          t('trackingUpdate', { code: shipment.code, message: msg }),
           `/dashboard/shipments/${shipmentId}`,
           'INFO'
         );
@@ -77,8 +81,8 @@ export const shipmentShipsgoUpdated = inngest.createFunction(
         if (shipment.clientOrganizationId) {
           await notifyOrganizationMembers(
             shipment.clientOrganizationId,
-            'Atualização do seu pedido',
-            `Pedido #${shipment.code}: ${msg}`,
+            t('titles.trackingUpdateClient'),
+            t('trackingUpdate', { code: shipment.code, message: msg }),
             `/dashboard/shipments/${shipmentId}`,
             'INFO'
           );

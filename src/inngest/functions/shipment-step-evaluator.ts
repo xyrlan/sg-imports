@@ -5,6 +5,7 @@ import { notifyOrganizationMembers } from '@/services/notification.service';
 import { db } from '@/db';
 import { shipments } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { getTranslations } from 'next-intl/server';
 
 export const shipmentStepEvaluator = inngest.createFunction(
   {
@@ -45,18 +46,19 @@ export const shipmentStepEvaluator = inngest.createFunction(
 
         if (result.advanced) {
           await step.run('notify-fob-complete', async () => {
+            const t = await getTranslations('Shipments.Notifications');
             await notifyOrganizationMembers(
               shipment.sellerOrganizationId,
-              'Pagamento FOB concluído',
-              'O pagamento FOB foi concluído. O pedido avançou para Preparação de Embarque.',
+              t('titles.fobComplete'),
+              t('fobComplete'),
               `/dashboard/shipments/${shipmentId}`,
               'SUCCESS'
             );
             if (shipment.clientOrganizationId) {
               await notifyOrganizationMembers(
                 shipment.clientOrganizationId,
-                'Pagamento FOB concluído',
-                'Seu pagamento FOB foi concluído. O pedido avançou para a próxima etapa.',
+                t('titles.fobComplete'),
+                t('fobCompleteClient'),
                 `/dashboard/shipments/${shipmentId}`,
                 'SUCCESS'
               );
@@ -81,10 +83,11 @@ export const shipmentStepEvaluator = inngest.createFunction(
 
         if (result.advanced) {
           await step.run('notify-customs-cleared', async () => {
+            const t = await getTranslations('Shipments.Notifications');
             await notifyOrganizationMembers(
               shipment.sellerOrganizationId,
-              'Desembaraço concluído',
-              'O desembaraço aduaneiro foi concluído. O pedido avançou para Conclusão.',
+              t('titles.customsCleared'),
+              t('customsCleared'),
               `/dashboard/shipments/${shipmentId}`,
               'SUCCESS'
             );

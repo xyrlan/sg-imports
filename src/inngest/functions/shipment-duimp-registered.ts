@@ -4,6 +4,7 @@ import { shipments, shipmentExpenses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { fetchDuimpData } from '@/lib/siscomex/client';
 import { notifyOrganizationMembers } from '@/services/notification.service';
+import { getTranslations } from 'next-intl/server';
 
 export const shipmentDuimpRegistered = inngest.createFunction(
   {
@@ -74,14 +75,17 @@ export const shipmentDuimpRegistered = inngest.createFunction(
 
       if (!shipment) return;
 
+      const t = await getTranslations('Shipments.Notifications');
+      const tChannel = await getTranslations('Shipments.DuimpChannel');
+
       const { channel } = siscomexResult;
-      const channelLabel = { GREEN: 'Verde', YELLOW: 'Amarelo', RED: 'Vermelho', GREY: 'Cinza' }[channel];
+      const channelLabel = tChannel(channel);
       const isUrgent = channel === 'RED' || channel === 'GREY';
 
       await notifyOrganizationMembers(
         shipment.sellerOrganizationId,
-        isUrgent ? 'DUIMP — Canal de Atenção' : 'DUIMP registrada',
-        `DUIMP ${duimpNumber} registrada. Canal: ${channelLabel}.`,
+        isUrgent ? t('titles.duimpUrgent') : t('titles.duimpRegistered'),
+        t('duimpRegistered', { number: duimpNumber, channel: channelLabel }),
         `/dashboard/shipments/${shipmentId}`,
         isUrgent ? 'WARNING' : 'SUCCESS'
       );
@@ -89,8 +93,8 @@ export const shipmentDuimpRegistered = inngest.createFunction(
       if (shipment.clientOrganizationId) {
         await notifyOrganizationMembers(
           shipment.clientOrganizationId,
-          'DUIMP registrada',
-          `A DUIMP do seu pedido #${shipment.code} foi registrada.`,
+          t('titles.duimpRegistered'),
+          t('duimpRegisteredClient', { code: shipment.code }),
           `/dashboard/shipments/${shipmentId}`,
           'INFO'
         );

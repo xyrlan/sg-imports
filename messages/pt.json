@@ -1831,8 +1831,10 @@
     },
     "Notifications": {
       "fobComplete": "O pagamento FOB foi concluído. O pedido avançou para Preparação de Embarque.",
+      "fobCompleteClient": "Seu pagamento FOB foi concluído. O pedido avançou para a próxima etapa.",
       "paymentConfirmed": "Pagamento de {amount} confirmado para o pedido #{code}.",
       "duimpRegistered": "DUIMP {number} registrada. Canal: {channel}.",
+      "duimpRegisteredClient": "A DUIMP do seu pedido #{code} foi registrada.",
       "duimpUrgent": "DUIMP — Canal de Atenção",
       "customsCleared": "O desembaraço aduaneiro foi concluído. O pedido avançou para Conclusão.",
       "shipmentFinalized": "Pedido #{code} finalizado com sucesso.",
@@ -1841,7 +1843,16 @@
       "vesselArrived": "O navio chegou ao porto de destino.",
       "cargoDelivered": "A carga foi entregue.",
       "invoiceGenerated": "Nova fatura gerada para o pedido #{code}.",
-      "amendmentGenerated": "Um aditivo contratual foi gerado. Por favor assine."
+      "amendmentGenerated": "Um aditivo contratual foi gerado. Por favor assine.",
+      "titles": {
+        "fobComplete": "Pagamento FOB concluído",
+        "paymentConfirmed": "Pagamento confirmado",
+        "duimpRegistered": "DUIMP registrada",
+        "duimpUrgent": "DUIMP — Canal de Atenção",
+        "customsCleared": "Desembaraço concluído",
+        "trackingUpdate": "Atualização de rastreamento",
+        "trackingUpdateClient": "Atualização do seu pedido"
+      }
     },
     "Actions": {
       "advanceStep": "Avançar Etapa",

@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { shipments, transactions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { notifyOrganizationMembers } from '@/services/notification.service';
+import { getTranslations } from 'next-intl/server';
 
 export const shipmentPaymentReceived = inngest.createFunction(
   {
@@ -34,10 +35,11 @@ export const shipmentPaymentReceived = inngest.createFunction(
       });
 
       if (shipment) {
+        const t = await getTranslations('Shipments.Notifications');
         await notifyOrganizationMembers(
           shipment.sellerOrganizationId,
-          'Pagamento confirmado',
-          `Pagamento de R$ ${txn.amountBrl} confirmado para o pedido #${shipment.code}.`,
+          t('titles.paymentConfirmed'),
+          t('paymentConfirmed', { amount: txn.amountBrl ?? '0', code: shipment.code }),
           `/dashboard/shipments/${shipmentId}`,
           'SUCCESS'
         );
