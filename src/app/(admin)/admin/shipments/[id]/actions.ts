@@ -812,6 +812,39 @@ export async function generateServiceFeeInvoiceAction(
   }
 }
 
+// ============================================
+// Item Editing Action
+// ============================================
+
+/**
+ * Initiate an item edit for a shipment, triggering an Inngest workflow
+ * that will generate a contractual amendment (aditivo) for ZapSign signature.
+ */
+export async function editShipmentItemsAction(
+  shipmentId: string,
+  changes: Array<{
+    type: 'ADD' | 'REMOVE' | 'UPDATE';
+    quoteItemId?: string;
+    variantId?: string;
+    quantity?: number;
+    priceUsd?: number;
+  }>,
+): Promise<{ success: boolean; data?: { success: boolean; message: string }; error?: string }> {
+  const { profile } = await getSuperAdminUser();
+  try {
+    const { initiateItemEdit } = await import('@/services/shipment-items.service');
+    const result = await initiateItemEdit({
+      shipmentId,
+      adminProfileId: profile.id,
+      changes,
+    });
+    revalidatePath(`/admin/shipments/${shipmentId}`);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Error' };
+  }
+}
+
 /**
  * Preview the service fee calculation without creating a transaction.
  */

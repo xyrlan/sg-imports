@@ -4,11 +4,12 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, Chip } from '@heroui/react';
-import { DollarSign, ExternalLink } from 'lucide-react';
+import { DollarSign, ExternalLink, Pencil } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { GenerateInvoiceModal } from '../modals/generate-invoice-modal';
 import { RegisterPaymentModal } from '../modals/register-payment-modal';
 import { CreateExchangeContractModal } from '../modals/create-exchange-contract-modal';
+import { EditItemsModal } from '../modals/edit-items-modal';
 import { updateProductionReadyDateAction } from '../../[id]/actions';
 
 // ============================================
@@ -354,12 +355,27 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
 
 export function MerchandisePaymentStep({ shipment, readOnly = false }: MerchandisePaymentStepProps) {
   const t = useTranslations('Admin.Shipments.Steps.MerchandisePayment');
+  const router = useRouter();
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <DollarSign className="h-5 w-5 text-default-400" />
-        <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-5 w-5 text-default-400" />
+          <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
+        </div>
+        {!readOnly && (
+          <EditItemsModal
+            shipment={shipment}
+            onSuccess={() => router.refresh()}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Pencil className="size-4" />
+                {t('editItems')}
+              </Button>
+            }
+          />
+        )}
       </div>
 
       <ProductionCard shipment={shipment} readOnly={readOnly} />

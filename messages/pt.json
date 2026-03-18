@@ -1144,6 +1144,7 @@
           "exchangeContracts": "Contratos de Câmbio",
           "newExchangeContract": "Novo Contrato de Câmbio",
           "save": "Salvar",
+          "editItems": "Editar Itens",
           "transactionTable": {
             "number": "#",
             "amountUsd": "Valor USD",
@@ -1289,6 +1290,21 @@
           "contract": "Contrato (PDF)",
           "cancel": "Cancelar",
           "save": "Salvar Contrato",
+          "saving": "Salvando..."
+        },
+        "EditItems": {
+          "title": "Editar Itens do Pedido",
+          "product": "Produto",
+          "variant": "Variante",
+          "quantity": "Quantidade",
+          "priceUsd": "Preço USD",
+          "total": "Total",
+          "remove": "Remover",
+          "addItem": "Adicionar Item",
+          "save": "Salvar Alterações",
+          "cancel": "Cancelar",
+          "noChanges": "Nenhuma alteração detectada",
+          "amendmentNote": "As alterações gerarão um aditivo contratual para assinatura do cliente.",
           "saving": "Salvando..."
         }
       },
