@@ -92,6 +92,43 @@ export async function createDocumentFromTemplate(
 }
 
 /**
+ * Add an attachment (amendment) to an existing signed document.
+ * @see https://docs.zapsign.com.br/documentos/adicionar-anexo-documento-extra-1
+ */
+export async function addDocumentAttachment(
+  docToken: string,
+  attachmentName: string,
+  pdfBase64: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!ZAPSIGN_API_TOKEN) {
+    return { success: false, error: 'ZapSign is not configured' };
+  }
+
+  try {
+    const response = await fetch(`${ZAPSIGN_BASE_URL}/docs/${docToken}/add-attachment/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ZAPSIGN_API_TOKEN}`,
+      },
+      body: JSON.stringify({
+        name: attachmentName,
+        base64_pdf: pdfBase64,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      return { success: false, error: `ZapSign API error: ${response.status} ${body}` };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: `Failed to connect to ZapSign: ${error}` };
+  }
+}
+
+/**
  * Verify document status via ZapSign API (used to validate webhooks).
  * Returns true if the document exists and has status "signed".
  */

@@ -26,6 +26,15 @@ export type ShipmentEvents = {
     data: { shipmentId: string; duimpNumber: string };
   };
 
+  /** Admin edited shipment items — triggers amendment PDF and ZapSign attachment */
+  'shipment/items.changed': {
+    data: {
+      shipmentId: string;
+      adminProfileId: string;
+      changes: Array<{ type: string; itemId?: string; data: Record<string, unknown> }>;
+    };
+  };
+
   /** Existing quote contract signed event */
   'quote/contract.signed': {
     data: { quoteId: string };

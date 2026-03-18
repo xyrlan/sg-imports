@@ -5,6 +5,7 @@ import { shipmentStepEvaluator } from "@/inngest/functions/shipment-step-evaluat
 import { shipmentPaymentReceived } from "@/inngest/functions/shipment-payment-received";
 import { shipmentDuimpRegistered } from "@/inngest/functions/shipment-duimp-registered";
 import { shipmentShipsgoUpdated } from "@/inngest/functions/shipment-shipsgo-updated";
+import { shipmentItemsChanged } from "@/inngest/functions/shipment-items-changed";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -14,5 +15,6 @@ export const { GET, POST, PUT } = serve({
     shipmentPaymentReceived,
     shipmentDuimpRegistered,
     shipmentShipsgoUpdated,
+    shipmentItemsChanged,
   ],
 });
