@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, ListBox, Modal, Select, TextField, useOverlayState } from '@heroui/react';
+import { Button, DateField, Input, Label, ListBox, Modal, Select, TextField, useOverlayState } from '@heroui/react';
+import { parseDate } from '@internationalized/date';
 import { Landmark } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { FileUpload } from '@/components/ui/file-upload';
@@ -262,15 +263,18 @@ export function CreateExchangeContractModal({
                       </TextField>
                     </div>
 
-                    <TextField variant="primary" isRequired>
+                    <DateField
+                      value={closedAt ? parseDate(closedAt) : null}
+                      onChange={(v) => setClosedAt(v?.toString() ?? '')}
+                      isRequired
+                    >
                       <Label>{t('closingDate')}</Label>
-                      <Input
-                        name="closedAt"
-                        type="date"
-                        value={closedAt}
-                        onChange={(e) => setClosedAt(e.target.value)}
-                      />
-                    </TextField>
+                      <DateField.Group variant="primary">
+                        <DateField.Input>
+                          {(segment) => <DateField.Segment segment={segment} />}
+                        </DateField.Input>
+                      </DateField.Group>
+                    </DateField>
 
                     <FileUpload
                       label={t('swift')}

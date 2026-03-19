@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, Modal, TextField, useOverlayState } from '@heroui/react';
+import { Button, DateField, Input, Label, Modal, TextField, useOverlayState } from '@heroui/react';
+import { parseDate } from '@internationalized/date';
 import { CreditCard } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { FileUpload } from '@/components/ui/file-upload';
@@ -101,15 +102,18 @@ export function RegisterPaymentModal({
                         autoComplete="off"
                       />
                     </TextField>
-                    <TextField variant="primary" isRequired>
+                    <DateField
+                      value={paymentDate ? parseDate(paymentDate) : null}
+                      onChange={(v) => setPaymentDate(v?.toString() ?? '')}
+                      isRequired
+                    >
                       <Label>{t('paymentDate')}</Label>
-                      <Input
-                        name="paymentDate"
-                        type="date"
-                        value={paymentDate}
-                        onChange={(e) => setPaymentDate(e.target.value)}
-                      />
-                    </TextField>
+                      <DateField.Group variant="primary">
+                        <DateField.Input>
+                          {(segment) => <DateField.Segment segment={segment} />}
+                        </DateField.Input>
+                      </DateField.Group>
+                    </DateField>
                     <FileUpload
                       label={t('proof')}
                       name="proofFile"

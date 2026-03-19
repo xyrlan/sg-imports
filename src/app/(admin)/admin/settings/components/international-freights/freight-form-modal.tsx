@@ -7,7 +7,6 @@ import {
   Checkbox,
   CheckboxGroup,
   DateField,
-  DateInputGroup,
   Description,
   Input,
   Label,
@@ -417,13 +416,13 @@ export function FreightFormModal({
                   minValue={today(getLocalTimeZone())}
                 >
                   <Label>{t('validTo')}</Label>
-                  <DateInputGroup variant="primary">
-                    <DateInputGroup.Input>
+                  <DateField.Group variant="primary">
+                    <DateField.Input>
                       {(segment) => (
-                        <DateInputGroup.Segment segment={segment} />
+                        <DateField.Segment segment={segment} />
                       )}
-                    </DateInputGroup.Input>
-                  </DateInputGroup>
+                    </DateField.Input>
+                  </DateField.Group>
                   <Description>{t('validToDescription')}</Description>
                 </DateField>
 

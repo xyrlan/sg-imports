@@ -4,7 +4,6 @@ import { useTranslations } from 'next-intl';
 import {
   Button,
   DateField,
-  DateInputGroup,
   Label,
   ListBox,
   Select,
@@ -108,22 +107,22 @@ export function AuditLogFilters({
         onChange={(v) => onFromDateChange(v?.toString() ?? '')}
       >
         <Label>{t('filterFrom')}</Label>
-        <DateInputGroup variant="primary">
-          <DateInputGroup.Input>
-            {(segment) => <DateInputGroup.Segment segment={segment} />}
-          </DateInputGroup.Input>
-        </DateInputGroup>
+        <DateField.Group variant="primary">
+          <DateField.Input>
+            {(segment) => <DateField.Segment segment={segment} />}
+          </DateField.Input>
+        </DateField.Group>
       </DateField>
       <DateField
         value={toDate ? parseDate(toDate) : null}
         onChange={(v) => onToDateChange(v?.toString() ?? '')}
       >
         <Label>{t('filterTo')}</Label>
-        <DateInputGroup variant="primary">
-          <DateInputGroup.Input>
-            {(segment) => <DateInputGroup.Segment segment={segment} />}
-          </DateInputGroup.Input>
-        </DateInputGroup>
+        <DateField.Group variant="primary">
+          <DateField.Input>
+            {(segment) => <DateField.Segment segment={segment} />}
+          </DateField.Input>
+        </DateField.Group>
       </DateField>
       <Button variant="primary" onPress={onApply} size="md">
         {t('applyFilters')}

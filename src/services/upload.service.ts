@@ -235,3 +235,59 @@ export async function uploadProductPhotos(
 
   return Promise.all(uploadPromises);
 }
+
+const SHIPMENT_DOCUMENTS_BUCKET = 'shipment-documents';
+
+/**
+ * Upload observation documents (PDF, JPG, PNG, WebP) to Supabase Storage
+ * @param files - Array of files to upload
+ * @param userId - User ID (for RLS path)
+ * @param quoteId - Quote ID
+ * @returns Array of { name, url } objects
+ */
+export async function uploadObservationDocuments(
+  files: File[],
+  userId: string,
+  quoteId: string
+): Promise<{ name: string; url: string }[]> {
+  if (files.length === 0) return [];
+
+  const supabase = await createClient();
+  const timestamp = Date.now();
+  const basePath = `${userId}/quotes/${quoteId}/observations`;
+
+  const uploadPromises = files.map(async (file, index) => {
+    const validation = validateFile(file, 10);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
+    const fileName = `${timestamp}-${index}.${fileExt}`;
+    const filePath = `${basePath}/${fileName}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error } = await supabase.storage
+      .from(SHIPMENT_DOCUMENTS_BUCKET)
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (error) {
+      console.error('Error uploading observation document:', error);
+      throw new Error(`Erro ao fazer upload do documento: ${error.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(SHIPMENT_DOCUMENTS_BUCKET)
+      .getPublicUrl(filePath);
+
+    return { name: file.name, url: publicUrl };
+  });
+
+  return Promise.all(uploadPromises);
+}

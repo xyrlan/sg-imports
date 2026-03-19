@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip, TextField, Input, Label, Surface } from '@heroui/react';
+import { Button, Chip, DateField, Input, Label, Surface } from '@heroui/react';
+import { parseDate } from '@internationalized/date';
 import { DollarSign, ExternalLink, Pencil } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { GenerateInvoiceModal } from '../modals/generate-invoice-modal';
@@ -72,14 +73,18 @@ function ProductionCard({ shipment, readOnly }: ProductionCardProps) {
       <p className="text-sm font-semibold text-foreground">{t('production')}</p>
       <div className="flex items-end gap-3">
         <div className="flex-1">
-          <TextField variant="primary" isDisabled={readOnly}>
+          <DateField
+            value={productionDate ? parseDate(productionDate) : null}
+            onChange={(v) => setProductionDate(v?.toString() ?? '')}
+            isDisabled={readOnly}
+          >
             <Label>{t('productionReadyDate')}</Label>
-            <Input
-              type="date"
-              value={productionDate}
-              onChange={(e) => setProductionDate(e.target.value)}
-            />
-          </TextField>
+            <DateField.Group variant="primary">
+              <DateField.Input>
+                {(segment) => <DateField.Segment segment={segment} />}
+              </DateField.Input>
+            </DateField.Group>
+          </DateField>
         </div>
         {!readOnly && (
           <Button size="sm" variant="primary" onPress={handleSave} isPending={isPending}>

@@ -10,6 +10,7 @@ import {
 import { calculateAndPersistLandedCost } from '@/domain/simulation/services/simulation-domain.service';
 import { getProductsByOrganization } from '@/services/product.service';
 import { getOrganizationDeliveryState } from '@/services/organization.service';
+import { getObservationsByQuoteId } from '@/services/quote-observation.service';
 import { getDolarPTAX } from '@/lib/fetch-dolar';
 
 export default async function SimulationDetailPage({
@@ -20,12 +21,13 @@ export default async function SimulationDetailPage({
   const { id } = await params;
   const { user, activeOrgId } = await requireAuthAndOrg();
 
-  const [data, productsResult, summary, hsCodes, defaultDestinationState] = await Promise.all([
+  const [data, productsResult, summary, hsCodes, defaultDestinationState, observations] = await Promise.all([
     getSimulationById(id, activeOrgId, user.id),
     getProductsByOrganization(activeOrgId, { pageSize: 200 }),
     getQuoteFinancialSummary(id, activeOrgId, user.id),
     getHsCodesForSimulation(),
     getOrganizationDeliveryState(activeOrgId, user.id),
+    getObservationsByQuoteId(id, activeOrgId, user.id),
   ]);
 
   if (!data) {
@@ -66,6 +68,7 @@ export default async function SimulationDetailPage({
         financialSummary={financialSummary}
         hsCodes={hsCodes}
         defaultDestinationState={defaultDestinationState}
+        observations={observations}
       />
     </div>
   );

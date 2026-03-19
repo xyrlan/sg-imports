@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Button, Chip } from '@heroui/react';
-import { ArrowLeft, PackageOpen, Settings, RefreshCw } from 'lucide-react';
+import { ArrowLeft, MessageSquarePlus, PackageOpen, Settings, RefreshCw } from 'lucide-react';
 import { calculateSimulationAction } from '@/domain/simulation/actions/calculate-simulation.action';
 import { SimulationItemsList } from './simulation-items-list';
 import type {
@@ -17,8 +17,11 @@ import type {
 import type { ProductWithVariants } from '@/services/product.service';
 import { AddProductModal } from './modals/add-product-modal';
 import { SettingsModal } from './modals/settings-modal';
+import { AddObservationModal } from './modals/add-observation-modal';
 import { SimulationFinancialSummary } from './cards/simulation-financial-summary';
 import { QuoteWorkflowButtons } from './quote-workflow-buttons';
+
+import type { QuoteObservation } from './modals/add-observation-modal';
 
 interface SimulationDetailContentProps {
   simulation: Simulation;
@@ -28,6 +31,7 @@ interface SimulationDetailContentProps {
   hsCodes: HsCodeOption[];
   financialSummary?: QuoteFinancialSummary | null;
   defaultDestinationState?: string | null;
+  observations?: QuoteObservation[];
   backHref?: string;
 }
 
@@ -39,12 +43,14 @@ export function SimulationDetailContent({
   hsCodes,
   financialSummary = null,
   defaultDestinationState = null,
+  observations = [],
   backHref = '/dashboard/simulations',
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
   const tStatus = useTranslations('Simulations.Status');
   const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [observationsOpen, setObservationsOpen] = useState(false);
   const [isRecalculating, startTransition] = useTransition();
 
   const handleMutate = () => {
@@ -107,6 +113,23 @@ export function SimulationDetailContent({
           />
           {canEdit && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onPress={() => setObservationsOpen(true)}
+                className="inline-flex items-center gap-2"
+              >
+                <MessageSquarePlus className="size-4" />
+                {t('observations')}
+              </Button>
+              <AddObservationModal
+                quoteId={simulation.id}
+                organizationId={organizationId}
+                observations={observations}
+                onMutate={handleMutate}
+                open={observationsOpen}
+                onOpenChange={setObservationsOpen}
+              />
               <Button
                 variant="outline"
                 size="sm"

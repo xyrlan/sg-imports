@@ -70,4 +70,6 @@ export interface ShippingMetadata {
   additionalFreightUsd?: number;
   /** Comissão % sobre FOB (0-100) */
   commissionPercent?: number;
+  /** Porcentagem do primeiro pagamento FOB (0-100) */
+  firstPaymentFobPercent?: number;
 }

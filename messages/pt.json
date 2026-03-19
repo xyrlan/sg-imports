@@ -1590,7 +1590,20 @@
       "editItem": "Editar item",
       "saveItem": "Salvar",
       "staleBannerMessage": "Alguns valores de câmbio ou frete mudaram. Clique aqui para recalcular.",
-      "staleBannerRecalculate": "Recalcular"
+      "staleBannerRecalculate": "Recalcular",
+      "addObservation": "Adicionar Observação",
+      "observations": "Observações"
+    },
+    "Observations": {
+      "heading": "Observações",
+      "listTitle": "Observações existentes",
+      "newObservationTitle": "Nova observação",
+      "descriptionLabel": "Descrição",
+      "descriptionPlaceholder": "Digite a observação...",
+      "documentsLabel": "Documentos",
+      "save": "Salvar",
+      "close": "Fechar",
+      "empty": "Nenhuma observação ainda"
     },
     "Workflow": {
       "sendToClient": "Enviar para Cliente",
@@ -1712,6 +1725,8 @@
       "destinationState": "Estado de Destino (ICMS)",
       "destinationStatePlaceholder": "Selecione o estado",
       "destinationStateRequired": "Selecione o estado de destino",
+      "firstPaymentFobPercentLabel": "Primeiro Pagamento FOB (%)",
+      "firstPaymentFobPercentPlaceholder": "0",
       "save": "Salvar",
       "cancel": "Cancelar"
     },

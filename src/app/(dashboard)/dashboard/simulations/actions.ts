@@ -149,6 +149,7 @@ const shippingMetadataSchema = z.object({
   destinationState: z.string().max(2).optional(),
   additionalFreightUsd: z.number().min(0).optional(),
   commissionPercent: z.number().min(0).max(100).optional(),
+  firstPaymentFobPercent: z.number().min(0).max(100).optional(),
 });
 
 const incotermSchema = z.enum(['EXW', 'FOB', 'CIF', 'DDP']);
