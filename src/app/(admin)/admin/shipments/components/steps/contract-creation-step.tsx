@@ -1,0 +1,72 @@
+'use client';
+
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Chip } from '@heroui/react';
+import { FileCheck, ExternalLink } from 'lucide-react';
+import type { ShipmentDetail } from '../shipment-utils';
+import { formatDateBR } from '../shipment-utils';
+
+// ============================================
+// Props
+// ============================================
+
+interface ContractCreationStepProps {
+  shipment: ShipmentDetail;
+  readOnly?: boolean;
+}
+
+// ============================================
+// Component
+// ============================================
+
+export function ContractCreationStep({ shipment }: ContractCreationStepProps) {
+  const t = useTranslations('Admin.Shipments.Steps.ContractCreation');
+
+  const isContractSigned = shipment.zapSignStatus === 'signed';
+
+  // Find the step history entry for CONTRACT_CREATION that is COMPLETED
+  const completedEntry = shipment.stepHistory?.find(
+    (h) => h.step === 'CONTRACT_CREATION' && h.status === 'COMPLETED',
+  );
+
+  const signatureDate = completedEntry?.completedAt ?? null;
+
+  return (
+    <div className="space-y-4">
+      {/* Contract signed status */}
+      <div className="flex items-center gap-3">
+        <FileCheck className="h-5 w-5 text-muted shrink-0" />
+        <span className="text-sm text-foreground/90">{t('contractSigned')}</span>
+        <Chip
+          color={isContractSigned ? 'success' : 'warning'}
+          variant="soft"
+          size="sm"
+        >
+          {isContractSigned ? t('contractSigned') : shipment.zapSignStatus ?? '—'}
+        </Chip>
+      </div>
+
+      {/* Signature date (only when signed) */}
+      {isContractSigned && (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted">{t('signatureDate')}:</span>
+          <span className="text-sm font-medium text-foreground">{formatDateBR(signatureDate)}</span>
+        </div>
+      )}
+
+      {/* Link to quote */}
+      {shipment.quoteId && (
+        <div className="pt-1">
+          <Link
+            href={`/admin/simulations/${shipment.quoteId}`}
+            className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {t('viewQuote')}
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}

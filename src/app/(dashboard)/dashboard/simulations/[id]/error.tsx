@@ -15,7 +15,7 @@ export default function SimulationDetailError({ error, reset }: ErrorProps) {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
-      <Card variant="default" className="w-full max-w-md">
+      <Card variant="secondary" className="w-full max-w-md">
         <Card.Content className="p-8">
           <div className="text-center space-y-6">
             <div className="flex justify-center">

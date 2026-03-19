@@ -82,7 +82,7 @@ export function SupplierFormModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <Truck className="size-5" />
               </Modal.Icon>
               <Modal.Heading>{labels.heading}</Modal.Heading>

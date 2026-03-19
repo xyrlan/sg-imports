@@ -122,7 +122,7 @@ export function EditItemModal({
           <Modal.Dialog className="max-w-5xl">
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <Box size={22} />
               </Modal.Icon>
               <Modal.Heading>{t('editItem')}</Modal.Heading>
@@ -130,7 +130,7 @@ export function EditItemModal({
             <Modal.Body className="overflow-visible">
               {isCatalogItem ? (
                 <div className="space-y-4">
-                  <div className="rounded-lg border border-border bg-default-50 px-3 py-2">
+                  <div className="rounded-lg border border-border bg-surface px-3 py-2">
                     <p className="text-sm font-medium">{getItemDisplayName(item)}</p>
                     <p className="font-mono text-xs text-muted">{getItemSku(item)}</p>
                   </div>

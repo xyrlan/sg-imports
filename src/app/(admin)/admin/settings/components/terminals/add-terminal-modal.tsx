@@ -32,7 +32,7 @@ export function AddTerminalModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className='mb-6'>
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <Building2 className="size-5" />
               </Modal.Icon>
               <Modal.Heading>{t('Terminals.addTerminal')}</Modal.Heading>

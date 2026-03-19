@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import {
   Button,
   DateField,
-  DateInputGroup,
   Description,
   Input,
   Label,
@@ -367,26 +366,26 @@ function PricingRuleFormContent({
                     onChange={(v) => setValidFrom(v?.toString() ?? '')}
                   >
                     <Label>{t('validFrom')}</Label>
-                    <DateInputGroup variant="primary">
-                      <DateInputGroup.Input>
+                    <DateField.Group variant="primary">
+                      <DateField.Input>
                         {(segment) => (
-                          <DateInputGroup.Segment segment={segment} />
+                          <DateField.Segment segment={segment} />
                         )}
-                      </DateInputGroup.Input>
-                    </DateInputGroup>
+                      </DateField.Input>
+                    </DateField.Group>
                   </DateField>
                   <DateField
                     value={validTo ? parseDate(validTo) : null}
                     onChange={(v) => setValidTo(v?.toString() ?? '')}
                   >
                     <Label>{t('validTo')}</Label>
-                    <DateInputGroup variant="primary">
-                      <DateInputGroup.Input>
+                    <DateField.Group variant="primary">
+                      <DateField.Input>
                         {(segment) => (
-                          <DateInputGroup.Segment segment={segment} />
+                          <DateField.Segment segment={segment} />
                         )}
-                      </DateInputGroup.Input>
-                    </DateInputGroup>
+                      </DateField.Input>
+                    </DateField.Group>
                     <Description>{t('validToHint')}</Description>
                   </DateField>
                 </div>
@@ -520,7 +519,7 @@ export function PricingRuleFormModal({
           <Modal.Dialog className="max-w-3xl overflow-y-auto">
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <DollarSign className="size-5" />
               </Modal.Icon>
               <Modal.Heading>

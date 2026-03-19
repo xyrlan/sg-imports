@@ -177,9 +177,9 @@ export function FreightTaxasSection({
       {visibleRules.length === 0 ? (
         <Card>
           <div className="py-12 text-center">
-            <DollarSign className="mx-auto mb-4 text-default-400" size={48} />
-            <p className="text-default-600">{t('noRules')}</p>
-            <p className="mt-1 text-sm text-default-500">{t('noRulesHint')}</p>
+            <DollarSign className="mx-auto mb-4 text-muted" size={48} />
+            <p className="text-foreground/90">{t('noRules')}</p>
+            <p className="mt-1 text-sm text-muted">{t('noRulesHint')}</p>
           </div>
         </Card>
       ) : (

@@ -67,6 +67,7 @@ export async function getAllOrganizations(
         stateRegistry: organizations.stateRegistry,
         orderType: organizations.orderType,
         minOrderValue: organizations.minOrderValue,
+        asaasCustomerId: organizations.asaasCustomerId,
         billingAddressId: organizations.billingAddressId,
         deliveryAddressId: organizations.deliveryAddressId,
         socialContractUrl: organizations.socialContractUrl,

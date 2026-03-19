@@ -99,7 +99,7 @@ export function UserEditForm({ profile, memberships }: UserEditFormProps) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left column: Editable fields */}
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Header>
             <Card.Title>{t('personalData')}</Card.Title>
           </Card.Header>
@@ -178,7 +178,7 @@ export function UserEditForm({ profile, memberships }: UserEditFormProps) {
         {/* Right column: Documents + Organizations */}
         <div className="space-y-6">
           {/* Documents section with upload */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <Card.Title>{t('documents')}</Card.Title>
             </Card.Header>
@@ -233,7 +233,7 @@ export function UserEditForm({ profile, memberships }: UserEditFormProps) {
           </Card>
 
           {/* Organizations section */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <div className="flex items-center gap-2">
                 <Building2 className="size-5" />
@@ -251,7 +251,7 @@ export function UserEditForm({ profile, memberships }: UserEditFormProps) {
                     <NextLink
                       key={m.organizationId}
                       href={`/admin/organizations/${m.organizationId}`}
-                      className="flex items-center justify-between p-3 rounded-lg bg-default-100 border hover:bg-default-200 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-border border hover:bg-surface transition-colors"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">
@@ -286,7 +286,7 @@ function DocumentLink({
   viewLabel: string;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-default-100 border">
+    <div className="flex items-center justify-between p-3 rounded-lg bg-border border">
       <div className="flex items-center gap-3">
         <FileText className="size-5 text-muted" />
         <div>

@@ -101,7 +101,7 @@ export function OnboardingForm({
           <p className="text-sm text-muted mt-0.5">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-surface-secondary">
+          <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-border-secondary">
             <span className="text-sm font-medium text-foreground">{organizationName}</span>
           </div>
           <span className="text-xs text-muted hidden sm:inline">
@@ -112,7 +112,7 @@ export function OnboardingForm({
 
       <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
-      <Card variant="default" className="shadow-lg border border-default-200/50 overflow-hidden">
+      <Card variant="secondary" className="shadow-lg border border-border/50 overflow-hidden">
         <Card.Content className="p-5 md:p-6 max-h-[min(65vh,calc(100svh-280px))] min-h-[260px] overflow-y-auto">
             {currentStep === 1 && (
               <Step1OrganizationDetails

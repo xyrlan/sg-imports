@@ -30,7 +30,7 @@ export function UserHeaderWithLogout({ email, name, maxWidth = 'max-w-md', compa
   };
 
   return (
-    <Card variant="default" className={`w-full ${maxWidth} shadow-md border border-default-200/50`}>
+    <Card variant="secondary" className={`w-full ${maxWidth} shadow-md border border-border/50`}>
       <Card.Content>
         <div className={`flex items-center justify-between ${compact ? 'p-3' : 'p-4'}`}>
           <div className="flex items-center gap-3">
@@ -41,7 +41,7 @@ export function UserHeaderWithLogout({ email, name, maxWidth = 'max-w-md', compa
               <span className="text-sm font-medium text-foreground">
                 {name || t('userLabel')}
               </span>
-              <span className="text-xs text-default-500">{email}</span>
+              <span className="text-xs text-muted">{email}</span>
             </div>
           </div>
 

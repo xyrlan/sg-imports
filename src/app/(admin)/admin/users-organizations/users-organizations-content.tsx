@@ -350,7 +350,7 @@ export function UsersOrganizationsContent({
       </div>
 
       {/* Tabs */}
-      <Tabs selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key as string)}>
+      <Tabs selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key as string)} >
         <Tabs.ListContainer>
           <Tabs.List aria-label={t('title')}>
             <Tabs.Tab id="users">
@@ -369,7 +369,6 @@ export function UsersOrganizationsContent({
             columns={profileColumns}
             data={initialProfiles}
             searchPlaceholder={t('searchUsers')}
-            enableRowSelection
             facetedFilters={profileFilters}
           />
         </Tabs.Panel>
@@ -379,7 +378,6 @@ export function UsersOrganizationsContent({
             columns={organizationColumns}
             data={initialOrganizations}
             searchPlaceholder={t('searchOrganizations')}
-            enableRowSelection
             facetedFilters={organizationFilters}
           />
         </Tabs.Panel>

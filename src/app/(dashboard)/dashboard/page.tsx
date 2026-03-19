@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Organization Card */}
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Header>
             <Card.Title>Organização Atual</Card.Title>
           </Card.Header>
@@ -82,7 +82,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Available Organizations Card */}
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Header>
             <Card.Title>Suas Organizações</Card.Title>
           </Card.Header>
@@ -121,7 +121,7 @@ export default function DashboardPage() {
 
       {/* Quick Stats */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Content>
             <div className="text-center">
               <p className="text-3xl font-bold text-primary">0</p>
@@ -130,7 +130,7 @@ export default function DashboardPage() {
           </Card.Content>
         </Card>
         
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Content>
             <div className="text-center">
               <p className="text-3xl font-bold text-success">0</p>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
           </Card.Content>
         </Card>
         
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Content>
             <div className="text-center">
               <p className="text-3xl font-bold text-warning">0</p>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
           </Card.Content>
         </Card>
         
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Content>
             <div className="text-center">
               <p className="text-3xl font-bold text-secondary">0</p>

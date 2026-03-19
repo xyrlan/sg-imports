@@ -207,7 +207,7 @@ export function StorageRuleFormModal({
           <Modal.Dialog className="max-w-6xl overflow-y-auto">
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6"> 
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 {modalIcon}
               </Modal.Icon>
               <Modal.Heading>{modalTitle}</Modal.Heading>

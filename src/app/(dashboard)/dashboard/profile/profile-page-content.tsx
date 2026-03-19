@@ -48,7 +48,7 @@ export function ProfilePageContent({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Data Card */}
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Header>
             <Card.Title>{t('personalData')}</Card.Title>
           </Card.Header>
@@ -70,7 +70,7 @@ export function ProfilePageContent({
         </Card>
 
         {/* Documents Card */}
-        <Card variant="default">
+        <Card variant="secondary">
           <Card.Header>
             <Card.Title>{t('documents')}</Card.Title>
           </Card.Header>
@@ -100,7 +100,7 @@ export function ProfilePageContent({
       </div>
 
       {/* Organizations Card */}
-      <Card variant="default" className="mt-6">
+      <Card variant="secondary" className="mt-6">
         <Card.Header>
           <Card.Title>{t('organizations')}</Card.Title>
         </Card.Header>
@@ -123,7 +123,7 @@ export function ProfilePageContent({
               return (
                 <div
                   key={organization.id}
-                  className="p-3 rounded-lg border border-default-200"
+                  className="p-3 rounded-lg border border-border"
                 >
                   <div className="flex justify-between items-start gap-3">
                     <div className="min-w-0 flex-1">
@@ -189,7 +189,7 @@ export function ProfilePageContent({
                       </Chip>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-default-200">
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-border">
                     {canEdit && (
                       <Button
                         size="sm"

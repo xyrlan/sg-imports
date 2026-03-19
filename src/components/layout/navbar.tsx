@@ -90,7 +90,7 @@ export function Navbar() {
 
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-default-300 bg-background">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <nav className="mx-auto flex h-16 max-w-full items-center justify-between px-4">
         {/* Left Content */}
         <div className="flex items-center gap-4">
@@ -130,7 +130,7 @@ export function Navbar() {
           {filteredLinks.map((link) => (
             <Link
               key={link.href}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-default-100 transition-colors text-foreground no-underline"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-border transition-colors text-foreground no-underline"
               href={link.href}
             >
               {link.icon}

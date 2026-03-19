@@ -46,7 +46,7 @@ export function FreightModalityCards({
           return (
             <Card
               key={id}
-              variant="default"
+              variant="secondary"
               className={`cursor-pointer transition-all border-2 ${
                 isSelected ? 'border-accent' : 'border-transparent'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-muted'}`}

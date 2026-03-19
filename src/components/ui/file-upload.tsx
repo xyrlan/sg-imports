@@ -3,6 +3,12 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Button } from '@heroui/react';
 
+interface FileUploadTranslations {
+  remove?: string;
+  clickToSelect?: string;
+  orDragFile?: string;
+}
+
 interface FileUploadProps {
   label: string;
   name: string;
@@ -12,6 +18,7 @@ interface FileUploadProps {
   error?: string;
   disabled?: boolean;
   required?: boolean;
+  translations?: FileUploadTranslations;
 }
 
 export function FileUpload({
@@ -23,6 +30,7 @@ export function FileUpload({
   error,
   disabled = false,
   required = false,
+  translations,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -152,7 +160,7 @@ export function FileUpload({
               onClick={handleRemove}
               isDisabled={disabled}
             >
-              Remover
+              {translations?.remove ?? 'Remover'}
             </Button>
           </div>
         ) : (
@@ -171,8 +179,8 @@ export function FileUpload({
               />
             </svg>
             <div>
-              <span className="text-sm text-accent font-medium">Clique para selecionar</span>
-              <span className="text-sm text-muted"> ou arraste o arquivo</span>
+              <span className="text-sm text-accent font-medium">{translations?.clickToSelect ?? 'Clique para selecionar'}</span>
+              <span className="text-sm text-muted"> {translations?.orDragFile ?? 'ou arraste o arquivo'}</span>
             </div>
             <p className="text-xs text-muted">{acceptedFormats}</p>
           </div>

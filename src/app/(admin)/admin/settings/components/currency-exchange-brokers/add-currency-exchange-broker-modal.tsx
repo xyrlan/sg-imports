@@ -32,7 +32,7 @@ export function AddCurrencyExchangeBrokerModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-                <Modal.Icon className="bg-default text-foreground">
+                <Modal.Icon className="bg-surface text-foreground">
                 <Landmark className="size-5" />
               </Modal.Icon>
               <Modal.Heading>{t('CurrencyExchangeBrokers.addBroker')}</Modal.Heading>

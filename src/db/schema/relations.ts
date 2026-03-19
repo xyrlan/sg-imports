@@ -2,7 +2,7 @@ import { relations } from 'drizzle-orm';
 
 import { organizations, memberships, profiles, addresses } from './auth';
 import { hsCodes, suppliers, products, productVariants, suppliersWallets, suppliersWalletTransactions, subSuppliers } from './products';
-import { quotes, quoteItems } from './quotes';
+import { quotes, quoteItems, quoteObservations } from './quotes';
 import { shipments, shipmentStepHistory, shipmentContainers, shipmentExpenses, shipmentDocuments, shipmentChangeRequests } from './shipments';
 import { carriers, currencyExchangeBrokers, ports, terminals, storageRules, storagePeriods, serviceFeeConfigs } from './admin-config';
 import { transactions, exchangeContracts } from './financial';
@@ -86,12 +86,17 @@ export const quotesRelations = relations(quotes, ({ one, many }) => ({
   clientOrganization: one(organizations, { fields: [quotes.clientOrganizationId], references: [organizations.id], relationName: 'quotesAsClient' }),
   createdBy: one(profiles, { fields: [quotes.createdById], references: [profiles.id] }),
   items: many(quoteItems),
+  observations: many(quoteObservations),
   generatedShipment: one(shipments, { fields: [quotes.generatedShipmentId], references: [shipments.id] }),
 }));
 
 export const quoteItemsRelations = relations(quoteItems, ({ one }) => ({
   quote: one(quotes, { fields: [quoteItems.quoteId], references: [quotes.id] }),
   variant: one(productVariants, { fields: [quoteItems.variantId], references: [productVariants.id] }),
+}));
+
+export const quoteObservationsRelations = relations(quoteObservations, ({ one }) => ({
+  quote: one(quotes, { fields: [quoteObservations.quoteId], references: [quotes.id] }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one, many }) => ({
@@ -108,6 +113,10 @@ export const exchangeContractsRelations = relations(exchangeContracts, ({ one })
     fields: [exchangeContracts.brokerId],
     references: [currencyExchangeBrokers.id],
   }),
+  supplier: one(suppliers, {
+    fields: [exchangeContracts.supplierId],
+    references: [suppliers.id],
+  }),
 }));
 
 export const currencyExchangeBrokersRelations = relations(
@@ -116,6 +125,19 @@ export const currencyExchangeBrokersRelations = relations(
     exchangeContracts: many(exchangeContracts),
   }),
 );
+
+export const shipmentContainersRelations = relations(shipmentContainers, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentContainers.shipmentId], references: [shipments.id] }),
+}));
+
+export const shipmentExpensesRelations = relations(shipmentExpenses, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentExpenses.shipmentId], references: [shipments.id] }),
+}));
+
+export const shipmentStepHistoryRelations = relations(shipmentStepHistory, ({ one }) => ({
+  shipment: one(shipments, { fields: [shipmentStepHistory.shipmentId], references: [shipments.id] }),
+  completedBy: one(profiles, { fields: [shipmentStepHistory.completedById], references: [profiles.id] }),
+}));
 
 export const shipmentDocumentsRelations = relations(shipmentDocuments, ({ one }) => ({
   shipment: one(shipments, { fields: [shipmentDocuments.shipmentId], references: [shipments.id] }),

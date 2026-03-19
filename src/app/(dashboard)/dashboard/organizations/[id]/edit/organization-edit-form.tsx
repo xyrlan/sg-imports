@@ -58,7 +58,7 @@ export function OrganizationEditForm({
   }, [state?.success, uploadState?.success, router]);
 
   return (
-    <Card variant="default">
+    <Card variant="secondary">
       <Card.Header>
         <Card.Title>{t('title')}</Card.Title>
       </Card.Header>
@@ -76,7 +76,7 @@ export function OrganizationEditForm({
         <form action={formAction} className="space-y-4">
           <FormError message={state?.error} variant="danger" />
 
-          <div className="space-y-2 p-3 rounded-lg bg-default-100 border flex ">
+          <div className="space-y-2 p-3 rounded-lg bg-border border flex ">
             <div className='flex-1'>
             <p className="text-sm text-muted">{t('name')}</p>
             <p className="font-medium">{organization.name}</p>
@@ -165,13 +165,13 @@ export function OrganizationEditForm({
           </TextField>
 
           {/* Social Contract */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <Card.Title>{t('socialContract')}</Card.Title>
             </Card.Header>
             <Card.Content>
               {organization.socialContractUrl ? (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-default-100 border mb-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-border border mb-4">
                 <div className="flex items-center gap-3">
                   <FileText className="size-5 text-muted" />
                   <div>

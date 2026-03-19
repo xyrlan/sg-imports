@@ -18,6 +18,7 @@ import {
   currencyEnum,
   paymentStatusEnum,
   documentTypeEnum,
+  duimpChannelEnum,
 } from './enums';
 import { organizations, profiles } from './auth';
 import { quotes } from './quotes';
@@ -42,6 +43,23 @@ export const shipments = pgTable('shipments', {
   // Financeiro Macro
   totalProductsUsd: decimal('total_products_usd', { precision: 12, scale: 2 }).default('0'),
   totalCostsBrl: decimal('total_costs_brl', { precision: 12, scale: 2 }).default('0'),
+
+  // Passo 1: Merchandise Payment
+  productionReadyDate: timestamp('production_ready_date'),
+  fobAdvancePercentage: decimal('fob_advance_percentage', { precision: 5, scale: 2 }).default('30'),
+
+  // Passo 2: Shipping Preparation
+  isPartLot: boolean('is_part_lot').default(false).notNull(),
+
+  // Passo 4: Customs Clearance
+  duimpNumber: text('duimp_number'),
+  duimpChannel: duimpChannelEnum('duimp_channel'),
+  duimpData: jsonb('duimp_data').$type<Record<string, unknown>>(),
+
+  // Passo 5: Completion (denormalized caches — authoritative source is shipmentExpenses)
+  icmsExitTaxes: decimal('icms_exit_taxes', { precision: 12, scale: 2 }),
+  storageCost: decimal('storage_cost', { precision: 12, scale: 2 }),
+  discounts: decimal('discounts', { precision: 12, scale: 2 }),
 
   etd: timestamp('etd'),
   eta: timestamp('eta'),
@@ -109,6 +127,7 @@ export const shipmentDocuments = pgTable('shipment_documents', {
   type: documentTypeEnum('type').notNull(),
   name: text('name').notNull(), // Nome amigável
   url: text('url').notNull(), // Supabase Storage URL
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
 
   status: text('status').$type<'PENDING' | 'APPROVED' | 'REJECTED'>().default('PENDING'),
   rejectionReason: text('rejection_reason'),

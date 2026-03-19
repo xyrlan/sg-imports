@@ -108,3 +108,12 @@ export const quoteItems = pgTable(
     ),
   ]
 );
+
+export const quoteObservations = pgTable('quote_observations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  quoteId: uuid('quote_id').references(() => quotes.id, { onDelete: 'cascade' }).notNull(),
+  description: text('description').notNull(),
+  documents: jsonb('documents').$type<{ name: string; url: string }[]>().default([]),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

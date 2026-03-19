@@ -110,7 +110,7 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
             <Modal.Dialog className="max-w-5xl max-h-[90vh] overflow-y-auto">
               <Modal.CloseTrigger />
               <Modal.Header >
-                <Modal.Icon className="bg-default text-foreground">
+                <Modal.Icon className="bg-surface text-foreground">
                   <Box size={22} />
                 </Modal.Icon>
                 <Modal.Heading>
@@ -120,7 +120,7 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
 
               <Modal.Body>
           <div className="space-y-6 p-4">
-            <div className="bg-default-100 dark:bg-zinc-800 p-4 rounded-lg">
+            <div className="bg-border dark:bg-zinc-800 p-4 rounded-lg">
               <h3 className="text-base font-medium mb-2">{t('downloadTemplate')}</h3>
               <p className="text-sm text-muted mb-3">
                 {t('templateDescription')}
@@ -146,9 +146,9 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
               </Button>
             </div>
 
-            <div className="bg-default-100 dark:bg-zinc-800 p-4 rounded-lg">
+            <div className="bg-border dark:bg-zinc-800 p-4 rounded-lg">
               <h3 className="text-base font-medium mb-2">{t('uploadFile')}</h3>
-              <div className="border-2 border-dashed border-default-300 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 <input
                   id="products-file-upload"
                   type="file"
@@ -163,7 +163,7 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
                 >
                   {isLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-default-400" />
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-border" />
                       <span className="text-sm text-muted mt-2">{t('importing')}</span>
                     </>
                   ) : (
@@ -177,7 +177,7 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
             </div>
 
             {importResult && (
-              <div className="bg-default-100 dark:bg-zinc-800 p-4 rounded-lg">
+              <div className="bg-border dark:bg-zinc-800 p-4 rounded-lg">
                 <h3 className="text-base font-medium mb-2">{t('importResults')}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -219,8 +219,8 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
 
       {showErrorDetails && importResult && importResult.detalhesErros?.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden border border-default-200">
-            <div className="flex items-center justify-between p-4 border-b border-default-200">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden border border-border">
+            <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">{t('errorsTitle')}</h3>
               <Button
                 size="sm"
@@ -250,7 +250,7 @@ export function ImportProductsDrawer({ organizationId, onMutate }: ImportProduct
                 </div>
               ))}
             </div>
-            <div className="p-4 border-t border-default-200">
+            <div className="p-4 border-t border-border">
               <Button
                 className="w-full"
                 variant="primary"

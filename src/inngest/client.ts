@@ -1,4 +1,7 @@
-import { Inngest } from "inngest";
+import { EventSchemas, Inngest } from 'inngest';
+import type { ShipmentEvents } from './events';
 
-// O ID deve ser único para seu app
-export const inngest = new Inngest({ id: "sg-imports" });
+export const inngest = new Inngest({
+  id: 'sg-imports',
+  schemas: new EventSchemas().fromRecord<ShipmentEvents>(),
+});

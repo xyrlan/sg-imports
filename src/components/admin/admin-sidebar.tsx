@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Settings,
   Package,
+  ClipboardList,
   Menu,
   X,
 } from 'lucide-react';
@@ -43,6 +44,11 @@ export function AdminSidebar() {
       labelKey: 'dashboard',
       href: '/admin',
       icon: <LayoutDashboard className="size-5 shrink-0" />,
+    },
+    {
+      labelKey: 'shipments',
+      href: '/admin/shipments',
+      icon: <ClipboardList className="size-5 shrink-0" />,
     },
     {
       labelKey: 'management',
@@ -83,7 +89,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Separator */}
-      <div className="mx-3 border-t border-default-200" />
+      <div className="mx-3 border-t border-border" />
 
       {/* Navigation Items */}
       <div className="flex flex-col gap-1 flex-1">
@@ -97,7 +103,7 @@ export function AdminSidebar() {
               className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
                 active
                   ? 'bg-accent/10 text-accent font-medium'
-                  : 'text-muted hover:bg-default-200 hover:text-foreground'
+                  : 'text-muted hover:bg-surface hover:text-foreground'
               }`}
             >
               {item.icon}
@@ -114,7 +120,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Footer: Back to dashboard */}
-      <div className="mx-3 border-t border-default-200" />
+      <div className="mx-3 border-t border-border" />
       <Link
         href="/dashboard"
         onClick={onLinkClick}
@@ -138,7 +144,7 @@ export function AdminSidebar() {
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center gap-3 bg-background shadow-sm px-4 py-3 lg:hidden">
         <button
           onClick={() => setIsMobileOpen(true)}
-          className="p-1.5 rounded-lg hover:bg-default-200 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-surface transition-colors"
           aria-label={t('openMenu')}
         >
           <Menu className="size-5" />
@@ -166,7 +172,7 @@ export function AdminSidebar() {
         <div className="flex justify-end px-3">
           <button
             onClick={closeMobile}
-            className="p-1.5 rounded-lg hover:bg-default-200 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface transition-colors"
             aria-label={t('closeMenu')}
           >
             <X className="size-5" />

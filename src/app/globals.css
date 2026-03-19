@@ -4,6 +4,13 @@
 
 @layer components {
   /* ===========================
+   * Surface
+   * =========================== */
+   .surface {
+    @apply rounded-2xl border;
+  }
+
+  /* ===========================
    * Accordion
    * =========================== */
   .accordion {
@@ -176,7 +183,7 @@
 [data-theme="light"],
 [data-theme="default"] {
   /* Theme Colors (Light Mode) */
-  --accent: oklch(37.17% 0.0392 257.28);
+  --accent: oklch(65% 0.25 257.28);
   --accent-foreground: oklch(99.11% 0 0);
   --background: oklch(98.00% 0.0165 257.28);
   --border: oklch(90.00% 0.0165 257.28);
@@ -218,7 +225,7 @@
 [data-theme="dark"] {
   color-scheme: dark;
   /* Theme Colors (Dark Mode) */
-  --accent: oklch(37.17% 0.0392 257.28);
+  --accent: oklch(65% 0.25 257.28);
   --accent-foreground: oklch(99.11% 0 0);
   /* Secondary button/Chip use accent-soft-foreground (default: --accent). Override for dark mode readability. */
   --color-accent-soft-foreground: var(--foreground);

@@ -66,7 +66,7 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
   };
 
   return (
-    <Card variant="default" className="w-full shadow-lg border border-default-200/50 overflow-hidden">
+    <Card variant="secondary" className="w-full shadow-lg border border-border/50 overflow-hidden">
       <Card.Content className="p-6 md:p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
@@ -99,8 +99,8 @@ export function OrganizationSelector({ organizations }: OrganizationSelectorProp
                 }`}
               >
                 <Card
-                  variant="default"
-                  className={`h-full border border-default-200/50 transition-all duration-200 ${
+                  variant="secondary"
+                  className={`h-full transition-all duration-200 ${
                     !isLoading && 'hover:shadow-md hover:border-accent/30'
                   }`}
                 >

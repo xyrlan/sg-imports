@@ -41,7 +41,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
   const scopeColors = {
     CARRIER: { border: 'border-success-200', bg: 'bg-success-50/30', text: 'text-success-700' },
     PORT: { border: 'border-primary-200', bg: 'bg-primary-50/30', text: 'text-primary-700' },
-    SPECIFIC: { border: 'border-default-300', bg: '', text: 'text-default-800' },
+    SPECIFIC: { border: 'border-border', bg: '', text: 'text-foreground' },
   };
   const colors = scopeColors[rule.scope] ?? scopeColors.SPECIFIC;
 
@@ -71,7 +71,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
       <div className="p-3 space-y-4">
         {(rule.port || rule.containerType) && (
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-default-800">{rule.port?.name ?? '-'}</p>
+            <p className="text-sm font-semibold text-foreground">{rule.port?.name ?? '-'}</p>
             <div className="flex items-center gap-2">
               {rule.containerType && (
                 <Chip size="sm" variant="soft">
@@ -95,7 +95,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
           </div>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-default-600">
+        <div className="flex items-center gap-2 text-xs text-foreground/90">
           <Calendar size={10} />
           <span>
             {formatDate(rule.validFrom)}
@@ -113,7 +113,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
         <div className="space-y-1">
           {rule.items.map((item) => (
             <div key={item.id} className="flex justify-between text-xs">
-              <span className="text-default-700">
+              <span className="text-foreground">
                 {item.name} {item.basis === 'PER_BL' ? `(${t('perBl')})` : `(${t('perContainer')})`}
               </span>
               <span className={`font-semibold ${colors.text}`}>
@@ -133,8 +133,8 @@ export const PricingRuleCard = memo(function PricingRuleCard({
               </Button>
             )}
             {isPending && (
-              <div className="rounded-lg border border-default-200 bg-default-50 p-2">
-                <p className="text-xs text-default-500 text-center">{t('loadingEffectiveFees')}</p>
+              <div className="rounded-lg border border-border bg-surface p-2">
+                <p className="text-xs text-muted text-center">{t('loadingEffectiveFees')}</p>
               </div>
             )}
             {effectiveFees && effectiveFees.length > 0 && (
@@ -144,7 +144,7 @@ export const PricingRuleCard = memo(function PricingRuleCard({
                   {effectiveFees.map((fee, idx) => (
                     <div key={idx} className="flex justify-between items-center text-xs">
                       <div className="flex items-center gap-1">
-                        <span className="text-default-700">{fee.name}</span>
+                        <span className="text-foreground">{fee.name}</span>
                         <Chip
                           size="sm"
                           color={

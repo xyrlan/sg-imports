@@ -191,6 +191,9 @@ export {
   type AuditLogsResult,
 } from './audit.service';
 
+// Shipments (admin-level)
+export { getAllShipments, getShipmentDetail } from './shipments.service';
+
 // Terminals & storage rules
 export {
   getAllTerminals,

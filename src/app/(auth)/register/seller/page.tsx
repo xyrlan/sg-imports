@@ -21,7 +21,7 @@ export default function SellerRegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card variant="default" className="w-full max-w-md">
+      <Card variant="secondary" className="w-full max-w-md">
         <Card.Content className="p-8">
           <div className="text-center mb-8">
             <Logo />

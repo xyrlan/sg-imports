@@ -56,7 +56,7 @@ export function SettingsSidebar({
             onClick={() => setIsMobileOpen((prev) => !prev)}
             aria-expanded={isMobileOpen}
             aria-controls="settings-mobile-menu"
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-default-200 bg-default-50 transition-colors"
+            className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-surface transition-colors"
           >
             {activeItem && (
               <span className="text-accent shrink-0">{activeItem.icon}</span>
@@ -81,7 +81,7 @@ export function SettingsSidebar({
               <div
                 id="settings-mobile-menu"
                 role="listbox"
-                className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-default-200 rounded-lg shadow-lg max-h-80 overflow-y-auto space-y-1 p-2"
+                className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto space-y-1 p-2"
               >
                 {sections.map((section) => (
                   <SectionButton

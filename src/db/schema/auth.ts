@@ -41,6 +41,9 @@ export const organizations = pgTable('organizations', {
   orderType: orderTypeEnum('order_type').default('ORDER').notNull(),
   minOrderValue: decimal('min_order_value', { precision: 10, scale: 2 }).default('0'),
 
+  // Payment Gateway
+  asaasCustomerId: text('asaas_customer_id'),
+
   // Foreign Keys (Endereços)
   billingAddressId: uuid('billing_address_id'),
   deliveryAddressId: uuid('delivery_address_id'),

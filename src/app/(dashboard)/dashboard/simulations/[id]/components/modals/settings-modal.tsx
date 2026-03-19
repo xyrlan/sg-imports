@@ -72,6 +72,9 @@ export function SettingsModal({
   const [commissionPercent, setCommissionPercent] = useState(
     () => String(existingMetadata.commissionPercent ?? ''),
   );
+  const [firstPaymentFobPercent, setFirstPaymentFobPercent] = useState(
+    () => String(existingMetadata.firstPaymentFobPercent ?? ''),
+  );
 
   const [state, formAction, isPending] = useActionState(updateSimulationAction, null);
 
@@ -84,6 +87,7 @@ export function SettingsModal({
         setIncoterm((simulation.incoterm as IncotermValue) ?? 'FOB');
         setAdditionalFreightUsd(String(meta.additionalFreightUsd ?? ''));
         setCommissionPercent(String(meta.commissionPercent ?? ''));
+        setFirstPaymentFobPercent(String(meta.firstPaymentFobPercent ?? ''));
       });
     }
   }, [open, simulation.metadata, simulation.shippingModality, simulation.incoterm, defaultDestinationState]);
@@ -115,6 +119,9 @@ export function SettingsModal({
     const commissionNum = commissionPercent.trim()
       ? parseFloat(commissionPercent.replace(',', '.'))
       : undefined;
+    const firstPaymentFobNum = firstPaymentFobPercent.trim()
+      ? parseFloat(firstPaymentFobPercent.replace(',', '.'))
+      : undefined;
     const metadata: ShippingMetadata = {
       ...existingMetadata,
       destinationState,
@@ -130,6 +137,13 @@ export function SettingsModal({
         commissionNum >= 0 &&
         commissionNum <= 100
           ? commissionNum
+          : undefined,
+      firstPaymentFobPercent:
+        firstPaymentFobNum !== undefined &&
+        !Number.isNaN(firstPaymentFobNum) &&
+        firstPaymentFobNum >= 0 &&
+        firstPaymentFobNum <= 100
+          ? firstPaymentFobNum
           : undefined,
     };
     const formData = new FormData();
@@ -150,7 +164,7 @@ export function SettingsModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <Settings size={22} />
               </Modal.Icon>
               <Modal.Heading>{t('heading')}</Modal.Heading>
@@ -233,6 +247,21 @@ export function SettingsModal({
                         type="text"
                         inputMode="decimal"
                         placeholder={t('commissionPlaceholder')}
+                      />
+                    </TextField>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('firstPaymentFobPercentLabel')}</Label>
+                    <TextField
+                      variant="primary"
+                      value={firstPaymentFobPercent}
+                      onChange={(v) => setFirstPaymentFobPercent(v)}
+                      isDisabled={isPending}
+                    >
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder={t('firstPaymentFobPercentPlaceholder')}
                       />
                     </TextField>
                   </div>

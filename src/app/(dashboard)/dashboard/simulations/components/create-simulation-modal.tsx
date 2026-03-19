@@ -58,7 +58,7 @@ export function CreateSimulationModal({ organizationId, onMutate: _onMutate }: C
             <Modal.Dialog>
               <Modal.CloseTrigger />
                 <Modal.Header className='mb-6'>
-                  <Modal.Icon className="bg-default text-foreground">
+                  <Modal.Icon className="bg-surface text-foreground">
                     <ClipboardPen size={22} />
                   </Modal.Icon>
                   <Modal.Heading>{t('heading')}</Modal.Heading>

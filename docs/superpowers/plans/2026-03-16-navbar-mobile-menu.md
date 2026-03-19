@@ -17,6 +17,7 @@
 ### Task 1: Add i18n keys
 
 **Files:**
+
 - Modify: `messages/pt.json:250-284` (Navbar section)
 
 - [ ] **Step 1: Add new keys under `Navbar`**
@@ -47,6 +48,7 @@ git commit -m "feat(i18n): add mobile menu translation keys"
 ### Task 2: Export `NavbarLink` interface from `navbar.tsx`
 
 **Files:**
+
 - Modify: `src/components/layout/navbar.tsx:22-27`
 
 - [ ] **Step 1: Export the `NavbarLink` interface**
@@ -75,38 +77,42 @@ git commit -m "refactor: export NavbarLink interface"
 ### Task 3: Create `NavbarMobileMenu` component
 
 **Files:**
+
 - Create: `src/components/layout/navbar-mobile-menu.tsx`
 
 - [ ] **Step 1: Create the component file**
 
 ```tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Dropdown, Header, Label, Separator } from '@heroui/react';
-import { useTranslations } from 'next-intl';
-import { Menu, Bell, Building2, Plus } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Dropdown, Header, Label, Separator } from "@heroui/react";
+import { useTranslations } from "next-intl";
+import { Menu, Bell, Building2, Plus } from "lucide-react";
 
-import { useOrganization, useOrganizationState } from '@/contexts/organization-context';
-import { useNotifications } from '@/hooks/use-notifications';
-import type { NavbarLink } from './navbar';
+import {
+  useOrganization,
+  useOrganizationState,
+} from "@/contexts/organization-context";
+import { useNotifications } from "@/hooks/use-notifications";
+import type { NavbarLink } from "./navbar";
 
 interface NavbarMobileMenuProps {
   links: NavbarLink[];
   canSelectOrganization: boolean;
 }
 
-export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileMenuProps) {
-  const t = useTranslations('Navbar');
-  const tOrg = useTranslations('Organization');
+export function NavbarMobileMenu({
+  links,
+  canSelectOrganization,
+}: NavbarMobileMenuProps) {
+  const t = useTranslations("Navbar");
+  const tOrg = useTranslations("Organization");
   const router = useRouter();
   const { profile } = useOrganizationState();
-  const {
-    currentOrganization,
-    availableOrganizations,
-    switchOrganization,
-  } = useOrganization();
+  const { currentOrganization, availableOrganizations, switchOrganization } =
+    useOrganization();
   const { unreadCount } = useNotifications(profile?.id);
   const [isSwitching, setIsSwitching] = useState(false);
 
@@ -117,7 +123,7 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
       await switchOrganization(orgId);
       router.refresh();
     } catch (error) {
-      console.error('Failed to switch organization:', error);
+      console.error("Failed to switch organization:", error);
     } finally {
       setIsSwitching(false);
     }
@@ -126,8 +132,8 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
   return (
     <Dropdown>
       <Dropdown.Trigger
-        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-default-100 transition-colors outline-none"
-        aria-label={t('menu')}
+        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-border transition-colors outline-none"
+        aria-label={t("menu")}
       >
         <Menu className="w-5 h-5 text-foreground" aria-hidden />
         {unreadCount > 0 && (
@@ -135,7 +141,7 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
             className="absolute -top-0.5 -right-0.5 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger text-[10px] font-medium text-danger-foreground px-1"
             aria-hidden
           >
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </Dropdown.Trigger>
@@ -153,28 +159,32 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
             }
 
             // Organization actions
-            if (keyStr === 'org-create-new') {
-              router.push('/dashboard/organizations/new');
+            if (keyStr === "org-create-new") {
+              router.push("/dashboard/organizations/new");
               return;
             }
-            if (keyStr.startsWith('org-')) {
-              const orgId = keyStr.replace('org-', '');
+            if (keyStr.startsWith("org-")) {
+              const orgId = keyStr.replace("org-", "");
               handleOrganizationSwitch(orgId);
               return;
             }
 
             // Notifications
-            if (keyStr === 'notifications') {
-              router.push('/dashboard/notifications');
+            if (keyStr === "notifications") {
+              router.push("/dashboard/notifications");
               return;
             }
           }}
-          disabledKeys={isSwitching ? ['org-create-new'] : []}
+          disabledKeys={isSwitching ? ["org-create-new"] : []}
         >
           {/* Navigation Section */}
           <Dropdown.Section>
             {links.map((link) => (
-              <Dropdown.Item key={link.href} id={link.href} textValue={link.label}>
+              <Dropdown.Item
+                key={link.href}
+                id={link.href}
+                textValue={link.label}
+              >
                 <div className="flex items-center gap-2">
                   {link.icon}
                   <Label>{link.label}</Label>
@@ -188,9 +198,11 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
             <>
               <Separator />
               <Dropdown.Section>
-                <Header>{tOrg('myOrganizations')}</Header>
+                <Header>{tOrg("myOrganizations")}</Header>
                 {availableOrganizations
-                  .filter((org) => org.organization.id !== currentOrganization?.id)
+                  .filter(
+                    (org) => org.organization.id !== currentOrganization?.id,
+                  )
                   .map((org) => (
                     <Dropdown.Item
                       key={`org-${org.organization.id}`}
@@ -203,10 +215,13 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
                       </div>
                     </Dropdown.Item>
                   ))}
-                <Dropdown.Item id="org-create-new" textValue={tOrg('createNew')}>
+                <Dropdown.Item
+                  id="org-create-new"
+                  textValue={tOrg("createNew")}
+                >
                   <div className="flex items-center gap-2 text-field-foreground">
                     <Plus className="w-4 h-4" />
-                    <Label>{tOrg('createNew')}</Label>
+                    <Label>{tOrg("createNew")}</Label>
                   </div>
                 </Dropdown.Item>
               </Dropdown.Section>
@@ -216,13 +231,13 @@ export function NavbarMobileMenu({ links, canSelectOrganization }: NavbarMobileM
           {/* Notifications Section */}
           <Separator />
           <Dropdown.Section>
-            <Dropdown.Item id="notifications" textValue={t('notifications')}>
+            <Dropdown.Item id="notifications" textValue={t("notifications")}>
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4" />
-                <Label>{t('notifications')}</Label>
+                <Label>{t("notifications")}</Label>
                 {unreadCount > 0 && (
                   <span className="ml-auto flex min-w-5 h-5 items-center justify-center rounded-full bg-danger text-[10px] font-medium text-danger-foreground px-1">
-                    {unreadCount > 99 ? '99+' : unreadCount}
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </div>
@@ -252,6 +267,7 @@ git commit -m "feat: create NavbarMobileMenu component"
 ### Task 4: Integrate into `navbar.tsx`
 
 **Files:**
+
 - Modify: `src/components/layout/navbar.tsx`
 
 - [ ] **Step 1: Add import**
@@ -259,7 +275,7 @@ git commit -m "feat: create NavbarMobileMenu component"
 After the existing imports (line 19), add:
 
 ```typescript
-import { NavbarMobileMenu } from './navbar-mobile-menu';
+import { NavbarMobileMenu } from "./navbar-mobile-menu";
 ```
 
 - [ ] **Step 2: Add mobile menu to the right side of the nav**
@@ -267,10 +283,15 @@ import { NavbarMobileMenu } from './navbar-mobile-menu';
 After the closing `</div>` of the desktop links section (line 130), add the mobile menu before the closing `</nav>`:
 
 ```tsx
-        {/* Mobile Menu */}
-        <div className="flex lg:hidden">
-          <NavbarMobileMenu links={filteredLinks} canSelectOrganization={canSelectOrganization} />
-        </div>
+{
+  /* Mobile Menu */
+}
+<div className="flex lg:hidden">
+  <NavbarMobileMenu
+    links={filteredLinks}
+    canSelectOrganization={canSelectOrganization}
+  />
+</div>;
 ```
 
 - [ ] **Step 3: Verify build**
@@ -296,6 +317,7 @@ Run: `bun run dev`
 - [ ] **Step 2: Test mobile viewport**
 
 Open browser at mobile width (`< 1024px`):
+
 - Hamburger icon should appear on the right
 - Desktop nav links should be hidden
 - Clicking hamburger opens dropdown with nav links, org section, notification item
@@ -311,6 +333,7 @@ Click a different organization in the dropdown — page should refresh with the 
 - [ ] **Step 5: Test desktop viewport**
 
 At `>= 1024px` width:
+
 - Hamburger should be hidden
 - Desktop nav links and NotificationBell should be visible as before
 

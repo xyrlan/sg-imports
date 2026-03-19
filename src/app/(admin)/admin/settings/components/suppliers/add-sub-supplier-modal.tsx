@@ -34,7 +34,7 @@ export function AddSubSupplierModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <Users className="size-5" />
               </Modal.Icon>
               <Modal.Heading>{t('SubSuppliers.addSubSupplier')}</Modal.Heading>

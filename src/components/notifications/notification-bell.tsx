@@ -71,7 +71,7 @@ export function NotificationBell() {
   return (
     <Dropdown>
       <Dropdown.Trigger
-        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-default-100 transition-colors outline-none min-w-10 min-h-10"
+        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-border transition-colors outline-none min-w-10 min-h-10"
         aria-label={
           unreadCount > 0
             ? t('ariaLabelUnread', { count: unreadCount })
@@ -130,7 +130,7 @@ export function NotificationBell() {
                   <button
                     key={n.id}
                     type="button"
-                    className="w-full px-4 py-3 text-left hover:bg-default-100 transition-colors border-b border-default-100 last:border-b-0 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset"
+                    className="w-full px-4 py-3 text-left hover:bg-border transition-colors border-b border-border last:border-b-0 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset"
                     onClick={() => handleNotificationClick(n.actionUrl, n.id)}
                     aria-label={`${n.title}: ${n.message}`}
                   >
@@ -143,7 +143,7 @@ export function NotificationBell() {
                               ? 'bg-warning'
                               : typeColor === 'success'
                                 ? 'bg-success'
-                                : 'bg-default-400'
+                                : 'bg-surface-400'
                         }`}
                         aria-hidden
                       />

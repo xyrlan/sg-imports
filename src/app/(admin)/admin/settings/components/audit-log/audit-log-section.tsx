@@ -50,7 +50,7 @@ function AuditDiffCell({
           {keys.length} {keys.length === 1 ? 'campo' : 'campos'}
         </button>
         {expanded && (
-          <div className="mt-2 p-2 rounded-lg bg-default-100 text-xs font-mono space-y-1 max-h-40 overflow-y-auto">
+          <div className="mt-2 p-2 rounded-lg bg-border text-xs font-mono space-y-1 max-h-40 overflow-y-auto">
             {keys.map((k) => (
               <div key={k}>
                 <span className="text-success-foreground">{k}:</span>{' '}
@@ -77,7 +77,7 @@ function AuditDiffCell({
           {keys.length} {keys.length === 1 ? 'campo' : 'campos'}
         </button>
         {expanded && (
-          <div className="mt-2 p-2 rounded-lg bg-default-100 text-xs font-mono space-y-1 max-h-40 overflow-y-auto">
+          <div className="mt-2 p-2 rounded-lg bg-border text-xs font-mono space-y-1 max-h-40 overflow-y-auto">
             {keys.map((k) => (
               <div key={k}>
                 <span className="text-danger">{k}:</span> {JSON.stringify(oldValues[k])}
@@ -103,9 +103,9 @@ function AuditDiffCell({
         {keys.length} {keys.length === 1 ? 'alteração' : 'alterações'}
       </button>
       {expanded && (
-        <div className="mt-2 p-2 rounded-lg bg-default-100 text-xs font-mono space-y-2 max-h-48 overflow-y-auto">
+        <div className="mt-2 p-2 rounded-lg bg-border text-xs font-mono space-y-2 max-h-48 overflow-y-auto">
           {keys.map((k) => (
-            <div key={k} className="border-b border-default-200 pb-1 last:border-0">
+            <div key={k} className="border-b border-border pb-1 last:border-0">
               <span className="font-semibold">{k}</span>
               <div className="mt-0.5">
                 <span className="text-danger">{t('diffOld')}:</span>{' '}

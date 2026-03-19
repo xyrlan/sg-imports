@@ -396,6 +396,7 @@
       "dashboard": "Painel",
       "management": "Usuários e Organizações",
       "products": "Produtos",
+      "shipments": "Pedidos",
       "settings": "Configurações",
       "backToDashboard": "Voltar ao Dashboard",
       "openMenu": "Abrir menu",
@@ -1074,6 +1075,252 @@
           "RF_40": "RF 40'"
         }
       }
+    },
+    "Shipments": {
+      "List": {
+        "title": "Pedidos",
+        "description": "Gerencie todos os pedidos de importação",
+        "columns": {
+          "code": "Código",
+          "client": "Cliente",
+          "status": "Status",
+          "step": "Etapa Atual",
+          "type": "Tipo",
+          "eta": "ETA",
+          "booking": "Booking",
+          "created": "Criação"
+        },
+        "filters": {
+          "status": "Status",
+          "step": "Etapa",
+          "type": "Tipo"
+        },
+        "empty": "Nenhum pedido encontrado"
+      },
+      "Detail": {
+        "title": "Pedido #{code}",
+        "back": "Voltar",
+        "cancel": "Cancelar Pedido",
+        "advanceStep": "Avançar Etapa",
+        "finalize": "Finalizar Pedido",
+        "confirmAdvance": "Tem certeza que deseja avançar para a próxima etapa?",
+        "confirmFinalize": "Tem certeza que deseja finalizar este pedido?",
+        "confirmCancel": "Tem certeza que deseja cancelar este pedido?",
+        "cancelReason": "Motivo do cancelamento",
+        "cancelConfirmation": "Entendo que esta ação não pode ser desfeita"
+      },
+      "Summary": {
+        "fobTotal": "FOB Total",
+        "paid": "Pago",
+        "eta": "ETA",
+        "modality": "Modalidade",
+        "status": "Status",
+        "type": "Tipo"
+      },
+      "OrderType": {
+        "ORDER": "Encomenda",
+        "DIRECT_ORDER": "Direta"
+      },
+      "Stepper": {
+        "CONTRACT_CREATION": "Contrato",
+        "MERCHANDISE_PAYMENT": "Pagamento FOB",
+        "SHIPPING_PREPARATION": "Embarque",
+        "DOCUMENT_PREPARATION": "Documentos",
+        "CUSTOMS_CLEARANCE": "Desembaraço",
+        "COMPLETION": "Conclusão"
+      },
+      "Steps": {
+        "ContractCreation": {
+          "title": "Criação do Contrato",
+          "contractSigned": "Contrato assinado",
+          "signatureDate": "Data da assinatura",
+          "viewQuote": "Ver proposta"
+        },
+        "MerchandisePayment": {
+          "title": "Pagamento da Mercadoria",
+          "production": "Produção",
+          "productionReadyDate": "Data Estimada de Prontidão",
+          "fobAdvancePercentage": "% Adiantamento FOB",
+          "payments": "Pagamentos FOB",
+          "progress": "{paid} / {total} ({percent}%)",
+          "generateInvoice": "Gerar Fatura",
+          "registerPayment": "Registrar Pagamento",
+          "exchangeContracts": "Contratos de Câmbio",
+          "newExchangeContract": "Novo Contrato de Câmbio",
+          "save": "Salvar",
+          "editItems": "Editar Itens",
+          "transactionTable": {
+            "number": "#",
+            "amountUsd": "Valor USD",
+            "amountBrl": "Valor BRL",
+            "status": "Status",
+            "date": "Data",
+            "proof": "Comprovante",
+            "view": "Ver"
+          },
+          "contractTable": {
+            "supplier": "Fornecedor",
+            "contractNumber": "Nº Contrato",
+            "broker": "Corretora",
+            "amountUsd": "USD",
+            "exchangeRate": "Taxa",
+            "swift": "Swift",
+            "contract": "Contrato"
+          }
+        },
+        "ShippingPreparation": {
+          "title": "Preparação de Embarque",
+          "bookingTracking": "Booking & Tracking",
+          "bookingNumber": "Número do Booking",
+          "mbl": "MBL",
+          "registerShipsGo": "Registrar na ShipsGo",
+          "shipsGoData": "Dados ShipsGo",
+          "carrier": "Transportadora",
+          "cargoType": "Tipo de Carga",
+          "partLot": "Part Lot",
+          "trackingLink": "Link de Rastreamento",
+          "containers": "Containers",
+          "freight": "Frete",
+          "freightCost": "Custo (simulação)",
+          "freightSellPrice": "Preço de Venda",
+          "documents": "Documentos",
+          "save": "Salvar"
+        },
+        "DocumentPreparation": {
+          "title": "Preparação de Documentos",
+          "exchangeSummary": "Resumo de Câmbio",
+          "totalPaid": "Total pago",
+          "avgRate": "Taxa média",
+          "numContracts": "Contratos",
+          "documentsPerSupplier": "Documentos por Fornecedor",
+          "invoice": "Invoice",
+          "packingList": "Packing List",
+          "uploaded": "Enviado",
+          "pending": "Pendente",
+          "otherDocuments": "Outros Documentos",
+          "addDocument": "Adicionar Documento",
+          "documentName": "Nome do documento",
+          "save": "Salvar",
+          "cancel": "Cancelar",
+          "checklist": "Checklist",
+          "allDocumentsOk": "Todos os documentos enviados",
+          "pendingDocs": "{count} documento(s) pendente(s)",
+          "supplier": "Fornecedor"
+        },
+        "CustomsClearance": {
+          "title": "Desembaraço Aduaneiro",
+          "invoice90": "Fatura 90%",
+          "totalCosts": "Custo Total (BRL)",
+          "paidFobBrl": "Pago FOB (BRL)",
+          "remaining": "Restante",
+          "invoice90Value": "Valor 90%",
+          "generate90Invoice": "Gerar Fatura de 90%",
+          "invoiceStatus": "Status da Fatura",
+          "duimp": "DUIMP",
+          "duimpNumber": "Número da DUIMP",
+          "register": "Registrar",
+          "siscomexData": "Dados Siscomex",
+          "channel": "Canal",
+          "taxBreakdown": "Impostos",
+          "taxCategory": "Imposto",
+          "taxValue": "Valor (BRL)"
+        },
+        "Completion": {
+          "title": "Conclusão",
+          "fiscalDocuments": "Documentos Fiscais",
+          "storageInvoice": "NF Armazenagem",
+          "salesInvoicePdf": "NF Venda (PDF)",
+          "salesInvoiceXml": "NF Venda (XML)",
+          "finalCosts": "Custos Finais",
+          "icmsExitTaxes": "ICMS e Tributos de Saída",
+          "storageCost": "Armazenagem",
+          "discounts": "Descontos",
+          "saveCosts": "Salvar",
+          "pl": "Cálculo Final (P&L)",
+          "totalRealized": "Total Realizado",
+          "estimatedCost": "Custo Estimado",
+          "finalBalance": "Saldo Final",
+          "clientOwes": "Cliente deve",
+          "refundPending": "Ressarcimento pendente",
+          "balanced": "Sem saldo pendente",
+          "generateBalanceInvoice": "Gerar Fatura do Saldo",
+          "serviceFee": "Honorários",
+          "base": "Base",
+          "percentage": "Percentual",
+          "calculatedValue": "Valor Calculado",
+          "minimumFloor": "Mínimo (piso)",
+          "finalFee": "Honorários Final",
+          "usedMinimum": "(usado mínimo)",
+          "generateServiceFeeInvoice": "Gerar Fatura de Honorários",
+          "save": "Salvar",
+          "loadingFee": "Calculando honorários...",
+          "serviceFeeAlreadyGenerated": "Fatura de honorários já gerada"
+        }
+      },
+      "Modals": {
+        "GenerateInvoice": {
+          "title": "Gerar Fatura",
+          "amount": "Valor",
+          "description": "Descrição",
+          "descriptionPlaceholder": "Descrição opcional",
+          "cancel": "Cancelar",
+          "generate": "Gerar Fatura",
+          "generating": "Gerando..."
+        },
+        "RegisterPayment": {
+          "title": "Registrar Pagamento",
+          "amountUsd": "Valor (USD)",
+          "amountUsdPlaceholder": "0.00",
+          "paymentDate": "Data do Pagamento",
+          "proof": "Comprovante de Pagamento",
+          "cancel": "Cancelar",
+          "register": "Registrar",
+          "registering": "Registrando..."
+        },
+        "ExchangeContract": {
+          "title": "Novo Contrato de Câmbio",
+          "supplier": "Fornecedor",
+          "selectSupplier": "Selecione o fornecedor",
+          "transaction": "Transação Vinculada",
+          "selectTransaction": "Selecione a transação",
+          "contractNumber": "Nº Contrato",
+          "contractNumberPlaceholder": "Ex: 12345",
+          "broker": "Corretora",
+          "selectBroker": "Selecione a corretora",
+          "amountUsd": "Valor USD",
+          "amountUsdPlaceholder": "0.00",
+          "exchangeRate": "Taxa de Câmbio",
+          "exchangeRatePlaceholder": "0.00",
+          "closingDate": "Data de Fechamento",
+          "swift": "Swift (PDF)",
+          "contract": "Contrato (PDF)",
+          "cancel": "Cancelar",
+          "save": "Salvar Contrato",
+          "saving": "Salvando..."
+        },
+        "EditItems": {
+          "title": "Editar Itens do Pedido",
+          "product": "Produto",
+          "variant": "Variante",
+          "quantity": "Quantidade",
+          "priceUsd": "Preço USD",
+          "total": "Total",
+          "remove": "Remover",
+          "addItem": "Adicionar Item",
+          "save": "Salvar Alterações",
+          "cancel": "Cancelar",
+          "noChanges": "Nenhuma alteração detectada",
+          "amendmentNote": "As alterações gerarão um aditivo contratual para assinatura do cliente.",
+          "saving": "Salvando..."
+        }
+      },
+      "Errors": {
+        "advanceFailed": "Erro ao avançar etapa",
+        "cancelFailed": "Erro ao cancelar pedido",
+        "finalizeFailed": "Erro ao finalizar pedido",
+        "invalidData": "Dados inválidos",
+        "reasonRequired": "Motivo é obrigatório"
+      }
     }
   },
   "NotFound": {
@@ -1345,7 +1592,20 @@
       "editItem": "Editar item",
       "saveItem": "Salvar",
       "staleBannerMessage": "Alguns valores de câmbio ou frete mudaram. Clique aqui para recalcular.",
-      "staleBannerRecalculate": "Recalcular"
+      "staleBannerRecalculate": "Recalcular",
+      "addObservation": "Adicionar Observação",
+      "observations": "Observações"
+    },
+    "Observations": {
+      "heading": "Observações",
+      "listTitle": "Observações existentes",
+      "newObservationTitle": "Nova observação",
+      "descriptionLabel": "Descrição",
+      "descriptionPlaceholder": "Digite a observação...",
+      "documentsLabel": "Documentos",
+      "save": "Salvar",
+      "close": "Fechar",
+      "empty": "Nenhuma observação ainda"
     },
     "Workflow": {
       "sendToClient": "Enviar para Cliente",
@@ -1467,6 +1727,8 @@
       "destinationState": "Estado de Destino (ICMS)",
       "destinationStatePlaceholder": "Selecione o estado",
       "destinationStateRequired": "Selecione o estado de destino",
+      "firstPaymentFobPercentLabel": "Primeiro Pagamento FOB (%)",
+      "firstPaymentFobPercentPlaceholder": "0",
       "save": "Salvar",
       "cancel": "Cancelar"
     },
@@ -1576,6 +1838,98 @@
       "selected": "{selected} de {total} selecionado(s)",
       "results": "{total} resultado(s)",
       "pageOf": "Pag. {current} de {total}"
+    },
+    "FileUpload": {
+      "remove": "Remover",
+      "clickToSelect": "Clique para selecionar",
+      "orDragFile": "ou arraste o arquivo"
+    }
+  },
+  "Shipments": {
+    "Steps": {
+      "CONTRACT_CREATION": "Criação do Contrato",
+      "MERCHANDISE_PAYMENT": "Pagamento da Mercadoria",
+      "SHIPPING_PREPARATION": "Preparação de Embarque",
+      "DOCUMENT_PREPARATION": "Preparação de Documentos",
+      "CUSTOMS_CLEARANCE": "Desembaraço Aduaneiro",
+      "COMPLETION": "Conclusão"
+    },
+    "Status": {
+      "PENDING": "Pendente",
+      "PRODUCTION": "Em Produção",
+      "BOOKED": "Embarcado",
+      "IN_TRANSIT": "Em Trânsito",
+      "CUSTOMS_CLEARANCE": "Em Desembaraço",
+      "RELEASED": "Liberado",
+      "DELIVERED": "Entregue",
+      "FINISHED": "Finalizado",
+      "CANCELED": "Cancelado"
+    },
+    "DuimpChannel": {
+      "GREEN": "Verde",
+      "YELLOW": "Amarelo",
+      "RED": "Vermelho",
+      "GREY": "Cinza"
+    },
+    "Notifications": {
+      "fobComplete": "O pagamento FOB foi concluído. O pedido avançou para Preparação de Embarque.",
+      "fobCompleteClient": "Seu pagamento FOB foi concluído. O pedido avançou para a próxima etapa.",
+      "paymentConfirmed": "Pagamento de {amount} confirmado para o pedido #{code}.",
+      "duimpRegistered": "DUIMP {number} registrada. Canal: {channel}.",
+      "duimpRegisteredClient": "A DUIMP do seu pedido #{code} foi registrada.",
+      "duimpUrgent": "DUIMP — Canal de Atenção",
+      "customsCleared": "O desembaraço aduaneiro foi concluído. O pedido avançou para Conclusão.",
+      "shipmentFinalized": "Pedido #{code} finalizado com sucesso.",
+      "trackingUpdate": "Pedido #{code}: {message}",
+      "vesselDeparted": "O navio partiu do porto de origem.",
+      "vesselArrived": "O navio chegou ao porto de destino.",
+      "cargoDelivered": "A carga foi entregue.",
+      "invoiceGenerated": "Nova fatura gerada para o pedido #{code}.",
+      "amendmentGenerated": "Um aditivo contratual foi gerado. Por favor assine.",
+      "contractSigned": "O cliente assinou o contrato da proposta \"{name}\". O pedido foi criado automaticamente.",
+      "orderCreated": "Seu pedido referente à proposta \"{name}\" foi criado com sucesso.",
+      "titles": {
+        "fobComplete": "Pagamento FOB concluído",
+        "paymentConfirmed": "Pagamento confirmado",
+        "duimpRegistered": "DUIMP registrada",
+        "duimpUrgent": "DUIMP — Canal de Atenção",
+        "customsCleared": "Desembaraço concluído",
+        "trackingUpdate": "Atualização de rastreamento",
+        "trackingUpdateClient": "Atualização do seu pedido",
+        "amendmentGenerated": "Aditivo Contratual Gerado",
+        "contractSigned": "Contrato assinado",
+        "orderCreated": "Pedido criado"
+      }
+    },
+    "Actions": {
+      "advanceStep": "Avançar Etapa",
+      "cancel": "Cancelar Pedido",
+      "finalize": "Finalizar Pedido",
+      "generateInvoice": "Gerar Fatura",
+      "registerPayment": "Registrar Pagamento",
+      "attachDocument": "Anexar Documento",
+      "registerDuimp": "Registrar DUIMP",
+      "registerBooking": "Registrar Booking",
+      "setFreightPrice": "Definir Preço do Frete"
+    },
+    "Labels": {
+      "productionReadyDate": "Data Estimada de Prontidão",
+      "fobAdvancePercentage": "% Adiantamento FOB",
+      "bookingNumber": "Número do Booking",
+      "masterBl": "MBL",
+      "houseBl": "HBL",
+      "isPartLot": "Part Lot",
+      "freightSellPrice": "Preço de Venda do Frete",
+      "duimpNumber": "Número da DUIMP",
+      "duimpChannel": "Canal de Parametrização",
+      "icmsExitTaxes": "ICMS e Tributos de Saída",
+      "storageCost": "Armazenagem",
+      "discounts": "Descontos",
+      "serviceFee": "Honorários",
+      "finalBalance": "Saldo Final",
+      "totalPaidFob": "Total Pago FOB",
+      "totalCosts": "Custo Total Estimado",
+      "exchangeSummary": "Resumo de Câmbio"
     }
   }
 }
