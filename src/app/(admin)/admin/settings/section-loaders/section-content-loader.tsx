@@ -35,7 +35,7 @@ export async function SectionContentLoader({
     case 'ports':
       return <PortsLoader />;
     case 'suppliers':
-      return <SuppliersLoader organizationId={organizationId} supplierId={supplierId} />;
+      return <SuppliersLoader supplierId={supplierId} />;
     case 'carriers':
       return <CarriersLoader />;
     case 'currency_exchange_brokers':

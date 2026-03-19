@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useTransition, useCallback, useRef } from 'react';
 import { Tabs, Button, Dropdown, Label } from '@heroui/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -8,12 +8,28 @@ import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { useQueryState } from 'nuqs';
+import type { PaginationState } from '@tanstack/react-table';
 
 import type { ProductWithOrgAndNcm, HsCode } from '@/services/admin';
+import type { PaginatedResult } from '@/services/admin/types';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { DeleteProductDialog } from './components/delete-product-dialog';
 import { DeleteNcmDialog } from './components/delete-ncm-dialog';
 import { EditNcmModal } from './components/edit-ncm-modal';
+import { fetchProductsAction, fetchHsCodesAction } from './actions';
+
+// ============================================
+// Debounce hook
+// ============================================
+
+function useDebouncedValue(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 // ============================================
 // Column Definitions: Products
@@ -253,8 +269,8 @@ function HsCodeActions({
 // ============================================
 
 interface ProductsContentProps {
-  initialProducts: ProductWithOrgAndNcm[];
-  initialHsCodes: HsCode[];
+  initialProducts: PaginatedResult<ProductWithOrgAndNcm>;
+  initialHsCodes: PaginatedResult<HsCode>;
 }
 
 export function ProductsContent({
@@ -266,12 +282,121 @@ export function ProductsContent({
   });
   const t = useTranslations('Admin.Products');
   const router = useRouter();
+  const [isProductsPending, startProductsTransition] = useTransition();
+  const [isHsCodesPending, startHsCodesTransition] = useTransition();
 
+  // Products state
+  const [products, setProducts] = useState(initialProducts.data);
+  const [productsTotal, setProductsTotal] = useState(initialProducts.total);
+  const [productsPageCount, setProductsPageCount] = useState(initialProducts.pageCount);
+  const [productsPagination, setProductsPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [productsSearch, setProductsSearch] = useState('');
+  const debouncedProductsSearch = useDebouncedValue(productsSearch, 300);
+
+  // HS Codes state
+  const [hsCodes, setHsCodes] = useState(initialHsCodes.data);
+  const [hsCodesTotal, setHsCodesTotal] = useState(initialHsCodes.total);
+  const [hsCodesPageCount, setHsCodesPageCount] = useState(initialHsCodes.pageCount);
+  const [hsCodesPagination, setHsCodesPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [hsCodesSearch, setHsCodesSearch] = useState('');
+  const debouncedHsCodesSearch = useDebouncedValue(hsCodesSearch, 300);
+
+  // Dialog state
   const [deleteProductTarget, setDeleteProductTarget] =
     useState<ProductWithOrgAndNcm | null>(null);
   const [deleteNcmTarget, setDeleteNcmTarget] = useState<HsCode | null>(null);
   const [editNcmTarget, setEditNcmTarget] = useState<HsCode | null>(null);
   const [editNcmOpen, setEditNcmOpen] = useState(false);
+
+  // Fetch products when pagination or search changes
+  const isFirstProductsFetch = useRef(true);
+  useEffect(() => {
+    if (isFirstProductsFetch.current) {
+      isFirstProductsFetch.current = false;
+      return;
+    }
+    startProductsTransition(async () => {
+      const result = await fetchProductsAction({
+        page: productsPagination.pageIndex,
+        pageSize: productsPagination.pageSize,
+        search: debouncedProductsSearch || undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setProducts(result.data);
+      setProductsTotal(result.total);
+      setProductsPageCount(result.pageCount);
+    });
+  }, [productsPagination.pageIndex, productsPagination.pageSize, debouncedProductsSearch]);
+
+  // Fetch HS codes when pagination or search changes
+  const isFirstHsCodesFetch = useRef(true);
+  useEffect(() => {
+    if (isFirstHsCodesFetch.current) {
+      isFirstHsCodesFetch.current = false;
+      return;
+    }
+    startHsCodesTransition(async () => {
+      const result = await fetchHsCodesAction({
+        page: hsCodesPagination.pageIndex,
+        pageSize: hsCodesPagination.pageSize,
+        search: debouncedHsCodesSearch || undefined,
+        sortBy: 'code',
+        sortOrder: 'asc',
+      });
+      setHsCodes(result.data);
+      setHsCodesTotal(result.total);
+      setHsCodesPageCount(result.pageCount);
+    });
+  }, [hsCodesPagination.pageIndex, hsCodesPagination.pageSize, debouncedHsCodesSearch]);
+
+  // Reset to page 0 when search changes
+  const handleProductsSearch = useCallback((value: string) => {
+    setProductsSearch(value);
+    setProductsPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
+
+  const handleHsCodesSearch = useCallback((value: string) => {
+    setHsCodesSearch(value);
+    setHsCodesPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
+
+  // Refetch current page after mutations
+  const refetchProducts = useCallback(() => {
+    startProductsTransition(async () => {
+      const result = await fetchProductsAction({
+        page: productsPagination.pageIndex,
+        pageSize: productsPagination.pageSize,
+        search: debouncedProductsSearch || undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setProducts(result.data);
+      setProductsTotal(result.total);
+      setProductsPageCount(result.pageCount);
+    });
+  }, [productsPagination, debouncedProductsSearch]);
+
+  const refetchHsCodes = useCallback(() => {
+    startHsCodesTransition(async () => {
+      const result = await fetchHsCodesAction({
+        page: hsCodesPagination.pageIndex,
+        pageSize: hsCodesPagination.pageSize,
+        search: debouncedHsCodesSearch || undefined,
+        sortBy: 'code',
+        sortOrder: 'asc',
+      });
+      setHsCodes(result.data);
+      setHsCodesTotal(result.total);
+      setHsCodesPageCount(result.pageCount);
+    });
+  }, [hsCodesPagination, debouncedHsCodesSearch]);
 
   const productColumns = useProductColumns(
     (p) => router.push(`/admin/products/${p.id}`),
@@ -296,11 +421,11 @@ export function ProductsContent({
         <Tabs.ListContainer>
           <Tabs.List aria-label={t('title')}>
             <Tabs.Tab id="products">
-              {t('productsTab')} ({initialProducts.length})
+              {t('productsTab')} ({productsTotal})
               <Tabs.Indicator />
             </Tabs.Tab>
             <Tabs.Tab id="ncms">
-              {t('ncmsTab')} ({initialHsCodes.length})
+              {t('ncmsTab')} ({hsCodesTotal})
               <Tabs.Indicator />
             </Tabs.Tab>
           </Tabs.List>
@@ -309,18 +434,32 @@ export function ProductsContent({
         <Tabs.Panel id="products" className="pt-4">
           <DataTable
             columns={productColumns}
-            data={initialProducts}
+            data={products}
             searchPlaceholder={t('searchProducts')}
             enableRowSelection
+            manualPagination
+            pagination={productsPagination}
+            onPaginationChange={setProductsPagination}
+            pageCount={productsPageCount}
+            totalRows={productsTotal}
+            isLoading={isProductsPending}
+            onSearchChange={handleProductsSearch}
           />
         </Tabs.Panel>
 
         <Tabs.Panel id="ncms" className="pt-4">
           <DataTable
             columns={hsCodeColumns}
-            data={initialHsCodes}
+            data={hsCodes}
             searchPlaceholder={t('searchNcms')}
             enableRowSelection
+            manualPagination
+            pagination={hsCodesPagination}
+            onPaginationChange={setHsCodesPagination}
+            pageCount={hsCodesPageCount}
+            totalRows={hsCodesTotal}
+            isLoading={isHsCodesPending}
+            onSearchChange={handleHsCodesSearch}
           />
         </Tabs.Panel>
       </Tabs>
@@ -331,7 +470,7 @@ export function ProductsContent({
         onOpenChange={(open) => !open && setDeleteProductTarget(null)}
         onSuccess={() => {
           setDeleteProductTarget(null);
-          router.refresh();
+          refetchProducts();
         }}
       />
 
@@ -341,7 +480,7 @@ export function ProductsContent({
         onOpenChange={(open) => !open && setDeleteNcmTarget(null)}
         onSuccess={() => {
           setDeleteNcmTarget(null);
-          router.refresh();
+          refetchHsCodes();
         }}
       />
 
@@ -350,9 +489,9 @@ export function ProductsContent({
         isOpen={editNcmOpen}
         onOpenChange={(open) => {
           setEditNcmOpen(open);
-          // Don't clear editNcmTarget on close so the modal stays mounted and can reopen for another NCM
         }}
         trigger={null}
+        onSuccess={refetchHsCodes}
       />
     </div>
   );

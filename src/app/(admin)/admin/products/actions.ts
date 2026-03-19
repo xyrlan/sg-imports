@@ -6,6 +6,8 @@ import {
   deleteProductAsAdmin,
   updateHsCode,
   deleteHsCode,
+  getAllProducts,
+  getAllHsCodes,
 } from '@/services/admin';
 import { markQuotesForRecalculationByHsCodeId } from '@/services/simulation.service';
 import {
@@ -399,4 +401,28 @@ export async function deleteHsCodeAction(
       error: err instanceof Error ? err.message : 'Failed to delete NCM',
     };
   }
+}
+
+// ============================================
+// Paginated Fetch Actions
+// ============================================
+
+const paginationParamsSchema = z.object({
+  page: z.number().int().min(0),
+  pageSize: z.number().int().min(1).max(100),
+  search: z.string().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
+export async function fetchProductsAction(params: unknown) {
+  await requireSuperAdmin();
+  const validated = paginationParamsSchema.parse(params);
+  return getAllProducts(validated);
+}
+
+export async function fetchHsCodesAction(params: unknown) {
+  await requireSuperAdmin();
+  const validated = paginationParamsSchema.parse(params);
+  return getAllHsCodes(validated);
 }

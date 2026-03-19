@@ -788,7 +788,7 @@
       },
       "Suppliers": {
         "title": "Fornecedores",
-        "description": "Gerencie fornecedores e sub-fornecedores por organização",
+        "description": "Gerencie fornecedores e sub-fornecedores do sistema",
         "addSupplier": "Novo Fornecedor",
         "back": "Voltar",
         "name": "Nome",
@@ -810,8 +810,10 @@
         "cancel": "Cancelar",
         "configure": "Sub-fornecedores",
         "noSuppliers": "Nenhum fornecedor cadastrado.",
-        "selectOrganization": "Selecione uma organização",
-        "selectOrganizationPlaceholder": "Escolha a organização",
+        "organization": "Organização",
+        "organizationPlaceholder": "Selecione uma organização (opcional)",
+        "filterByOrganization": "Filtrar por organização",
+        "allOrganizations": "Todas",
         "searchPlaceholder": "Buscar fornecedores...",
         "deleteConfirmTitle": "Excluir fornecedor?",
         "deleteConfirm": "Deseja realmente excluir \"{name}\"? Esta ação não pode ser desfeita.",
@@ -820,7 +822,8 @@
           "taxId": "TIN",
           "countryCode": "País",
           "email": "E-mail",
-          "siscomexId": "Siscomex"
+          "siscomexId": "Siscomex",
+          "organization": "Organização"
         }
       },
       "SubSuppliers": {

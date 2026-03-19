@@ -1,16 +1,33 @@
 'use client';
 
+import { useState, useEffect, useTransition, useCallback, useRef } from 'react';
 import { Tabs, Chip, Button, Dropdown, Label, Link } from '@heroui/react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Eye, UserCog, Pencil } from 'lucide-react';
 import { DataTable, facetedFilterFn, type FacetedFilterDef } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
+import type { PaginationState } from '@tanstack/react-table';
+import { useQueryState } from 'nuqs';
 
 import type { Profile } from '@/services/admin/profiles.service';
 import type { OrganizationWithMemberCount } from '@/services/admin';
+import type { PaginatedResult } from '@/services/admin/types';
 import { formatCNPJ, formatDate } from '@/lib/utils';
-import { parseAsString, useQueryState } from 'nuqs';
+import { fetchProfilesAction, fetchOrganizationsAction } from './actions';
+
+// ============================================
+// Debounce hook
+// ============================================
+
+function useDebouncedValue(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 // ============================================
 // Column Definitions: Profiles
@@ -282,15 +299,6 @@ function OrganizationActions({ organization }: { organization: OrganizationWithM
 }
 
 // ============================================
-// Main Component
-// ============================================
-
-interface UsersOrganizationsContentProps {
-  initialProfiles: Profile[];
-  initialOrganizations: OrganizationWithMemberCount[];
-}
-
-// ============================================
 // Faceted filter definitions
 // ============================================
 
@@ -328,6 +336,11 @@ function useOrganizationFilters(): FacetedFilterDef[] {
 // Main Component
 // ============================================
 
+interface UsersOrganizationsContentProps {
+  initialProfiles: PaginatedResult<Profile>;
+  initialOrganizations: PaginatedResult<OrganizationWithMemberCount>;
+}
+
 export function UsersOrganizationsContent({
   initialProfiles,
   initialOrganizations,
@@ -336,29 +349,105 @@ export function UsersOrganizationsContent({
     defaultValue: 'users',
   });
   const t = useTranslations('Admin.Management');
+  const [isProfilesPending, startProfilesTransition] = useTransition();
+  const [isOrgsPending, startOrgsTransition] = useTransition();
+
+  // Profiles state
+  const [profiles, setProfiles] = useState(initialProfiles.data);
+  const [profilesTotalCount, setProfilesTotalCount] = useState(initialProfiles.total);
+  const [profilesPageCount, setProfilesPageCount] = useState(initialProfiles.pageCount);
+  const [profilesPagination, setProfilesPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [profilesSearch, setProfilesSearch] = useState('');
+  const debouncedProfilesSearch = useDebouncedValue(profilesSearch, 300);
+
+  // Organizations state
+  const [orgs, setOrgs] = useState(initialOrganizations.data);
+  const [orgsTotalCount, setOrgsTotalCount] = useState(initialOrganizations.total);
+  const [orgsPageCount, setOrgsPageCount] = useState(initialOrganizations.pageCount);
+  const [orgsPagination, setOrgsPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [orgsSearch, setOrgsSearch] = useState('');
+  const debouncedOrgsSearch = useDebouncedValue(orgsSearch, 300);
+
+  // Fetch profiles
+  const isFirstProfilesFetch = useRef(true);
+  useEffect(() => {
+    if (isFirstProfilesFetch.current) {
+      isFirstProfilesFetch.current = false;
+      return;
+    }
+    startProfilesTransition(async () => {
+      const result = await fetchProfilesAction({
+        page: profilesPagination.pageIndex,
+        pageSize: profilesPagination.pageSize,
+        search: debouncedProfilesSearch || undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setProfiles(result.data);
+      setProfilesTotalCount(result.total);
+      setProfilesPageCount(result.pageCount);
+    });
+  }, [profilesPagination.pageIndex, profilesPagination.pageSize, debouncedProfilesSearch]);
+
+  // Fetch organizations
+  const isFirstOrgsFetch = useRef(true);
+  useEffect(() => {
+    if (isFirstOrgsFetch.current) {
+      isFirstOrgsFetch.current = false;
+      return;
+    }
+    startOrgsTransition(async () => {
+      const result = await fetchOrganizationsAction({
+        page: orgsPagination.pageIndex,
+        pageSize: orgsPagination.pageSize,
+        search: debouncedOrgsSearch || undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setOrgs(result.data);
+      setOrgsTotalCount(result.total);
+      setOrgsPageCount(result.pageCount);
+    });
+  }, [orgsPagination.pageIndex, orgsPagination.pageSize, debouncedOrgsSearch]);
+
+  // Search handlers (reset to page 0)
+  const handleProfilesSearch = useCallback((value: string) => {
+    setProfilesSearch(value);
+    setProfilesPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
+
+  const handleOrgsSearch = useCallback((value: string) => {
+    setOrgsSearch(value);
+    setOrgsPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
+
   const profileColumns = useProfileColumns();
   const organizationColumns = useOrganizationColumns();
   const profileFilters = useProfileFilters();
   const organizationFilters = useOrganizationFilters();
 
   return (
-    <div className="space-y-6"> 
-      {/* Page Header */}
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">{t('title')}</h1>
         <p className="text-muted mt-1">{t('description')}</p>
       </div>
 
-      {/* Tabs */}
       <Tabs selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key as string)} >
         <Tabs.ListContainer>
           <Tabs.List aria-label={t('title')}>
             <Tabs.Tab id="users">
-              {t('usersTab')} ({initialProfiles.length})
+              {t('usersTab')} ({profilesTotalCount})
               <Tabs.Indicator />
             </Tabs.Tab>
             <Tabs.Tab id="organizations">
-              {t('organizationsTab')} ({initialOrganizations.length})
+              {t('organizationsTab')} ({orgsTotalCount})
               <Tabs.Indicator />
             </Tabs.Tab>
           </Tabs.List>
@@ -367,18 +456,32 @@ export function UsersOrganizationsContent({
         <Tabs.Panel id="users" className="pt-4">
           <DataTable
             columns={profileColumns}
-            data={initialProfiles}
+            data={profiles}
             searchPlaceholder={t('searchUsers')}
             facetedFilters={profileFilters}
+            manualPagination
+            pagination={profilesPagination}
+            onPaginationChange={setProfilesPagination}
+            pageCount={profilesPageCount}
+            totalRows={profilesTotalCount}
+            isLoading={isProfilesPending}
+            onSearchChange={handleProfilesSearch}
           />
         </Tabs.Panel>
 
         <Tabs.Panel id="organizations" className="pt-4">
           <DataTable
             columns={organizationColumns}
-            data={initialOrganizations}
+            data={orgs}
             searchPlaceholder={t('searchOrganizations')}
             facetedFilters={organizationFilters}
+            manualPagination
+            pagination={orgsPagination}
+            onPaginationChange={setOrgsPagination}
+            pageCount={orgsPageCount}
+            totalRows={orgsTotalCount}
+            isLoading={isOrgsPending}
+            onSearchChange={handleOrgsSearch}
           />
         </Tabs.Panel>
       </Tabs>

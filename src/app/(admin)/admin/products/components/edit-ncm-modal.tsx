@@ -14,6 +14,7 @@ interface EditNcmModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   trigger: React.ReactNode;
+  onSuccess?: () => void;
 }
 
 function toDecimalString(val: string | null | undefined): string {
@@ -26,6 +27,7 @@ export function EditNcmModal({
   isOpen,
   onOpenChange,
   trigger,
+  onSuccess,
 }: EditNcmModalProps) {
   const t = useTranslations('Admin.Products');
   const [code, setCode] = useState(hsCode?.code ?? '');
@@ -55,9 +57,12 @@ export function EditNcmModal({
 
   useEffect(() => {
     if (state?.ok && !isPending) {
-      queueMicrotask(() => onOpenChange(false));
+      queueMicrotask(() => {
+        onOpenChange(false);
+        onSuccess?.();
+      });
     }
-  }, [state?.ok, isPending, onOpenChange]);
+  }, [state?.ok, isPending, onOpenChange, onSuccess]);
 
   if (!hsCode) return null;
 

@@ -7,6 +7,7 @@ import type { Supplier } from '@/services/admin';
 
 interface EditSupplierModalProps {
   supplier: Supplier;
+  organizations: { id: string; name: string }[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   trigger: React.ReactNode;
@@ -14,6 +15,7 @@ interface EditSupplierModalProps {
 
 export function EditSupplierModal({
   supplier,
+  organizations,
   isOpen,
   onOpenChange,
   trigger,
@@ -27,6 +29,7 @@ export function EditSupplierModal({
       trigger={trigger}
       action={updateSupplierAction.bind(null, supplier.id)}
       supplier={supplier}
+      organizations={organizations}
       labels={{
         heading: `${t('edit')} - ${supplier.name}`,
         name: t('name'),
@@ -39,6 +42,8 @@ export function EditSupplierModal({
         emailPlaceholder: t('emailPlaceholder'),
         address: t('address'),
         addressPlaceholder: t('addressPlaceholder'),
+        organization: t('organization'),
+        organizationPlaceholder: t('organizationPlaceholder'),
         cancel: t('cancel'),
         save: t('save'),
         saving: t('saving'),
