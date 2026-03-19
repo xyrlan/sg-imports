@@ -39,7 +39,7 @@ export const hsCodes = pgTable('hs_codes', {
 
 export const suppliers = pgTable('suppliers', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').references(() => organizations.id).notNull(),
+  organizationId: uuid('organization_id').references(() => organizations.id),
   name: text('name').notNull(),
   taxId: text('tax_id'), // TIN number
   countryCode: text('country_code').default('CN'),

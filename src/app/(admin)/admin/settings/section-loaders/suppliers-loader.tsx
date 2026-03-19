@@ -13,19 +13,15 @@ function isValidUuid(value: string): boolean {
 }
 
 interface SuppliersLoaderProps {
-  organizationId: string;
   supplierId: string;
 }
 
 export async function SuppliersLoader({
-  organizationId,
   supplierId,
 }: SuppliersLoaderProps) {
   const [organizations, suppliers, selectedSupplier] = await Promise.all([
     getOrganizationsForSelect(),
-    organizationId && isValidUuid(organizationId)
-      ? getAllSuppliers(organizationId)
-      : Promise.resolve([]),
+    getAllSuppliers(),
     supplierId && isValidUuid(supplierId)
       ? getSupplierWithSubSuppliers(supplierId)
       : Promise.resolve(null),
@@ -36,7 +32,6 @@ export async function SuppliersLoader({
       organizations={organizations}
       suppliers={suppliers}
       selectedSupplier={selectedSupplier}
-      initialOrganizationId={organizationId}
       initialSupplierId={supplierId}
     />
   );

@@ -71,6 +71,10 @@ export interface DataTableProps<TData> {
   onRowSelectionChange?: (selectedRows: TData[]) => void;
   /** Callback when a row is clicked */
   onRowClick?: (row: TData) => void;
+  /** Server-side search callback — when provided, search triggers this instead of client-side globalFilter */
+  onSearchChange?: (value: string) => void;
+  /** Total row count for server-side pagination (shown in pagination info) */
+  totalRows?: number;
 }
 
 /**
@@ -315,12 +319,12 @@ function DataTableFilterDropdown<TData>({
   );
 }
 
-function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
+function DataTablePagination<TData>({ table, totalRows: externalTotal }: { table: Table<TData>; totalRows?: number }) {
   const t = useTranslations('Common.DataTable');
   const pageIndex = table.getState().pagination.pageIndex;
   const pageCount = table.getPageCount();
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-  const totalRows = table.getFilteredRowModel().rows.length;
+  const totalRows = externalTotal ?? table.getFilteredRowModel().rows.length;
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
@@ -406,13 +410,13 @@ function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
   );
 }
 
-function DataTableSkeleton({ columnCount }: { columnCount: number }) {
+function DataTableSkeleton({ columnCount, rowCount = 5 }: { columnCount: number; rowCount?: number }) {
   return (
     <>
-      {Array.from({ length: 5 }).map((_, rowIdx) => (
+      {Array.from({ length: rowCount }).map((_, rowIdx) => (
         <tr key={rowIdx} className="border-b border-border">
           {Array.from({ length: columnCount }).map((_, colIdx) => (
-            <td key={colIdx} className="px-4 py-3">
+            <td key={colIdx} className="px-4 py-4.5">
               <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
             </td>
           ))}
@@ -439,6 +443,8 @@ export function DataTable<TData>({
   onPaginationChange,
   onRowSelectionChange,
   onRowClick,
+  onSearchChange,
+  totalRows: externalTotalRows,
 }: DataTableProps<TData>) {
   const t = useTranslations('Common.DataTable');
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -486,7 +492,7 @@ export function DataTable<TData>({
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    ...(!manualPagination && { getFilteredRowModel: getFilteredRowModel() }),
     getPaginationRowModel: getPaginationRowModel(),
     ...(manualPagination && {
       manualPagination: true,
@@ -508,7 +514,10 @@ export function DataTable<TData>({
       <div className="flex items-center gap-2">
         <DataTableSearch
           value={globalFilter}
-          onChange={setGlobalFilter}
+          onChange={(value) => {
+            setGlobalFilter(value);
+            onSearchChange?.(value);
+          }}
           placeholder={searchPlaceholder}
         />
         {facetedFilters && facetedFilters.length > 0 && (
@@ -544,7 +553,7 @@ export function DataTable<TData>({
             </thead>
             <tbody className="divide-y">
               {isLoading ? (
-                <DataTableSkeleton columnCount={allColumns.length} />
+                <DataTableSkeleton columnCount={allColumns.length} rowCount={pagination.pageSize} />
               ) : table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => (
                   <tr
@@ -582,7 +591,7 @@ export function DataTable<TData>({
       </div>
 
       {/* Pagination */}
-      <DataTablePagination table={table} />
+      <DataTablePagination table={table} totalRows={externalTotalRows} />
     </div>
   );
 }

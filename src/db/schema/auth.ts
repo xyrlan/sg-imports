@@ -20,6 +20,8 @@ export const profiles = pgTable('profiles', {
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
   phone: text('phone'),
+  taxId: text('tax_id'),
+  maritalStatus: text('marital_status'),
   documentPhotoUrl: text('document_photo_url'),
   addressProofUrl: text('address_proof_url'),
   systemRole: systemRoleEnum('system_role').notNull().default('USER'),

@@ -14,7 +14,7 @@ import {
 import { toPlainObject } from '../../action-utils';
 
 const supplierSchema = z.object({
-  organizationId: z.string().uuid(),
+  organizationId: z.string().uuid().optional().or(z.literal('')).transform(v => v || null),
   name: z.string().min(1),
   taxId: z.string().optional(),
   countryCode: z.string().optional(),
@@ -42,6 +42,7 @@ export async function createSupplierAction(prev: unknown, formData: FormData) {
       const created = await createSupplier(
         {
           ...parsed.data,
+          organizationId: parsed.data.organizationId ?? null,
           taxId: parsed.data.taxId || null,
           countryCode: parsed.data.countryCode || null,
           email: parsed.data.email || null,
@@ -72,6 +73,7 @@ export async function updateSupplierAction(
   try {
     const parsed = z
       .object({
+        organizationId: z.string().uuid().optional().or(z.literal('')).transform(v => v || null),
         name: z.string().min(1),
         taxId: z.string().optional(),
         countryCode: z.string().optional(),
@@ -80,6 +82,7 @@ export async function updateSupplierAction(
         siscomexId: z.string().optional(),
       })
       .safeParse({
+        organizationId: formData.get('organizationId') || undefined,
         name: formData.get('name'),
         taxId: formData.get('taxId') || undefined,
         countryCode: formData.get('countryCode') || undefined,
@@ -101,6 +104,7 @@ export async function updateSupplierAction(
         id,
         {
           ...parsed.data,
+          organizationId: parsed.data.organizationId ?? null,
           taxId: parsed.data.taxId ?? null,
           countryCode: parsed.data.countryCode ?? null,
           email: parsed.data.email ?? null,

@@ -5,14 +5,14 @@ import { SupplierFormModal } from '@/components/shared/supplier-form-modal';
 import { createSupplierAction } from './actions';
 
 interface AddSupplierModalProps {
-  organizationId: string;
+  organizations: { id: string; name: string }[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   trigger: React.ReactNode;
 }
 
 export function AddSupplierModal({
-  organizationId,
+  organizations,
   isOpen,
   onOpenChange,
   trigger,
@@ -25,7 +25,7 @@ export function AddSupplierModal({
       onOpenChange={onOpenChange}
       trigger={trigger}
       action={createSupplierAction}
-      organizationId={organizationId}
+      organizations={organizations}
       labels={{
         heading: t('addSupplier'),
         name: t('name'),
@@ -38,6 +38,8 @@ export function AddSupplierModal({
         emailPlaceholder: t('emailPlaceholder'),
         address: t('address'),
         addressPlaceholder: t('addressPlaceholder'),
+        organization: t('organization'),
+        organizationPlaceholder: t('organizationPlaceholder'),
         cancel: t('cancel'),
         save: t('save'),
         saving: t('saving'),

@@ -3,7 +3,7 @@
  */
 
 import { db } from '@/db';
-import { suppliers, subSuppliers } from '@/db/schema';
+import { suppliers, subSuppliers, organizations } from '@/db/schema';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
 import type { DbTransaction } from './audit.service';
@@ -14,7 +14,9 @@ type DbOrTx = typeof db | DbTransaction;
 // Types
 // ============================================
 
-export type Supplier = InferSelectModel<typeof suppliers>;
+export type Supplier = InferSelectModel<typeof suppliers> & {
+  organizationName?: string | null;
+};
 export type SubSupplier = InferSelectModel<typeof subSuppliers>;
 
 export interface SupplierWithSubSuppliers extends Supplier {
@@ -22,7 +24,7 @@ export interface SupplierWithSubSuppliers extends Supplier {
 }
 
 export interface CreateSupplierData {
-  organizationId: string;
+  organizationId?: string | null;
   name: string;
   taxId?: string | null;
   countryCode?: string | null;
@@ -32,6 +34,7 @@ export interface CreateSupplierData {
 }
 
 export interface UpdateSupplierData {
+  organizationId?: string | null;
   name?: string;
   taxId?: string | null;
   countryCode?: string | null;
@@ -67,12 +70,23 @@ export async function getAllSuppliers(
   organizationId?: string,
   client: DbOrTx = db,
 ): Promise<Supplier[]> {
-  if (!organizationId) return [];
-  return client
-    .select()
+  const rows = await client
+    .select({
+      id: suppliers.id,
+      organizationId: suppliers.organizationId,
+      name: suppliers.name,
+      taxId: suppliers.taxId,
+      countryCode: suppliers.countryCode,
+      email: suppliers.email,
+      address: suppliers.address,
+      siscomexId: suppliers.siscomexId,
+      organizationName: organizations.name,
+    })
     .from(suppliers)
-    .where(eq(suppliers.organizationId, organizationId))
+    .leftJoin(organizations, eq(suppliers.organizationId, organizations.id))
+    .where(organizationId ? eq(suppliers.organizationId, organizationId) : undefined)
     .orderBy(asc(suppliers.name));
+  return rows;
 }
 
 export async function getSupplierById(id: string, client: DbOrTx = db): Promise<Supplier | null> {
@@ -123,6 +137,7 @@ export async function updateSupplier(
   const [updated] = await client
     .update(suppliers)
     .set({
+      ...(data.organizationId !== undefined && { organizationId: data.organizationId }),
       ...(data.name !== undefined && { name: data.name }),
       ...(data.taxId !== undefined && { taxId: data.taxId }),
       ...(data.countryCode !== undefined && { countryCode: data.countryCode }),

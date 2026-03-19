@@ -13,8 +13,8 @@ export default async function ManagementPage() {
 
   return (
     <UsersOrganizationsContent
-      initialProfiles={profilesResult.data}
-      initialOrganizations={organizationsResult.data}
+      initialProfiles={profilesResult}
+      initialOrganizations={organizationsResult}
     />
   );
 }

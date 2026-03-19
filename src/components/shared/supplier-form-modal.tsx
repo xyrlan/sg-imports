@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button, Input, Label, Modal, TextField } from '@heroui/react';
+import { Button, Input, Label, ListBox, Modal, Select, TextField } from '@heroui/react';
 import { Truck } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { useActionModal } from '@/hooks/use-action-modal';
 
 interface Supplier {
   id: string;
+  organizationId: string | null;
   name: string;
   taxId: string | null;
   countryCode: string | null;
@@ -27,6 +28,8 @@ interface SupplierFormModalLabels {
   emailPlaceholder: string;
   address: string;
   addressPlaceholder: string;
+  organization?: string;
+  organizationPlaceholder?: string;
   cancel: string;
   save: string;
   saving: string;
@@ -39,6 +42,7 @@ interface SupplierFormModalProps {
   action: (state: any, formData: FormData) => Promise<any>;
   supplier?: Supplier | null;
   organizationId?: string;
+  organizations?: { id: string; name: string }[];
   labels: SupplierFormModalLabels;
 }
 
@@ -49,8 +53,10 @@ export function SupplierFormModal({
   action,
   supplier,
   organizationId,
+  organizations,
   labels,
 }: SupplierFormModalProps) {
+  const [selectedOrgId, setSelectedOrgId] = useState(supplier?.organizationId ?? organizationId ?? '');
   const [name, setName] = useState(supplier?.name ?? '');
   const [taxId, setTaxId] = useState(supplier?.taxId ?? '');
   const [countryCode, setCountryCode] = useState(supplier?.countryCode ?? '');
@@ -65,6 +71,7 @@ export function SupplierFormModal({
   useEffect(() => {
     if (isOpen) {
       queueMicrotask(() => {
+        setSelectedOrgId(supplier?.organizationId ?? organizationId ?? '');
         setName(supplier?.name ?? '');
         setTaxId(supplier?.taxId ?? '');
         setCountryCode(supplier?.countryCode ?? '');
@@ -72,7 +79,7 @@ export function SupplierFormModal({
         setAddress(supplier?.address ?? '');
       });
     }
-  }, [isOpen, supplier]);
+  }, [isOpen, supplier, organizationId]);
 
   return (
     <Modal>
@@ -88,11 +95,35 @@ export function SupplierFormModal({
               <Modal.Heading>{labels.heading}</Modal.Heading>
             </Modal.Header>
             <form action={formAction}>
-              {organizationId && (
-                <input type="hidden" name="organizationId" value={organizationId} />
-              )}
+              <input type="hidden" name="organizationId" value={selectedOrgId} />
               <Modal.Body className="p-2">
                 <div className="space-y-4">
+                  {organizations && organizations.length > 0 && (
+                    <div>
+                      <Label className="text-sm mb-1 block">{labels.organization}</Label>
+                      <Select
+                        selectedKey={selectedOrgId || null}
+                        onSelectionChange={(key) => setSelectedOrgId(key != null ? String(key) : '')}
+                        variant="primary"
+                        placeholder={labels.organizationPlaceholder}
+                      >
+                        <Select.Trigger>
+                          <Select.Value />
+                          <Select.Indicator />
+                        </Select.Trigger>
+                        <Select.Popover>
+                          <ListBox>
+                            {organizations.map((org) => (
+                              <ListBox.Item key={org.id} id={org.id} textValue={org.name}>
+                                {org.name}
+                                <ListBox.ItemIndicator />
+                              </ListBox.Item>
+                            ))}
+                          </ListBox>
+                        </Select.Popover>
+                      </Select>
+                    </div>
+                  )}
                   <TextField variant="primary" isRequired>
                     <Label>{labels.name}</Label>
                     <Input

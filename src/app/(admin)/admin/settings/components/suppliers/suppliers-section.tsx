@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseAsString, useQueryState } from 'nuqs';
-import { AlertDialog, Button, Card, Label, Select } from '@heroui/react';
+import { AlertDialog, Button, Card, Label, Select, ListBox } from '@heroui/react';
 import { Plus, Pencil, Settings, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { createColumnHelper } from '@tanstack/react-table';
-import { ListBox } from '@heroui/react';
 import { SettingsSectionHeader } from '../_shared/settings-section-header';
 import { AddSupplierModal } from './add-supplier-modal';
 import { deleteSupplierAction } from './actions';
@@ -20,6 +18,7 @@ import { EditSupplierModal } from './edit-supplier-modal';
 const supplierColumnHelper = createColumnHelper<Supplier>();
 
 function useSupplierColumns(
+  organizations: { id: string; name: string }[],
   editingSupplier: Supplier | null,
   setEditingSupplier: (s: Supplier | null) => void,
   onConfigure: (id: string) => void,
@@ -33,6 +32,12 @@ function useSupplierColumns(
         header: t('Suppliers.columns.name'),
         cell: (info) => (
           <span className="font-medium">{info.getValue()}</span>
+        ),
+      }),
+      supplierColumnHelper.accessor('organizationName', {
+        header: t('Suppliers.columns.organization'),
+        cell: (info) => (
+          <span className="text-sm text-muted">{info.getValue() ?? '—'}</span>
         ),
       }),
       supplierColumnHelper.accessor('taxId', {
@@ -82,6 +87,7 @@ function useSupplierColumns(
               <EditSupplierModal
                 key={`${sup.id}-${editingSupplier?.id === sup.id}`}
                 supplier={sup}
+                organizations={organizations}
                 isOpen={editingSupplier?.id === sup.id}
                 onOpenChange={(open: boolean) => setEditingSupplier(open ? sup : null)}
                 trigger={
@@ -109,7 +115,7 @@ function useSupplierColumns(
         size: 280,
       }),
     ],
-    [t, editingSupplier?.id, setEditingSupplier, setDeletingSupplier, onConfigure],
+    [t, organizations, editingSupplier?.id, setEditingSupplier, setDeletingSupplier, onConfigure],
   );
 }
 
@@ -117,7 +123,6 @@ interface SuppliersSectionProps {
   organizations: { id: string; name: string }[];
   suppliers: Supplier[];
   selectedSupplier: SupplierWithSubSuppliers | null;
-  initialOrganizationId: string;
   initialSupplierId: string;
 }
 
@@ -125,15 +130,11 @@ export function SuppliersSection({
   organizations,
   suppliers,
   selectedSupplier,
-  initialOrganizationId,
   initialSupplierId,
 }: SuppliersSectionProps) {
   const t = useTranslations('Admin.Settings');
   const router = useRouter();
-  const [organizationId, setOrganizationId] = useQueryState(
-    'organizationId',
-    parseAsString.withDefault(initialOrganizationId).withOptions({ shallow: false }),
-  );
+  const [filterOrgId, setFilterOrgId] = useState('');
   const [supplierId, setSupplierId] = useQueryState(
     'supplierId',
     parseAsString.withDefault(initialSupplierId).withOptions({ shallow: false }),
@@ -143,10 +144,10 @@ export function SuppliersSection({
   const [deletingSupplier, setDeletingSupplier] = useState<Supplier | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const handleOrgChange = (key: string | null) => {
-    setOrganizationId(key ?? '');
-    setSupplierId('');
-  };
+  const filteredSuppliers = useMemo(() => {
+    if (!filterOrgId) return suppliers;
+    return suppliers.filter((s) => s.organizationId === filterOrgId);
+  }, [suppliers, filterOrgId]);
 
   const handleConfigure = (id: string) => setSupplierId(id);
   const handleBack = () => setSupplierId('');
@@ -164,6 +165,7 @@ export function SuppliersSection({
   };
 
   const columns = useSupplierColumns(
+    organizations,
     editingSupplier,
     setEditingSupplier,
     handleConfigure,
@@ -189,15 +191,15 @@ export function SuppliersSection({
               <div className="flex flex-wrap items-center gap-3">
                 <div className="min-w-[200px]">
                   <Label className="text-sm text-muted mb-1 block">
-                    {t('Suppliers.selectOrganization')}
+                    {t('Suppliers.filterByOrganization')}
                   </Label>
                   <Select
-                    selectedKey={organizationId || null}
+                    selectedKey={filterOrgId || null}
                     onSelectionChange={(key) =>
-                      handleOrgChange(key != null ? String(key) : null)
+                      setFilterOrgId(key != null && key !== 'all' ? String(key) : '')
                     }
                     variant="primary"
-                    placeholder={t('Suppliers.selectOrganizationPlaceholder')}
+                    placeholder={t('Suppliers.allOrganizations')}
                   >
                     <Select.Trigger>
                       <Select.Value />
@@ -205,6 +207,14 @@ export function SuppliersSection({
                     </Select.Trigger>
                     <Select.Popover>
                       <ListBox>
+                        <ListBox.Item
+                          key="all"
+                          id="all"
+                          textValue={t('Suppliers.allOrganizations')}
+                        >
+                          {t('Suppliers.allOrganizations')}
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
                         {organizations.map((org) => (
                           <ListBox.Item
                             key={org.id}
@@ -219,33 +229,29 @@ export function SuppliersSection({
                     </Select.Popover>
                   </Select>
                 </div>
-                {organizationId && (
-                  <AddSupplierModal
-                    organizationId={organizationId}
-                    isOpen={addModalOpen}
-                    onOpenChange={setAddModalOpen}
-                    trigger={
-                      <Button
-                        variant="primary"
-                        onPress={() => setAddModalOpen(true)}
-                      >
-                        <Plus className="size-4" />
-                        {t('Suppliers.addSupplier')}
-                      </Button>
-                    }
-                  />
-                )}
+                <AddSupplierModal
+                  organizations={organizations}
+                  isOpen={addModalOpen}
+                  onOpenChange={setAddModalOpen}
+                  trigger={
+                    <Button
+                      variant="primary"
+                      onPress={() => setAddModalOpen(true)}
+                    >
+                      <Plus className="size-4" />
+                      {t('Suppliers.addSupplier')}
+                    </Button>
+                  }
+                />
               </div>
             }
           />
-          {!organizationId ? (
-            <p className="text-muted">{t('Suppliers.selectOrganizationPlaceholder')}</p>
-          ) : suppliers.length === 0 ? (
+          {filteredSuppliers.length === 0 ? (
             <p className="text-muted">{t('Suppliers.noSuppliers')}</p>
           ) : (
             <DataTable<Supplier>
               columns={columns}
-              data={suppliers}
+              data={filteredSuppliers}
               searchPlaceholder={t('Suppliers.searchPlaceholder')}
             />
           )}
