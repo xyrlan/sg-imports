@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Checkbox, TextField, Input, Label } from '@heroui/react';
+import { Button, Checkbox, TextField, Input, Label, Surface } from '@heroui/react';
 import { Ship, ExternalLink } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { ShipmentDocumentField } from '../shipment-document-field';
@@ -72,7 +72,7 @@ function BookingTrackingCard({ shipment, readOnly }: BookingTrackingCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-4">
       <p className="text-sm font-semibold text-foreground">{t('bookingTracking')}</p>
 
       {/* Booking Number */}
@@ -172,7 +172,7 @@ function BookingTrackingCard({ shipment, readOnly }: BookingTrackingCardProps) {
           </ul>
         </div>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -197,7 +197,7 @@ function FreightCard({ shipment, readOnly }: FreightCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('freight')}</p>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted">{t('freightCost')}:</span>
@@ -226,7 +226,7 @@ function FreightCard({ shipment, readOnly }: FreightCardProps) {
           </Button>
         )}
       </div>
-    </div>
+    </Surface>
   );
 }
 
@@ -242,7 +242,7 @@ function DocumentsCard({ shipment, readOnly }: DocumentsCardProps) {
   const hblDocument = (shipment.documents ?? []).find((d) => d.type === 'HBL_DOCUMENT');
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-4">
       <p className="text-sm font-semibold text-foreground">{t('documents')}</p>
 
       <ShipmentDocumentField
@@ -262,7 +262,7 @@ function DocumentsCard({ shipment, readOnly }: DocumentsCardProps) {
         readOnly={readOnly}
         acceptedFormats="PDF (máx. 10MB)"
       />
-    </div>
+    </Surface>
   );
 }
 

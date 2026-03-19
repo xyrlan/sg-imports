@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip, TextField, Input, Label } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label, Surface } from '@heroui/react';
 import { CheckCircle } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { ShipmentDocumentField } from '../shipment-document-field';
@@ -62,7 +62,7 @@ function FiscalDocumentsCard({ shipment, readOnly }: FiscalDocumentsCardProps) {
     (shipment.documents ?? []).find((d) => d.type === type);
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-4">
       <p className="text-sm font-semibold text-foreground">{t('fiscalDocuments')}</p>
 
       {FISCAL_DOC_TYPES.map(({ type, labelKey, accept }) => {
@@ -81,7 +81,7 @@ function FiscalDocumentsCard({ shipment, readOnly }: FiscalDocumentsCardProps) {
           </div>
         );
       })}
-    </div>
+    </Surface>
   );
 }
 
@@ -107,7 +107,7 @@ function FinalCostsCard({ shipment, readOnly }: FinalCostsCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('finalCosts')}</p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -148,7 +148,7 @@ function FinalCostsCard({ shipment, readOnly }: FinalCostsCardProps) {
           {t('saveCosts')}
         </Button>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -193,7 +193,7 @@ function PLCard({ shipment, readOnly }: PLCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('pl')}</p>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
@@ -255,7 +255,7 @@ function PLCard({ shipment, readOnly }: PLCardProps) {
           </Chip>
         </div>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -307,7 +307,7 @@ function ServiceFeeCard({ shipment, readOnly }: ServiceFeeCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('serviceFee')}</p>
 
       {isLoadingFee ? (
@@ -359,7 +359,7 @@ function ServiceFeeCard({ shipment, readOnly }: ServiceFeeCardProps) {
           </Button>
         )
       )}
-    </div>
+    </Surface>
   );
 }
 

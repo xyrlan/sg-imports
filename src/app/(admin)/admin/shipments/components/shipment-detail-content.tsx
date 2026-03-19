@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Modal, TextArea, TextField, Checkbox, Label } from '@heroui/react';
+import { Button, Modal, TextArea, TextField, Checkbox, Label, Surface } from '@heroui/react';
 import { ArrowLeft, X } from 'lucide-react';
 
 import { ShipmentStepper, STEP_ORDER, type ShipmentStep } from './shipment-stepper';
@@ -210,11 +210,11 @@ export function ShipmentDetailContent({
       />
 
       {/* ====== Step Content ====== */}
-      <div className="rounded-lg border border-default-200 bg-default-50 p-6">
+      <Surface variant="secondary" className="p-6">
         {ActiveStep && (
           <ActiveStep shipment={shipment} readOnly={isReadOnly} />
         )}
-      </div>
+      </Surface>
 
       {/* ====== Action Buttons ====== */}
       {(showAdvanceButton || showFinalizeButton) && (

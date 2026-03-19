@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip, TextField, Input, Label } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label, Surface } from '@heroui/react';
 import { DollarSign, ExternalLink, Pencil } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { GenerateInvoiceModal } from '../modals/generate-invoice-modal';
@@ -67,7 +67,7 @@ function ProductionCard({ shipment, readOnly }: ProductionCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('production')}</p>
       <div className="flex items-end gap-3">
         <div className="flex-1">
@@ -92,7 +92,7 @@ function ProductionCard({ shipment, readOnly }: ProductionCardProps) {
           {shipment.fobAdvancePercentage ?? '—'}%
         </span>
       </div>
-    </div>
+    </Surface>
   );
 }
 
@@ -113,7 +113,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
   const isDirectOrder = shipment.clientOrganization?.orderType === 'DIRECT_ORDER';
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-4">
       <p className="text-sm font-semibold text-foreground">{t('payments')}</p>
 
       {/* Progress */}
@@ -222,7 +222,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
           </table>
         </div>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -249,7 +249,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
     }, []);
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">{t('exchangeContracts')}</p>
         {!readOnly && (
@@ -345,7 +345,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
           </table>
         </div>
       )}
-    </div>
+    </Surface>
   );
 }
 

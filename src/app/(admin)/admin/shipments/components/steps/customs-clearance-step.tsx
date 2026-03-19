@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip, TextField, Input, Label } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label, Surface } from '@heroui/react';
 import { Shield } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { generate90InvoiceAction, registerDuimpAction } from '../../[id]/actions';
@@ -72,7 +72,7 @@ function Invoice90Card({ shipment, readOnly }: Invoice90CardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('invoice90')}</p>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
@@ -112,7 +112,7 @@ function Invoice90Card({ shipment, readOnly }: Invoice90CardProps) {
           {t('generate90Invoice')}
         </Button>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -143,7 +143,7 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
   );
 
   return (
-    <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-4">
       <p className="text-sm font-semibold text-foreground">{t('duimp')}</p>
 
       {/* DUIMP number input */}
@@ -217,7 +217,7 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
           )}
         </div>
       )}
-    </div>
+    </Surface>
   );
 }
 
