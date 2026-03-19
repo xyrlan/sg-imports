@@ -46,6 +46,7 @@ export function ShipmentSummaryCard({
 }: ShipmentSummaryCardProps) {
   const t = useTranslations('Admin.Shipments.Summary');
   const tStatus = useTranslations('Shipments.Status');
+  const tOrderType = useTranslations('Admin.Shipments.OrderType');
 
   const statusColor = STATUS_COLORS[status] ?? 'default';
   const isFinished = status === 'FINISHED';
@@ -113,7 +114,7 @@ export function ShipmentSummaryCard({
           variant="secondary"
           size="sm"
         >
-          {orderType}
+          {tOrderType(orderType)}
         </Chip>
       </div>
     </Surface>

@@ -38,6 +38,7 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
   const t = useTranslations('Admin.Shipments.List');
   const tStepper = useTranslations('Admin.Shipments.Stepper');
   const tStatus = useTranslations('Shipments.Status');
+  const tOrderType = useTranslations('Admin.Shipments.OrderType');
 
   const columns = [
     columnHelper.accessor('code', {
@@ -82,7 +83,14 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
       id: 'type',
       header: t('columns.type'),
       filterFn: facetedFilterFn,
-      cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      cell: (info) => {
+        const value = info.getValue();
+        return <Chip
+        color={value === "DIRECT_ORDER" ? 'danger' : 'accent'}
+        variant='soft'
+        size="sm"
+      >{tOrderType(value)}</Chip>;
+      },
     }),
     columnHelper.accessor('eta', {
       header: t('columns.eta'),
@@ -133,8 +141,8 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
       columnId: 'type',
       title: t('filters.type'),
       options: [
-        { value: 'ORDER', label: 'ORDER' },
-        { value: 'DIRECT_ORDER', label: 'DIRECT_ORDER' },
+        { value: 'ORDER', label: tOrderType('ORDER') },
+        { value: 'DIRECT_ORDER', label: tOrderType('DIRECT_ORDER') },
       ],
     },
   ];

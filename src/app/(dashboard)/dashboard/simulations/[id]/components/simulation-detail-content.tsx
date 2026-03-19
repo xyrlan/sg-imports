@@ -108,7 +108,7 @@ export function SimulationDetailContent({
           {canEdit && (
             <>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onPress={() => setSettingsOpen(true)}
                 className="inline-flex items-center gap-2"

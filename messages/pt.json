@@ -1117,6 +1117,10 @@
         "status": "Status",
         "type": "Tipo"
       },
+      "OrderType": {
+        "ORDER": "Encomenda",
+        "DIRECT_ORDER": "Direta"
+      },
       "Stepper": {
         "CONTRACT_CREATION": "Contrato",
         "MERCHANDISE_PAYMENT": "Pagamento FOB",

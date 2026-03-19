@@ -210,7 +210,7 @@ export function ShipmentDetailContent({
       />
 
       {/* ====== Step Content ====== */}
-      <Surface variant="secondary" className="p-6">
+      <Surface variant="tertiary" className="p-6">
         {ActiveStep && (
           <ActiveStep shipment={shipment} readOnly={isReadOnly} />
         )}

@@ -190,7 +190,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
                 <tr key={tx.id} className="border-b border-border last:border-0">
                   <td className="py-2 px-2 text-muted">{idx + 1}</td>
                   <td className="py-2 px-2 text-foreground font-medium">
-                    {tx.amountUsd ? `$${tx.amountUsd}` : '—'}
+                    {tx.amountUsd ? `${formatUsd(tx.amountUsd)}` : '—'}
                   </td>
                   <td className="py-2 px-2">
                     <Chip

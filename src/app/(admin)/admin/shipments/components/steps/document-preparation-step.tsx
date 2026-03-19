@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip } from '@heroui/react';
+import { Button, Chip, Surface } from '@heroui/react';
 import { FileText, ExternalLink } from 'lucide-react';
 import { FileUpload } from '@/components/ui/file-upload';
 import type { ShipmentDetail } from '../shipment-utils';
@@ -102,7 +102,7 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
   const supplierRows = Array.from(supplierMap.entries());
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">{t('exchangeSummary')}</p>
         <span className="text-xs text-muted">
@@ -146,7 +146,7 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
       ) : (
         <p className="text-xs text-muted">—</p>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -172,7 +172,7 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
   );
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{supplier.name}</p>
 
       {/* Commercial Invoice */}
@@ -222,7 +222,7 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
           extraFormData={{ supplierId: supplier.id }}
         />
       </div>
-    </div>
+    </Surface>
   );
 }
 
@@ -258,7 +258,7 @@ function OtherDocumentsCard({ shipment, readOnly }: OtherDocumentsCardProps) {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">{t('otherDocuments')}</p>
         {!readOnly && !isAdding && (
@@ -328,7 +328,7 @@ function OtherDocumentsCard({ shipment, readOnly }: OtherDocumentsCardProps) {
           </div>
         </div>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -358,7 +358,7 @@ function ChecklistCard({ shipment, suppliers }: ChecklistCardProps) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4 space-y-2">
+    <Surface variant="secondary" className="p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('checklist')}</p>
       {pendingCount > 0 ? (
         <Chip size="sm" variant="soft" color="warning">
@@ -369,7 +369,7 @@ function ChecklistCard({ shipment, suppliers }: ChecklistCardProps) {
           {t('allDocumentsOk')}
         </Chip>
       )}
-    </div>
+    </Surface>
   );
 }
 
