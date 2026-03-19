@@ -13,7 +13,7 @@ export async function runPhase03(legacy: Sql, target: Sql, idMap: IdMap): Promis
       WHERE p.email = 'pedro@dev.com' LIMIT 1`;
     if (org) {
       brTradingId = org.organization_id;
-      idMap.set('meta', 'brTradingOrgId', brTradingId);
+      idMap.set('meta', 'brTradingOrgId', brTradingId || "");
       console.log(`  [meta] brTradingOrgId resolved from pedro@dev.com's org: ${brTradingId}`);
     } else {
       throw new Error('Could not resolve brTradingOrgId: pedro@dev.com not found in target DB');
@@ -141,7 +141,7 @@ export async function runPhase03(legacy: Sql, target: Sql, idMap: IdMap): Promis
             try {
               const [ev] = await target`
                 INSERT INTO product_variants (id, product_id, organization_id, sku, name, price_usd, units_per_carton, carton_height, carton_width, carton_length, carton_weight, attributes)
-                VALUES (gen_random_uuid(), ${inserted.id}, ${orgId}, ${variantSku}, ${el.nome}, ${variantPrice}, ${r.quantidadePorCaixa ?? 1}, ${tc?.altura ?? 0}, ${tc?.largura ?? 0}, ${tc?.comprimento ?? 0}, ${r.pesoCaixa ?? 0}, ${{ [v.nomeVariacao]: el.nome }})
+                VALUES (gen_random_uuid(), ${inserted.id}, ${orgId}, ${variantSku}, ${el.nome}, ${variantPrice}, ${r.quantidadePorCaixa ?? 1}, ${tc?.altura ?? 0}, ${tc?.largura ?? 0}, ${tc?.comprimento ?? 0}, ${r.pesoCaixa ?? 0}, ${JSON.stringify({ [v.nomeVariacao]: el.nome })}::jsonb)
                 ON CONFLICT (organization_id, sku) DO NOTHING
                 RETURNING id`;
               if (ev) idMap.set('elementoVariacao', el.id, ev.id);
