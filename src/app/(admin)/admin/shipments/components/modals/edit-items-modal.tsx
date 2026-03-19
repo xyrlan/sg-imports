@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, Modal, TextField } from '@heroui/react';
+import { Button, Input, Modal, TextField, useOverlayState } from '@heroui/react';
 import { Pencil, AlertCircle, Trash2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { editShipmentItemsAction } from '@/app/(admin)/admin/shipments/[id]/actions';
@@ -30,7 +30,6 @@ interface EditedValues {
 export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalProps) {
   const t = useTranslations('Admin.Shipments.Modals.EditItems');
 
-  const [isOpen, setIsOpen] = useState(false);
   const [editedItems, setEditedItems] = useState<Map<string, EditedValues>>(new Map());
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -39,15 +38,16 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
 
   const quoteItems = shipment.quote?.items ?? [];
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setEditedItems(new Map());
-      setRemovedItemIds(new Set());
-      setError(null);
-      setNoChangesMessage(false);
-    }
-  }, [isOpen]);
+  const state = useOverlayState({
+    onOpenChange: (isOpen) => {
+      if (isOpen) {
+        setEditedItems(new Map());
+        setRemovedItemIds(new Set());
+        setError(null);
+        setNoChangesMessage(false);
+      }
+    },
+  });
 
   const handleQuantityChange = (itemId: string, originalQty: number, value: string) => {
     const parsed = parseInt(value, 10);
@@ -80,7 +80,6 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
       next.add(itemId);
       return next;
     });
-    // Remove any pending edits for this item
     setEditedItems((prev) => {
       const next = new Map(prev);
       next.delete(itemId);
@@ -163,7 +162,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
     try {
       const result = await editShipmentItemsAction(shipment.id, changes);
       if (result.success) {
-        setIsOpen(false);
+        state.close();
         onSuccess?.();
       } else {
         setError(result.error ?? 'Erro desconhecido');
@@ -176,10 +175,10 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
   };
 
   return (
-    <Modal>
-      <span onClick={() => setIsOpen(true)}>{trigger}</span>
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
-          <Modal.Container>
+    <Modal state={state}>
+      {trigger}
+      <Modal.Backdrop >
+          <Modal.Container size="cover">
             <Modal.Dialog>
               <Modal.CloseTrigger />
               <Modal.Header className="mb-4">
@@ -333,7 +332,6 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                   type="button"
                   variant="outline"
                   slot="close"
-                  onPress={() => setIsOpen(false)}
                 >
                   {t('cancel')}
                 </Button>

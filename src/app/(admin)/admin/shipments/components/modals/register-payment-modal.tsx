@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, Modal, TextField } from '@heroui/react';
+import { Button, Input, Label, Modal, TextField, useOverlayState } from '@heroui/react';
 import { CreditCard } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { FileUpload } from '@/components/ui/file-upload';
@@ -23,21 +23,22 @@ export function RegisterPaymentModal({
   const t = useTranslations('Admin.Shipments.Modals.RegisterPayment');
   const router = useRouter();
 
-  const [isOpen, setIsOpen] = useState(false);
   const [amountUsd, setAmountUsd] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setAmountUsd('');
-      setPaymentDate('');
-      setProofFile(null);
-      setError(null);
-    }
-  }, [isOpen]);
+  const state = useOverlayState({
+    onOpenChange: (isOpen) => {
+      if (isOpen) {
+        setAmountUsd('');
+        setPaymentDate('');
+        setProofFile(null);
+        setError(null);
+      }
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +57,7 @@ export function RegisterPaymentModal({
       const result = await registerManualPaymentAction(formData);
 
       if (result.success) {
-        setIsOpen(false);
+        state.close();
         onSuccess?.();
         router.refresh();
       } else {
@@ -70,9 +71,9 @@ export function RegisterPaymentModal({
   };
 
   return (
-    <Modal>
-      <span onClick={() => setIsOpen(true)}>{trigger}</span>
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
+    <Modal state={state}>
+      {trigger}
+      <Modal.Backdrop>
           <Modal.Container>
             <Modal.Dialog>
               <Modal.CloseTrigger />
@@ -122,7 +123,6 @@ export function RegisterPaymentModal({
                     type="button"
                     variant="outline"
                     slot="close"
-                    onPress={() => setIsOpen(false)}
                   >
                     {t('cancel')}
                   </Button>

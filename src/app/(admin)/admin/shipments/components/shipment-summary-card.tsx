@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Chip } from '@heroui/react';
+import { Chip, Surface } from '@heroui/react';
 import { DollarSign, Percent, CalendarClock, Ship } from 'lucide-react';
 import { STATUS_COLORS, formatDateBR, formatUsd } from './shipment-utils';
 
@@ -51,7 +51,7 @@ export function ShipmentSummaryCard({
   const isFinished = status === 'FINISHED';
 
   return (
-    <div className="flex flex-wrap gap-4 p-4 rounded-lg bg-default-50 border border-default-200">
+    <Surface variant="transparent" className="p-4 flex flex-wrap gap-8">
       {/* FOB Total */}
       <div className="flex items-center gap-2">
         <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
@@ -116,6 +116,6 @@ export function ShipmentSummaryCard({
           {orderType}
         </Chip>
       </div>
-    </div>
+    </Surface>
   );
 }

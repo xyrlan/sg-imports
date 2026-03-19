@@ -11,6 +11,7 @@ import { RegisterPaymentModal } from '../modals/register-payment-modal';
 import { CreateExchangeContractModal } from '../modals/create-exchange-contract-modal';
 import { EditItemsModal } from '../modals/edit-items-modal';
 import { updateProductionReadyDateAction } from '../../[id]/actions';
+import { formatUsd } from '../shipment-utils';
 
 // ============================================
 // Props
@@ -121,15 +122,15 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
         <div className="flex justify-between text-xs text-muted">
           <span>
             {t('progress', {
-              paid: `$${paidAmount.toFixed(2)}`,
-              total: `$${totalAmount.toFixed(2)}`,
+              paid: `${formatUsd(paidAmount)}`,
+              total: `${formatUsd(totalAmount)}`,
               percent: progressPct.toFixed(1),
             })}
           </span>
         </div>
-        <div className="h-2 w-full rounded-full bg-default-200">
+        <div className="h-1.5 w-full rounded-full bg-accent-soft-hover">
           <div
-            className="h-2 rounded-full bg-success transition-all"
+            className="h-1.5 rounded-full bg-success transition-all"
             style={{ width: `${progressPct}%` }}
           />
         </div>

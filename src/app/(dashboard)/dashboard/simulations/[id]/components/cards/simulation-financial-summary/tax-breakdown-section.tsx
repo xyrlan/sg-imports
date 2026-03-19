@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@heroui/react';
 import { ChevronDown, ChevronUp, Receipt } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatBrl } from '@/app/(admin)/admin/shipments/components/shipment-utils';
 import type { TaxBreakdown } from './use-tax-breakdown';
 
 interface TaxBreakdownSectionProps {
@@ -20,8 +20,6 @@ export function TaxBreakdownSection({
 }: TaxBreakdownSectionProps) {
   const t = useTranslations('Simulations.FinancialSummary');
   const [expanded, setExpanded] = useState(false);
-
-  const formatBrl = (value: number) => formatCurrency(value, 'pt-BR', 'BRL');
 
   return (
     <div className="rounded-lg border border-default-200 p-3 space-y-2">

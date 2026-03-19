@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, Chip, TextField, Input, Label, Surface } from '@heroui/react';
 import { CheckCircle } from 'lucide-react';
-import type { ShipmentDetail } from '../shipment-utils';
+import { formatBrl, type ShipmentDetail } from '../shipment-utils';
 import { ShipmentDocumentField } from '../shipment-document-field';
 import {
   saveCompletionCostsAction,
@@ -21,17 +21,6 @@ import {
 interface CompletionStepProps {
   shipment: ShipmentDetail;
   readOnly?: boolean;
-}
-
-// ============================================
-// Helpers
-// ============================================
-
-function formatBrl(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === '') return '—';
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '—';
-  return `R$ ${num.toFixed(2)}`;
 }
 
 // ============================================

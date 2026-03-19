@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label, Modal, TextArea, TextField } from '@heroui/react';
+import { Button, Input, Label, Modal, TextArea, TextField, useOverlayState } from '@heroui/react';
 import { FileText } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import {
@@ -35,19 +35,20 @@ export function GenerateInvoiceModal({
   const t = useTranslations('Admin.Shipments.Modals.GenerateInvoice');
   const router = useRouter();
 
-  const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState(defaultAmount);
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setAmount(defaultAmount);
-      setDescription('');
-      setError(null);
-    }
-  }, [isOpen, defaultAmount]);
+  const state = useOverlayState({
+    onOpenChange: (isOpen) => {
+      if (isOpen) {
+        setAmount(defaultAmount);
+        setDescription('');
+        setError(null);
+      }
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +71,7 @@ export function GenerateInvoiceModal({
       }
 
       if (result.success) {
-        setIsOpen(false);
+        state.close();
         onSuccess?.();
         router.refresh();
       } else {
@@ -86,9 +87,9 @@ export function GenerateInvoiceModal({
   const showAmountField = type === 'MERCHANDISE' || (type === 'BALANCE' && !readOnlyAmount);
 
   return (
-    <Modal>
-      <span onClick={() => setIsOpen(true)}>{trigger}</span>
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
+    <Modal state={state}>
+      {trigger}
+      <Modal.Backdrop>
           <Modal.Container>
             <Modal.Dialog>
               <Modal.CloseTrigger />
@@ -139,7 +140,6 @@ export function GenerateInvoiceModal({
                     type="button"
                     variant="outline"
                     slot="close"
-                    onPress={() => setIsOpen(false)}
                   >
                     {t('cancel')}
                   </Button>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, Chip, TextField, Input, Label, Surface } from '@heroui/react';
 import { Shield } from 'lucide-react';
-import type { ShipmentDetail } from '../shipment-utils';
+import { formatBrl, type ShipmentDetail } from '../shipment-utils';
 import { generate90InvoiceAction, registerDuimpAction } from '../../[id]/actions';
 
 // ============================================
@@ -27,13 +27,6 @@ const CHANNEL_COLORS: Record<string, 'default' | 'warning' | 'success' | 'danger
   RED: 'danger',
   GREY: 'default',
 };
-
-function formatBrl(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === '') return '—';
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '—';
-  return `R$ ${num.toFixed(2)}`;
-}
 
 // ============================================
 // Sub-components

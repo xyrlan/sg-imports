@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@heroui/react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatBrl } from '@/app/(admin)/admin/shipments/components/shipment-utils';
 import type { SimulationItem } from '@/services/simulation.service';
 
 interface LandedCostPerItemListProps {
@@ -23,8 +23,6 @@ export function LandedCostPerItemList({ items }: LandedCostPerItemListProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (items.length === 0) return null;
-
-  const formatBrl = (value: number) => formatCurrency(value, 'pt-BR', 'BRL');
 
   return (
     <div className="space-y-2">

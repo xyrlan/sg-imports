@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@heroui/react';
 import { DollarSign, Package, Ship, Plane, Shield } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatBrl, formatUsd } from '@/app/(admin)/admin/shipments/components/shipment-utils';
 import { computeFreightDisplayFromQuote } from '@/lib/simulation/freight-display';
 import { FreightCapacityProgress } from '../../freight-capacity-progress';
 import type {
@@ -87,9 +87,6 @@ export function SimulationFinancialSummary({
 
   const { totalFobUsd, totalFreightUsd, totalInsuranceUsd, totalTaxesBrl, totalLandedCostBrl } =
     summary;
-
-  const formatUsd = (v: number) => formatCurrency(v, 'en-US', 'USD');
-  const formatBrl = (v: number) => formatCurrency(v, 'pt-BR', 'BRL');
 
   const productPct = financialMetrics?.productPct ?? 0;
   const logisticsPct = financialMetrics?.logisticsPct ?? 0;
