@@ -6,7 +6,7 @@ import { Button, Input, Modal, TextField, useOverlayState } from '@heroui/react'
 import { Pencil, AlertCircle, Trash2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { editShipmentItemsAction } from '@/app/(admin)/admin/shipments/[id]/actions';
-import type { ShipmentDetail } from '../shipment-utils';
+import { formatUsd, type ShipmentDetail } from '../shipment-utils';
 
 // ============================================
 // Types
@@ -178,7 +178,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
     <Modal state={state}>
       {trigger}
       <Modal.Backdrop >
-          <Modal.Container size="cover">
+          <Modal.Container size="cover" className="max-w-5xl max-h-[90vh]">
             <Modal.Dialog>
               <Modal.CloseTrigger />
               <Modal.Header className="mb-4">
@@ -193,9 +193,9 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
               <Modal.Body className="p-2">
                 <div className="space-y-4">
                   {/* Amendment note */}
-                  <div className="flex items-start gap-2 rounded-md border border-warning-200 bg-warning-50 p-3">
-                    <AlertCircle className="size-4 mt-0.5 shrink-0 text-warning-600" />
-                    <p className="text-xs text-warning-700">{t('amendmentNote')}</p>
+                  <div className="flex items-start gap-2 rounded-md border border-warning/50 bg-warning-soft p-3">
+                    <AlertCircle className="size-4 mt-0.5 shrink-0 text-warning" />
+                    <p className="text-xs text-warning">{t('amendmentNote')}</p>
                   </div>
 
                   {/* Items table */}
@@ -287,7 +287,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                                   {isRemoved ? (
                                     <span className="text-muted">—</span>
                                   ) : (
-                                    `$${total}`
+                                    `${formatUsd(total)}`
                                   )}
                                 </td>
                                 <td className="py-2 px-2">

@@ -4,6 +4,13 @@
 
 @layer components {
   /* ===========================
+   * Surface
+   * =========================== */
+   .surface {
+    @apply rounded-2xl border;
+  }
+
+  /* ===========================
    * Accordion
    * =========================== */
   .accordion {

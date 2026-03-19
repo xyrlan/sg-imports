@@ -215,7 +215,7 @@ export function QuoteWorkflowButtons({
         </div>
 
         {simulation.status === 'REJECTED' && isSeller && simulation.rejectionReason && (
-          <div className="rounded-lg border border-warning bg-warning/10 px-3 py-2 text-sm text-warning-600">
+          <div className="rounded-lg border border-warning bg-warning/10 px-3 py-2 text-sm text-warning">
             <p className="font-medium">{t('rejectedBy')}</p>
             <p className="text-foreground/90">
               {t('rejectionReasonLabel', { reason: simulation.rejectionReason })}
