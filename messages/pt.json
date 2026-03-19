@@ -1155,7 +1155,8 @@
             "amountBrl": "Valor BRL",
             "status": "Status",
             "date": "Data",
-            "proof": "Comprovante"
+            "proof": "Comprovante",
+            "view": "Ver"
           },
           "contractTable": {
             "supplier": "Fornecedor",
@@ -1203,7 +1204,8 @@
           "cancel": "Cancelar",
           "checklist": "Checklist",
           "allDocumentsOk": "Todos os documentos enviados",
-          "pendingDocs": "{count} documento(s) pendente(s)"
+          "pendingDocs": "{count} documento(s) pendente(s)",
+          "supplier": "Fornecedor"
         },
         "CustomsClearance": {
           "title": "Desembaraço Aduaneiro",
@@ -1836,6 +1838,11 @@
       "selected": "{selected} de {total} selecionado(s)",
       "results": "{total} resultado(s)",
       "pageOf": "Pag. {current} de {total}"
+    },
+    "FileUpload": {
+      "remove": "Remover",
+      "clickToSelect": "Clique para selecionar",
+      "orDragFile": "ou arraste o arquivo"
     }
   },
   "Shipments": {
@@ -1879,6 +1886,8 @@
       "cargoDelivered": "A carga foi entregue.",
       "invoiceGenerated": "Nova fatura gerada para o pedido #{code}.",
       "amendmentGenerated": "Um aditivo contratual foi gerado. Por favor assine.",
+      "contractSigned": "O cliente assinou o contrato da proposta \"{name}\". O pedido foi criado automaticamente.",
+      "orderCreated": "Seu pedido referente à proposta \"{name}\" foi criado com sucesso.",
       "titles": {
         "fobComplete": "Pagamento FOB concluído",
         "paymentConfirmed": "Pagamento confirmado",
@@ -1887,7 +1896,9 @@
         "customsCleared": "Desembaraço concluído",
         "trackingUpdate": "Atualização de rastreamento",
         "trackingUpdateClient": "Atualização do seu pedido",
-        "amendmentGenerated": "Aditivo Contratual Gerado"
+        "amendmentGenerated": "Aditivo Contratual Gerado",
+        "contractSigned": "Contrato assinado",
+        "orderCreated": "Pedido criado"
       }
     },
     "Actions": {

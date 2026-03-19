@@ -4,7 +4,7 @@
  */
 
 import Decimal from 'decimal.js';
-import { db } from '@/db';
+import { db, type DbTransaction } from '@/db';
 import { quotes, quoteItems, organizations, shipments, memberships, profiles } from '@/db/schema';
 import { eq, and, ne, or, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { getOrganizationById } from '@/services/organization.service';
@@ -336,6 +336,52 @@ export interface ConvertQuoteToShipmentResult {
 }
 
 /**
+ * Shared conversion logic: compute totals, insert shipment, mark quote as CONVERTED.
+ * Works with both `db` (direct) and `tx` (inside transaction).
+ */
+async function executeQuoteConversion(
+  executor: typeof db | DbTransaction,
+  params: {
+    quoteId: string;
+    sellerOrganizationId: string;
+    clientOrganizationId: string | null;
+    shippingModality: string | null;
+    items: Array<{ priceUsd: string | null; quantity: number; landedCostTotalSnapshot: string | null }>;
+  },
+): Promise<ConvertQuoteToShipmentResult> {
+  const clientOrgId = params.clientOrganizationId ?? params.sellerOrganizationId;
+  const totalProductsUsd = params.items.reduce(
+    (sum, i) => sum.plus(new Decimal(i.priceUsd ?? 0).times(i.quantity)),
+    new Decimal(0),
+  );
+  const totalCostsBrl = params.items.reduce(
+    (sum, i) => sum.plus(new Decimal(i.landedCostTotalSnapshot ?? 0)),
+    new Decimal(0),
+  );
+
+  const [shipment] = await executor
+    .insert(shipments)
+    .values({
+      quoteId: params.quoteId,
+      sellerOrganizationId: params.sellerOrganizationId,
+      clientOrganizationId: clientOrgId,
+      shipmentType: (params.shippingModality as 'SEA_FCL' | 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_FCL',
+      totalProductsUsd: totalProductsUsd.toFixed(2),
+      totalCostsBrl: totalCostsBrl.toFixed(2),
+    })
+    .returning();
+
+  if (!shipment) return { success: false, error: 'Falha ao criar pedido' };
+
+  await executor
+    .update(quotes)
+    .set({ generatedShipmentId: shipment.id, status: 'CONVERTED', updatedAt: new Date() })
+    .where(eq(quotes.id, params.quoteId));
+
+  return { success: true, shipmentId: shipment.id };
+}
+
+/**
  * Etapa D: Converter cotação aprovada em Shipment.
  */
 export async function convertQuoteToShipment(
@@ -357,36 +403,13 @@ export async function convertQuoteToShipment(
     return { success: false, error: 'Pedido já foi gerado' };
   }
 
-  const clientOrgId = simulation.clientOrganizationId ?? simulation.sellerOrganizationId;
-  const totalProductsUsd = items.reduce(
-    (sum, i) => sum.plus(new Decimal(i.priceUsd ?? 0).times(i.quantity)),
-    new Decimal(0)
-  );
-  const totalCostsBrl = items.reduce(
-    (sum, i) => sum.plus(new Decimal(i.landedCostTotalSnapshot ?? 0)),
-    new Decimal(0)
-  );
-
-  const [shipment] = await db
-    .insert(shipments)
-    .values({
-      quoteId,
-      sellerOrganizationId: simulation.sellerOrganizationId,
-      clientOrganizationId: clientOrgId,
-      shipmentType: (simulation.shippingModality as 'SEA_FCL' | 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_FCL',
-      totalProductsUsd: totalProductsUsd.toFixed(2),
-      totalCostsBrl: totalCostsBrl.toFixed(2),
-    })
-    .returning();
-
-  if (!shipment) return { success: false, error: 'Falha ao criar pedido' };
-
-  await db
-    .update(quotes)
-    .set({ generatedShipmentId: shipment.id, status: 'CONVERTED', updatedAt: new Date() })
-    .where(eq(quotes.id, quoteId));
-
-  return { success: true, shipmentId: shipment.id };
+  return executeQuoteConversion(db, {
+    quoteId,
+    sellerOrganizationId: simulation.sellerOrganizationId,
+    clientOrganizationId: simulation.clientOrganizationId,
+    shippingModality: simulation.shippingModality,
+    items,
+  });
 }
 
 /**
@@ -404,7 +427,6 @@ export async function convertQuoteToShipmentSystem(
     });
 
     if (!quote) {
-      // Check if already converted (idempotent)
       const existing = await tx.query.quotes.findFirst({
         where: and(eq(quotes.id, quoteId), eq(quotes.status, 'CONVERTED')),
         columns: { generatedShipmentId: true },
@@ -419,37 +441,13 @@ export async function convertQuoteToShipmentSystem(
       return { success: true, shipmentId: quote.generatedShipmentId };
     }
 
-    const items = quote.items ?? [];
-    const clientOrgId = quote.clientOrganizationId ?? quote.sellerOrganizationId;
-    const totalProductsUsd = items.reduce(
-      (sum, i) => sum.plus(new Decimal(i.priceUsd ?? 0).times(i.quantity)),
-      new Decimal(0)
-    );
-    const totalCostsBrl = items.reduce(
-      (sum, i) => sum.plus(new Decimal(i.landedCostTotalSnapshot ?? 0)),
-      new Decimal(0)
-    );
-
-    const [shipment] = await tx
-      .insert(shipments)
-      .values({
-        quoteId,
-        sellerOrganizationId: quote.sellerOrganizationId,
-        clientOrganizationId: clientOrgId,
-        shipmentType: (quote.shippingModality as 'SEA_FCL' | 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_FCL',
-        totalProductsUsd: totalProductsUsd.toFixed(2),
-        totalCostsBrl: totalCostsBrl.toFixed(2),
-      })
-      .returning();
-
-    if (!shipment) return { success: false, error: 'Falha ao criar pedido' };
-
-    await tx
-      .update(quotes)
-      .set({ generatedShipmentId: shipment.id, status: 'CONVERTED', updatedAt: new Date() })
-      .where(eq(quotes.id, quoteId));
-
-    return { success: true, shipmentId: shipment.id };
+    return executeQuoteConversion(tx, {
+      quoteId,
+      sellerOrganizationId: quote.sellerOrganizationId,
+      clientOrganizationId: quote.clientOrganizationId,
+      shippingModality: quote.shippingModality,
+      items: quote.items ?? [],
+    });
   });
 }
 

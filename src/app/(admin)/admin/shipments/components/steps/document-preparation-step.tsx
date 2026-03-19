@@ -116,7 +116,7 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
             <thead>
               <tr className="border-b border-border">
                 <th className="py-2 px-2 text-left text-xs text-muted font-medium">
-                  Fornecedor
+                  {t('supplier')}
                 </th>
                 <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('totalPaid')} (USD)

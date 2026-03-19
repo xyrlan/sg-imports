@@ -23,6 +23,34 @@ import { roundMoney } from '@/lib/currency';
 import { z } from 'zod';
 
 // ============================================
+// Helpers
+// ============================================
+
+async function tryAttachAsaasInvoice(params: {
+  orderType: string | null | undefined;
+  clientOrganizationId: string;
+  transactionId: string;
+  amountBrl: number;
+  description: string;
+}): Promise<void> {
+  if (params.orderType !== 'ORDER') return;
+  try {
+    const asaasResult = await generateAsaasInvoice({
+      organizationId: params.clientOrganizationId,
+      transactionId: params.transactionId,
+      amountBrl: params.amountBrl,
+      description: params.description,
+    });
+    await db
+      .update(transactions)
+      .set({ gatewayId: asaasResult.gatewayId, gatewayUrl: asaasResult.gatewayUrl })
+      .where(eq(transactions.id, params.transactionId));
+  } catch (asaasError) {
+    console.error('Asaas invoice creation failed (non-blocking):', asaasError);
+  }
+}
+
+// ============================================
 // Schemas
 // ============================================
 
@@ -200,27 +228,16 @@ export async function generateFobInvoiceAction(
       amountUsd,
     });
 
-    // Integrate with Asaas for ORDER-type organizations
-    if (shipment.clientOrganization?.orderType === 'ORDER') {
-      try {
-        const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
-        const amountBrl = roundMoney(parseFloat(amountUsd) * exchangeRate);
+    const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
+    const amountBrl = roundMoney(parseFloat(amountUsd) * exchangeRate);
 
-        const asaasResult = await generateAsaasInvoice({
-          organizationId: shipment.clientOrganizationId,
-          transactionId: txn.id,
-          amountBrl,
-          description: `Fatura FOB — Embarque ${shipmentId}`,
-        });
-
-        await db
-          .update(transactions)
-          .set({ gatewayId: asaasResult.gatewayId, gatewayUrl: asaasResult.gatewayUrl })
-          .where(eq(transactions.id, txn.id));
-      } catch (asaasError) {
-        console.error('Asaas FOB invoice creation failed (non-blocking):', asaasError);
-      }
-    }
+    await tryAttachAsaasInvoice({
+      orderType: shipment.clientOrganization?.orderType,
+      clientOrganizationId: shipment.clientOrganizationId,
+      transactionId: txn.id,
+      amountBrl,
+      description: `Fatura FOB — Embarque ${shipmentId}`,
+    });
 
     revalidatePath(`/admin/shipments/${shipmentId}`);
     return { success: true, data: { id: txn.id } };
@@ -593,29 +610,22 @@ export async function generate90InvoiceAction(
 
     const txn = await generate90Invoice(shipmentId);
 
-    // Integrate with Asaas for ORDER-type organizations
-    try {
+    if (txn.amountBrl) {
       const shipment = await db.query.shipments.findFirst({
         where: eq(shipments.id, shipmentId),
         columns: { clientOrganizationId: true },
         with: { clientOrganization: { columns: { orderType: true } } },
       });
 
-      if (shipment?.clientOrganization?.orderType === 'ORDER' && txn.amountBrl) {
-        const asaasResult = await generateAsaasInvoice({
-          organizationId: shipment.clientOrganizationId,
+      if (shipment) {
+        await tryAttachAsaasInvoice({
+          orderType: shipment.clientOrganization?.orderType,
+          clientOrganizationId: shipment.clientOrganizationId,
           transactionId: txn.id,
           amountBrl: parseFloat(txn.amountBrl),
           description: `Fatura 90% — Embarque ${shipmentId}`,
         });
-
-        await db
-          .update(transactions)
-          .set({ gatewayId: asaasResult.gatewayId, gatewayUrl: asaasResult.gatewayUrl })
-          .where(eq(transactions.id, txn.id));
       }
-    } catch (asaasError) {
-      console.error('Asaas 90% invoice creation failed (non-blocking):', asaasError);
     }
 
     revalidatePath(`/admin/shipments/${shipmentId}`);
@@ -713,24 +723,13 @@ export async function generateBalanceInvoiceAction(
       amountBrl,
     });
 
-    // Integrate with Asaas for ORDER-type organizations
-    if (shipment.clientOrganization?.orderType === 'ORDER') {
-      try {
-        const asaasResult = await generateAsaasInvoice({
-          organizationId: shipment.clientOrganizationId,
-          transactionId: txn.id,
-          amountBrl: parseFloat(amountBrl),
-          description: `Fatura Saldo — Embarque ${shipmentId}`,
-        });
-
-        await db
-          .update(transactions)
-          .set({ gatewayId: asaasResult.gatewayId, gatewayUrl: asaasResult.gatewayUrl })
-          .where(eq(transactions.id, txn.id));
-      } catch (asaasError) {
-        console.error('Asaas balance invoice creation failed (non-blocking):', asaasError);
-      }
-    }
+    await tryAttachAsaasInvoice({
+      orderType: shipment.clientOrganization?.orderType,
+      clientOrganizationId: shipment.clientOrganizationId,
+      transactionId: txn.id,
+      amountBrl: parseFloat(amountBrl),
+      description: `Fatura Saldo — Embarque ${shipmentId}`,
+    });
 
     revalidatePath(`/admin/shipments/${shipmentId}`);
     return { success: true, data: { id: txn.id } };
@@ -782,24 +781,13 @@ export async function generateServiceFeeInvoiceAction(
       amountBrl: String(feeResult.serviceFee),
     });
 
-    // Integrate with Asaas for ORDER-type organizations
-    if (shipment.clientOrganization?.orderType === 'ORDER') {
-      try {
-        const asaasResult = await generateAsaasInvoice({
-          organizationId: shipment.clientOrganizationId,
-          transactionId: txn.id,
-          amountBrl: feeResult.serviceFee,
-          description: `Honorários — Embarque ${shipmentId}`,
-        });
-
-        await db
-          .update(transactions)
-          .set({ gatewayId: asaasResult.gatewayId, gatewayUrl: asaasResult.gatewayUrl })
-          .where(eq(transactions.id, txn.id));
-      } catch (asaasError) {
-        console.error('Asaas service fee invoice creation failed (non-blocking):', asaasError);
-      }
-    }
+    await tryAttachAsaasInvoice({
+      orderType: shipment.clientOrganization?.orderType,
+      clientOrganizationId: shipment.clientOrganizationId,
+      transactionId: txn.id,
+      amountBrl: feeResult.serviceFee,
+      description: `Honorários — Embarque ${shipmentId}`,
+    });
 
     revalidatePath(`/admin/shipments/${shipmentId}`);
     return { success: true, data: { id: txn.id, serviceFee: feeResult.serviceFee } };

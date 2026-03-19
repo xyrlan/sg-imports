@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Chip } from '@heroui/react';
 import { FileCheck, ExternalLink } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
+import { formatDateBR } from '../shipment-utils';
 
 // ============================================
 // Props
@@ -13,20 +14,6 @@ import type { ShipmentDetail } from '../shipment-utils';
 interface ContractCreationStepProps {
   shipment: ShipmentDetail;
   readOnly?: boolean;
-}
-
-// ============================================
-// Helpers
-// ============================================
-
-function formatDate(value: Date | string | null | undefined): string {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
 }
 
 // ============================================
@@ -64,7 +51,7 @@ export function ContractCreationStep({ shipment }: ContractCreationStepProps) {
       {isContractSigned && (
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted">{t('signatureDate')}:</span>
-          <span className="text-sm font-medium text-foreground">{formatDate(signatureDate)}</span>
+          <span className="text-sm font-medium text-foreground">{formatDateBR(signatureDate)}</span>
         </div>
       )}
 

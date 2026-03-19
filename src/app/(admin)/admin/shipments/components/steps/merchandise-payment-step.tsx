@@ -12,7 +12,7 @@ import { RegisterPaymentModal } from '../modals/register-payment-modal';
 import { CreateExchangeContractModal } from '../modals/create-exchange-contract-modal';
 import { EditItemsModal } from '../modals/edit-items-modal';
 import { updateProductionReadyDateAction } from '../../[id]/actions';
-import { formatUsd } from '../shipment-utils';
+import { formatUsd, formatDateBR } from '../shipment-utils';
 
 // ============================================
 // Props
@@ -26,12 +26,6 @@ interface MerchandisePaymentStepProps {
 // ============================================
 // Helpers
 // ============================================
-
-function formatDate(value: Date | string | null | undefined): string {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 function toInputDate(value: Date | string | null | undefined): string {
   if (!value) return '';
@@ -206,7 +200,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
                       {tx.status}
                     </Chip>
                   </td>
-                  <td className="py-2 px-2 text-muted">{formatDate(tx.paidAt)}</td>
+                  <td className="py-2 px-2 text-muted">{formatDateBR(tx.paidAt)}</td>
                   <td className="py-2 px-2">
                     {tx.proofUrl ? (
                       <a
@@ -216,7 +210,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
                         className="inline-flex items-center gap-1 text-accent hover:underline text-xs"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Ver
+                        {t('transactionTable.view')}
                       </a>
                     ) : (
                       <span className="text-muted">—</span>

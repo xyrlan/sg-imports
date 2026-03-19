@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Button, Checkbox, Surface } from '@heroui/react';
 import { Ship, ExternalLink } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
+import { formatDateBR } from '../shipment-utils';
 import { ShipmentDocumentField } from '../shipment-document-field';
 import {
   updateBookingNumberAction,
@@ -21,16 +22,6 @@ import {
 interface ShippingPreparationStepProps {
   shipment: ShipmentDetail;
   readOnly?: boolean;
-}
-
-// ============================================
-// Helpers
-// ============================================
-
-function formatDate(value: Date | string | null | undefined): string {
-  if (!value) return '—';
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 // ============================================
@@ -124,11 +115,11 @@ function BookingTrackingCard({ shipment, readOnly }: BookingTrackingCardProps) {
             </div>
             <div>
               <span className="text-muted">ETD: </span>
-              <span>{formatDate(shipment.etd)}</span>
+              <span>{formatDateBR(shipment.etd)}</span>
             </div>
             <div>
               <span className="text-muted">ETA: </span>
-              <span>{formatDate(shipment.eta)}</span>
+              <span>{formatDateBR(shipment.eta)}</span>
             </div>
           </div>
           {shipment.shipsGoTrackingUrl && (

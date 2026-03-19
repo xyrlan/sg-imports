@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Modal, TextArea, TextField, Checkbox, Label, Surface } from '@heroui/react';
+import { Button, Surface } from '@heroui/react';
 import { ArrowLeft, X } from 'lucide-react';
 
 import { ShipmentStepper, STEP_ORDER, type ShipmentStep } from './shipment-stepper';
 import { ShipmentSummaryCard } from './shipment-summary-card';
+import { CancelShipmentModal } from './modals/cancel-shipment-modal';
 import { ContractCreationStep } from './steps/contract-creation-step';
 import { MerchandisePaymentStep } from './steps/merchandise-payment-step';
 import { ShippingPreparationStep } from './steps/shipping-preparation-step';
@@ -18,7 +19,6 @@ import { CompletionStep } from './steps/completion-step';
 import type { ShipmentDetail } from './shipment-utils';
 import {
   advanceShipmentStepAction,
-  cancelShipmentAction,
   finalizeShipmentAction,
 } from '../[id]/actions';
 
@@ -76,13 +76,6 @@ export function ShipmentDetailContent({
   const isCanceled = shipment.status === 'CANCELED';
   const isFinished = shipment.status === 'FINISHED';
 
-  // Cancel modal state
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [cancelConfirmed, setCancelConfirmed] = useState(false);
-  const [cancelError, setCancelError] = useState<string | null>(null);
-  const [isCancelPending, startCancelTransition] = useTransition();
-
   const isCurrentStep = viewingStep === currentStep;
   const isReadOnly = !isCurrentStep || isCanceled || isFinished;
 
@@ -124,40 +117,17 @@ export function ShipmentDetailContent({
     });
   }
 
-  function handleOpenCancelModal() {
-    setCancelReason('');
-    setCancelConfirmed(false);
-    setCancelError(null);
-    setIsCancelModalOpen(true);
-  }
-
-  function handleCloseCancelModal() {
-    setIsCancelModalOpen(false);
-  }
-
-  function handleCancelSubmit() {
-    const formData = new FormData();
-    formData.set('shipmentId', shipment.id);
-    formData.set('reason', cancelReason);
-
-    startCancelTransition(async () => {
-      const result = await cancelShipmentAction(formData);
-      if (result.success) {
-        setIsCancelModalOpen(false);
-        router.refresh();
-      } else {
-        setCancelError(result.error ?? null);
-      }
-    });
-  }
-
   const clientName = shipment.clientOrganization?.name ?? '—';
   const shipmentCode = shipment.code ?? shipment.id.slice(0, 8).toUpperCase();
 
-  const totalProductsUsd = shipment.quote?.items?.reduce((acc, item) => {
-    const itemTotal = parseFloat(item.priceUsd ?? '0') * (item.quantity ?? 0);
-    return acc + itemTotal;
-  }, 0);
+  const totalProductsUsd = useMemo(
+    () =>
+      shipment.quote?.items?.reduce((acc, item) => {
+        const itemTotal = parseFloat(item.priceUsd ?? '0') * (item.quantity ?? 0);
+        return acc + itemTotal;
+      }, 0),
+    [shipment.quote?.items],
+  );
 
   return (
     <div className="space-y-6 p-6">
@@ -178,14 +148,15 @@ export function ShipmentDetailContent({
         </div>
 
         {!isCanceled && !isFinished && (
-          <Button
-            size="sm"
-            variant="danger-soft"
-            onPress={handleOpenCancelModal}
-          >
-            <X className="h-4 w-4" />
-            {t('cancel')}
-          </Button>
+          <CancelShipmentModal
+            shipmentId={shipment.id}
+            trigger={
+              <Button size="sm" variant="danger-soft">
+                <X className="h-4 w-4" />
+                {t('cancel')}
+              </Button>
+            }
+          />
         )}
       </div>
 
@@ -240,68 +211,6 @@ export function ShipmentDetailContent({
         </div>
       )}
 
-      {/* ====== Cancel Modal ====== */}
-      <Modal>
-        <Modal.Backdrop
-          isOpen={isCancelModalOpen}
-          onOpenChange={(open) => !open && handleCloseCancelModal()}
-          isDismissable={!isCancelPending}
-        >
-          <Modal.Container>
-            <Modal.Dialog>
-              <Modal.CloseTrigger />
-              <Modal.Header>
-                <Modal.Icon className="bg-danger/10 text-danger">
-                  <X className="h-5 w-5" />
-                </Modal.Icon>
-                <Modal.Heading>{t('cancel')}</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body className="space-y-4 p-4">
-                <TextField variant="primary" isRequired>
-                  <Label>{t('cancelReason')}</Label>
-                  <TextArea
-                    value={cancelReason}
-                    onChange={(e) => setCancelReason(e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                </TextField>
-                <Checkbox
-                  isSelected={cancelConfirmed}
-                  onChange={setCancelConfirmed}
-                >
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  <Checkbox.Content>
-                    <Label>{t('cancelConfirmation')}</Label>
-                  </Checkbox.Content>
-                </Checkbox>
-                {cancelError && (
-                  <p className="text-sm text-danger">{cancelError}</p>
-                )}
-              </Modal.Body>
-              <Modal.Footer>
-                <Button
-                  variant="outline"
-                  onPress={handleCloseCancelModal}
-                  isDisabled={isCancelPending}
-                >
-                  {t('back')}
-                </Button>
-                <Button
-                  variant="danger"
-                  onPress={handleCancelSubmit}
-                  isPending={isCancelPending}
-                  isDisabled={!cancelReason.trim() || !cancelConfirmed}
-                >
-                  {t('cancel')}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
     </div>
   );
 }

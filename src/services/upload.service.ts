@@ -1,94 +1,63 @@
 import { createClient } from '@/lib/supabase/server';
 
 /**
+ * Upload a file to Supabase Storage and return the public URL.
+ */
+export async function uploadToSupabase(params: {
+  bucket: string;
+  filePath: string;
+  file: File;
+  contentType?: string;
+}): Promise<string> {
+  const supabase = await createClient();
+
+  const arrayBuffer = await params.file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const { error } = await supabase.storage
+    .from(params.bucket)
+    .upload(params.filePath, buffer, {
+      contentType: params.contentType ?? params.file.type,
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from(params.bucket)
+    .getPublicUrl(params.filePath);
+
+  return publicUrl;
+}
+
+/**
  * Upload a profile document to Supabase Storage
- * @param file - File to upload
- * @param userId - User ID (profile ID)
- * @param type - Type of document ('document' or 'address')
- * @returns Public URL of the uploaded file
  */
 export async function uploadProfileDocument(
   file: File,
   userId: string,
   type: 'document' | 'address'
 ): Promise<string> {
-  const supabase = await createClient();
-  
-  // Get file extension
   const fileExt = file.name.split('.').pop()?.toLowerCase();
-  const fileName = `${type}-${Date.now()}.${fileExt}`;
-  const filePath = `${userId}/${fileName}`;
-
-  // Convert File to ArrayBuffer for Supabase Storage
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  // Upload to Supabase Storage
-  const { data, error } = await supabase.storage
-    .from('onboarding-documents')
-    .upload(filePath, buffer, {
-      contentType: file.type,
-      cacheControl: '3600',
-      upsert: true,
-    });
-
-  if (error) {
-    console.error('Error uploading profile document:', error);
-    throw new Error(`Erro ao fazer upload do documento: ${error.message}`);
-  }
-
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('onboarding-documents')
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+  const filePath = `${userId}/${type}-${Date.now()}.${fileExt}`;
+  return uploadToSupabase({ bucket: 'onboarding-documents', filePath, file });
 }
 
 /**
  * Upload an organization document to Supabase Storage
  * Path uses userId as first segment to satisfy RLS: (storage.foldername(name))[1] = auth.uid()
- * @param file - File to upload
- * @param userId - User ID (must match auth.uid() for RLS)
- * @param orgId - Organization ID
- * @returns Public URL of the uploaded file
  */
 export async function uploadOrganizationDocument(
   file: File,
   userId: string,
   orgId: string
 ): Promise<string> {
-  const supabase = await createClient();
-  
-  // Get file extension
   const fileExt = file.name.split('.').pop()?.toLowerCase();
-  const fileName = `social-contract-${Date.now()}.${fileExt}`;
-  const filePath = `${userId}/organizations/${orgId}/${fileName}`;
-
-  // Convert File to ArrayBuffer for Supabase Storage
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  // Upload to Supabase Storage
-  const { data, error } = await supabase.storage
-    .from('onboarding-documents')
-    .upload(filePath, buffer, {
-      contentType: file.type,
-      cacheControl: '3600',
-      upsert: true,
-    });
-
-  if (error) {
-    console.error('Error uploading organization document:', error);
-    throw new Error(`Erro ao fazer upload do documento: ${error.message}`);
-  }
-
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('onboarding-documents')
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+  const filePath = `${userId}/organizations/${orgId}/social-contract-${Date.now()}.${fileExt}`;
+  return uploadToSupabase({ bucket: 'onboarding-documents', filePath, file });
 }
 
 /**
@@ -189,7 +158,6 @@ export async function uploadProductPhotos(
 ): Promise<string[]> {
   if (files.length === 0) return [];
 
-  const supabase = await createClient();
   const timestamp = Date.now();
   const basePath = `${userId}/organizations/${organizationId}/products`;
 
@@ -200,11 +168,7 @@ export async function uploadProductPhotos(
     }
 
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `${timestamp}-${index}.${fileExt}`;
-    const filePath = `${basePath}/${fileName}`;
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const filePath = `${basePath}/${timestamp}-${index}.${fileExt}`;
 
     const contentType =
       file.type && ALLOWED_IMAGE_MIME_TYPES.includes(file.type)
@@ -213,24 +177,7 @@ export async function uploadProductPhotos(
           : file.type
         : `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
 
-    const { error } = await supabase.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .upload(filePath, buffer, {
-        contentType,
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (error) {
-      console.error('Error uploading product photo:', error);
-      throw new Error(`Erro ao fazer upload da imagem: ${error.message}`);
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+    return uploadToSupabase({ bucket: PRODUCT_IMAGES_BUCKET, filePath, file, contentType });
   });
 
   return Promise.all(uploadPromises);
@@ -252,7 +199,6 @@ export async function uploadObservationDocuments(
 ): Promise<{ name: string; url: string }[]> {
   if (files.length === 0) return [];
 
-  const supabase = await createClient();
   const timestamp = Date.now();
   const basePath = `${userId}/quotes/${quoteId}/observations`;
 
@@ -263,30 +209,10 @@ export async function uploadObservationDocuments(
     }
 
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
-    const fileName = `${timestamp}-${index}.${fileExt}`;
-    const filePath = `${basePath}/${fileName}`;
+    const filePath = `${basePath}/${timestamp}-${index}.${fileExt}`;
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const { error } = await supabase.storage
-      .from(SHIPMENT_DOCUMENTS_BUCKET)
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (error) {
-      console.error('Error uploading observation document:', error);
-      throw new Error(`Erro ao fazer upload do documento: ${error.message}`);
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(SHIPMENT_DOCUMENTS_BUCKET)
-      .getPublicUrl(filePath);
-
-    return { name: file.name, url: publicUrl };
+    const url = await uploadToSupabase({ bucket: SHIPMENT_DOCUMENTS_BUCKET, filePath, file });
+    return { name: file.name, url };
   });
 
   return Promise.all(uploadPromises);

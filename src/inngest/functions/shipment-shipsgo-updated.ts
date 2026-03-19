@@ -2,7 +2,7 @@ import { inngest } from '@/inngest/client';
 import { db } from '@/db';
 import { shipments, shipmentStepHistory } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { notifyOrganizationMembers } from '@/services/notification.service';
+import { notifyShipmentParties } from '@/inngest/helpers/notify-parties';
 import { getTranslations } from 'next-intl/server';
 
 export const shipmentShipsgoUpdated = inngest.createFunction(
@@ -70,23 +70,20 @@ export const shipmentShipsgoUpdated = inngest.createFunction(
         const msgKey = eventMessageKey[eventType];
         const msg = msgKey ? t(msgKey) : eventType;
 
-        await notifyOrganizationMembers(
-          shipment.sellerOrganizationId,
-          t('titles.trackingUpdate'),
-          t('trackingUpdate', { code: shipment.code, message: msg }),
-          `/dashboard/shipments/${shipmentId}`,
-          'INFO'
-        );
-
-        if (shipment.clientOrganizationId) {
-          await notifyOrganizationMembers(
-            shipment.clientOrganizationId,
-            t('titles.trackingUpdateClient'),
-            t('trackingUpdate', { code: shipment.code, message: msg }),
-            `/dashboard/shipments/${shipmentId}`,
-            'INFO'
-          );
-        }
+        await notifyShipmentParties({
+          sellerOrganizationId: shipment.sellerOrganizationId,
+          clientOrganizationId: shipment.clientOrganizationId,
+          seller: {
+            title: t('titles.trackingUpdate'),
+            message: t('trackingUpdate', { code: shipment.code, message: msg }),
+            url: `/dashboard/shipments/${shipmentId}`,
+          },
+          client: {
+            title: t('titles.trackingUpdateClient'),
+            message: t('trackingUpdate', { code: shipment.code, message: msg }),
+            url: `/dashboard/shipments/${shipmentId}`,
+          },
+        });
       });
     }
 

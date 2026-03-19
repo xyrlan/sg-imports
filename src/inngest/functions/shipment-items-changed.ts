@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { applyItemChanges } from '@/services/shipment-items.service';
 import { addDocumentAttachment } from '@/services/zapsign.service';
 import { generateAmendmentPdfBase64 } from '@/lib/pdf/amendment-pdf';
-import { notifyOrganizationMembers } from '@/services/notification.service';
+import { notifyShipmentParties } from '@/inngest/helpers/notify-parties';
 import { getTranslations } from 'next-intl/server';
 
 export const shipmentItemsChanged = inngest.createFunction(
@@ -84,22 +84,22 @@ export const shipmentItemsChanged = inngest.createFunction(
 
     await step.run('notify-parties', async () => {
       const t = await getTranslations('Shipments.Notifications');
-      await notifyOrganizationMembers(
-        shipment.sellerOrganizationId,
-        t('titles.amendmentGenerated' as any),
-        t('amendmentGenerated'),
-        `/admin/shipments/${shipmentId}`,
-        'INFO'
-      );
-      if (shipment.clientOrganizationId) {
-        await notifyOrganizationMembers(
-          shipment.clientOrganizationId,
-          t('titles.amendmentGenerated' as any),
-          t('amendmentGenerated'),
-          `/dashboard`,
-          'WARNING'
-        );
-      }
+      await notifyShipmentParties({
+        sellerOrganizationId: shipment.sellerOrganizationId,
+        clientOrganizationId: shipment.clientOrganizationId,
+        seller: {
+          title: t('titles.amendmentGenerated' as any),
+          message: t('amendmentGenerated'),
+          url: `/admin/shipments/${shipmentId}`,
+          type: 'INFO',
+        },
+        client: {
+          title: t('titles.amendmentGenerated' as any),
+          message: t('amendmentGenerated'),
+          url: `/dashboard`,
+          type: 'WARNING',
+        },
+      });
     });
 
     return { success: true, oldTotalFob, newTotalFob };

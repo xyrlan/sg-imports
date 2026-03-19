@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { shipments, shipmentExpenses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { fetchDuimpData } from '@/lib/siscomex/client';
-import { notifyOrganizationMembers } from '@/services/notification.service';
+import { notifyShipmentParties } from '@/inngest/helpers/notify-parties';
 import { getTranslations } from 'next-intl/server';
 
 export const shipmentDuimpRegistered = inngest.createFunction(
@@ -82,23 +82,22 @@ export const shipmentDuimpRegistered = inngest.createFunction(
       const channelLabel = tChannel(channel);
       const isUrgent = channel === 'RED' || channel === 'GREY';
 
-      await notifyOrganizationMembers(
-        shipment.sellerOrganizationId,
-        isUrgent ? t('titles.duimpUrgent') : t('titles.duimpRegistered'),
-        t('duimpRegistered', { number: duimpNumber, channel: channelLabel }),
-        `/dashboard/shipments/${shipmentId}`,
-        isUrgent ? 'WARNING' : 'SUCCESS'
-      );
-
-      if (shipment.clientOrganizationId) {
-        await notifyOrganizationMembers(
-          shipment.clientOrganizationId,
-          t('titles.duimpRegistered'),
-          t('duimpRegisteredClient', { code: shipment.code }),
-          `/dashboard/shipments/${shipmentId}`,
-          'INFO'
-        );
-      }
+      await notifyShipmentParties({
+        sellerOrganizationId: shipment.sellerOrganizationId,
+        clientOrganizationId: shipment.clientOrganizationId,
+        seller: {
+          title: isUrgent ? t('titles.duimpUrgent') : t('titles.duimpRegistered'),
+          message: t('duimpRegistered', { number: duimpNumber, channel: channelLabel }),
+          url: `/dashboard/shipments/${shipmentId}`,
+          type: isUrgent ? 'WARNING' : 'SUCCESS',
+        },
+        client: {
+          title: t('titles.duimpRegistered'),
+          message: t('duimpRegisteredClient', { code: shipment.code }),
+          url: `/dashboard/shipments/${shipmentId}`,
+          type: 'INFO',
+        },
+      });
     });
 
     await step.run('evaluate-step', async () => {

@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { shipmentDocuments } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { createClient } from '@/lib/supabase/server';
+import { uploadToSupabase } from '@/services/upload.service';
 
 /** Upload a file to Supabase Storage and create a shipmentDocument record */
 export async function uploadShipmentDocument(params: {
@@ -12,30 +12,14 @@ export async function uploadShipmentDocument(params: {
   uploadedById: string;
   metadata?: Record<string, unknown>;
 }) {
-  const supabase = await createClient();
-
   const fileExt = params.file.name.split('.').pop()?.toLowerCase();
-  const fileName = `${params.type}-${Date.now()}.${fileExt}`;
-  const filePath = `shipments/${params.shipmentId}/${fileName}`;
+  const filePath = `shipments/${params.shipmentId}/${params.type}-${Date.now()}.${fileExt}`;
 
-  const arrayBuffer = await params.file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  const { error } = await supabase.storage
-    .from('shipment-documents')
-    .upload(filePath, buffer, {
-      contentType: params.file.type,
-      cacheControl: '3600',
-      upsert: true,
-    });
-
-  if (error) {
-    throw new Error(`Upload failed: ${error.message}`);
-  }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('shipment-documents')
-    .getPublicUrl(filePath);
+  const publicUrl = await uploadToSupabase({
+    bucket: 'shipment-documents',
+    filePath,
+    file: params.file,
+  });
 
   const [doc] = await db
     .insert(shipmentDocuments)

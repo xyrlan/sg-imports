@@ -1,7 +1,7 @@
 import { inngest } from '@/inngest/client';
 import { advanceStep } from '@/services/shipment-workflow.service';
 import { getTotalMerchandisePaidUsd, is90InvoicePaid } from '@/services/shipment.service';
-import { notifyOrganizationMembers } from '@/services/notification.service';
+import { notifyShipmentParties } from '@/inngest/helpers/notify-parties';
 import { db } from '@/db';
 import { shipments } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -47,22 +47,22 @@ export const shipmentStepEvaluator = inngest.createFunction(
         if (result.advanced) {
           await step.run('notify-fob-complete', async () => {
             const t = await getTranslations('Shipments.Notifications');
-            await notifyOrganizationMembers(
-              shipment.sellerOrganizationId,
-              t('titles.fobComplete'),
-              t('fobComplete'),
-              `/dashboard/shipments/${shipmentId}`,
-              'SUCCESS'
-            );
-            if (shipment.clientOrganizationId) {
-              await notifyOrganizationMembers(
-                shipment.clientOrganizationId,
-                t('titles.fobComplete'),
-                t('fobCompleteClient'),
-                `/dashboard/shipments/${shipmentId}`,
-                'SUCCESS'
-              );
-            }
+            await notifyShipmentParties({
+              sellerOrganizationId: shipment.sellerOrganizationId,
+              clientOrganizationId: shipment.clientOrganizationId,
+              seller: {
+                title: t('titles.fobComplete'),
+                message: t('fobComplete'),
+                url: `/dashboard/shipments/${shipmentId}`,
+                type: 'SUCCESS',
+              },
+              client: {
+                title: t('titles.fobComplete'),
+                message: t('fobCompleteClient'),
+                url: `/dashboard/shipments/${shipmentId}`,
+                type: 'SUCCESS',
+              },
+            });
           });
         }
         return { evaluated: true, advanced: result.advanced, newStep: result.currentStep };
@@ -84,13 +84,16 @@ export const shipmentStepEvaluator = inngest.createFunction(
         if (result.advanced) {
           await step.run('notify-customs-cleared', async () => {
             const t = await getTranslations('Shipments.Notifications');
-            await notifyOrganizationMembers(
-              shipment.sellerOrganizationId,
-              t('titles.customsCleared'),
-              t('customsCleared'),
-              `/dashboard/shipments/${shipmentId}`,
-              'SUCCESS'
-            );
+            await notifyShipmentParties({
+              sellerOrganizationId: shipment.sellerOrganizationId,
+              clientOrganizationId: null,
+              seller: {
+                title: t('titles.customsCleared'),
+                message: t('customsCleared'),
+                url: `/dashboard/shipments/${shipmentId}`,
+                type: 'SUCCESS',
+              },
+            });
           });
         }
         return { evaluated: true, advanced: result.advanced, newStep: result.currentStep };
