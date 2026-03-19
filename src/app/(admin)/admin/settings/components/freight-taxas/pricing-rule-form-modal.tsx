@@ -520,7 +520,7 @@ export function PricingRuleFormModal({
           <Modal.Dialog className="max-w-3xl overflow-y-auto">
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <DollarSign className="size-5" />
               </Modal.Icon>
               <Modal.Heading>

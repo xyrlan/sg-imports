@@ -193,7 +193,7 @@ export function OrganizationEditForm({
         {/* Left column: Org fields + Address */}
         <div className="space-y-6">
           {/* Company data form */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <Card.Title>{t('companyData')}</Card.Title>
             </Card.Header>
@@ -202,7 +202,7 @@ export function OrganizationEditForm({
                 <FormError message={state?.error} variant="danger" />
 
                 {/* Read-only: Name + CNPJ */}
-                <div className="space-y-2 p-3 rounded-lg bg-default-100 border flex gap-4">
+                <div className="space-y-2 p-3 rounded-lg bg-border border flex gap-4">
                   <div className="flex-1">
                     <p className="text-sm text-muted">{t('name')}</p>
                     <p className="font-medium">{organization.name}</p>
@@ -292,7 +292,7 @@ export function OrganizationEditForm({
           </Card>
 
           {/* Address form */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <div className="flex items-center gap-2">
                 <MapPin className="size-5" />
@@ -359,13 +359,13 @@ export function OrganizationEditForm({
         {/* Right column: Social Contract + Members */}
         <div className="space-y-6">
           {/* Social Contract upload */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <Card.Title>{t('socialContract')}</Card.Title>
             </Card.Header>
             <Card.Content>
               {organization.socialContractUrl && (
-                <div className="flex items-center justify-between p-3 rounded-lg bg-default-100 border mb-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-border border mb-4">
                   <div className="flex items-center gap-3">
                     <FileText className="size-5 text-muted" />
                     <div>
@@ -406,7 +406,7 @@ export function OrganizationEditForm({
           </Card>
 
           {/* Service Fee Configuration */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <div className="flex items-center gap-2">
                 <Receipt className="size-5" />
@@ -498,7 +498,7 @@ export function OrganizationEditForm({
           </Card>
 
           {/* Members list with role editing */}
-          <Card variant="default">
+          <Card variant="secondary">
             <Card.Header>
               <div className="flex items-center gap-2">
                 <Users className="size-5" />
@@ -643,7 +643,7 @@ function MemberRow({
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-default-100 border">
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-border border">
       <NextLink
         href={`/admin/users/${member.profileId}`}
         className="min-w-0 flex-1 hover:opacity-80 transition-opacity"

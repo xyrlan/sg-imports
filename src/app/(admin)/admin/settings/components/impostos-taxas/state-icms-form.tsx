@@ -69,23 +69,23 @@ export function StateIcmsForm({ stateIcmsRates, t }: StateIcmsFormProps) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('Taxes.searchByState')}
               aria-label={t('Taxes.searchByState')}
-              className="w-full rounded-lg border border-default-200 bg-default-50 py-2 pl-9 pr-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
+              className="w-full rounded-lg border border-border bg-surface py-2 pl-9 pr-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
             />
           </div>
         </div>
         <div className="overflow-x-auto">
-          <div className="min-w-[520px] overflow-y-auto rounded-xl border border-default-200 overflow-hidden">
-            <div className="grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-2 px-4 py-3 bg-default-100 sticky top-0 z-10 border-b border-default-200 text-xs font-semibold tracking-wider text-muted">
+          <div className="min-w-[520px] overflow-y-auto rounded-xl border border-border overflow-hidden">
+            <div className="grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-2 px-4 py-3 bg-border sticky top-0 z-10 border-b border-border text-xs font-semibold tracking-wider text-muted">
               <span className="min-w-10">{t('Taxes.state')}</span>
               <span>{t('Taxes.difal')}</span>
               <span>{t('Taxes.aliquota')}</span>
             </div>
-            <div className="divide-y divide-default-100">
+            <div className="divide-y ">
               {(Object.entries(STATE_REGIONS) as [keyof typeof STATE_REGIONS, readonly string[]][]).map(
                 ([region, states]) => (
                   <div key={region}>
                     <div
-                      className={`px-4 py-2 bg-default-50 text-xs font-medium text-muted border-b border-default-100 ${
+                      className={`px-4 py-2 bg-surface text-xs font-medium text-muted border-b border-border ${
                         states.every((s) => !stateMatchesSearch(s, search))
                           ? 'hidden'
                           : ''
@@ -99,7 +99,7 @@ export function StateIcmsForm({ stateIcmsRates, t }: StateIcmsFormProps) {
                       return (
                         <div
                           key={stateCode}
-                          className={`grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-2 items-center px-4 py-3 transition-colors hover:bg-default-50 ${
+                          className={`grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-2 items-center px-4 py-3 transition-colors hover:bg-surface ${
                             !isVisible ? 'hidden' : ''
                           }`}
                         >

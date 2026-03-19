@@ -27,7 +27,7 @@ export function LandedCostPerItemList({ items }: LandedCostPerItemListProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-default-500">{t('landedCostPerItem')}</p>
+        <p className="text-xs font-medium text-muted">{t('landedCostPerItem')}</p>
         <Button
           variant="ghost"
           size="sm"
@@ -43,7 +43,7 @@ export function LandedCostPerItemList({ items }: LandedCostPerItemListProps) {
         style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="space-y-1 max-h-32 overflow-y-auto rounded-lg border border-default-200 p-2">
+          <div className="space-y-1 max-h-32 overflow-y-auto rounded-lg border border-border p-2">
             {items.map((item) => {
               const name = getItemDisplayName(item, t('itemFallback'));
               const landedUnit = Number(
@@ -52,7 +52,7 @@ export function LandedCostPerItemList({ items }: LandedCostPerItemListProps) {
               return (
                 <div
                   key={item.id}
-                  className="flex justify-between text-sm py-1 border-b border-default-200 last:border-0 last:pb-0"
+                  className="flex justify-between text-sm py-1 border-b border-border last:border-0 last:pb-0"
                 >
                   <span className="truncate max-w-[180px]" title={name}>
                     {name}

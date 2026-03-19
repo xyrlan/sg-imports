@@ -32,13 +32,13 @@ export function PlatformRatesForm({ platformRates, t }: PlatformRatesFormProps) 
         description={t('Taxes.platformRatesDescription')}
       />
       <form action={formAction} className="space-y-4">
-        <div className="rounded-xl border border-default-200 overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 px-4 py-3 bg-default-100 border-b border-default-200 text-xs font-semibold tracking-wider text-muted">
+        <div className="rounded-xl border border-border overflow-hidden">
+          <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 px-4 py-3 bg-border border-b border-border text-xs font-semibold tracking-wider text-muted">
             <span>{t('Taxes.rateTypeLabel')}</span>
             <span className="min-w-[140px]">{t('Taxes.value')}</span>
             <span className="min-w-[140px]">{t('Taxes.unit')}</span>
           </div>
-          <div className="divide-y divide-default-100">
+          <div className="divide-y ">
             {RATE_TYPES.map((rateType) => {
               const rate = platformRates.find((r) => r.rateType === rateType);
               return (

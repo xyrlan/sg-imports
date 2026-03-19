@@ -35,7 +35,7 @@ export function CreateProductDrawer({ organizationId, onMutate }: CreateProductD
             <Modal.Dialog className="max-w-5xl max-h-[90vh]">
               <Modal.CloseTrigger />
               <Modal.Header>
-                <Modal.Icon className="bg-default text-foreground">
+                <Modal.Icon className="bg-surface text-foreground">
                   <Box size={22} />
                 </Modal.Icon>
                 <Modal.Heading>{t('heading')}</Modal.Heading>

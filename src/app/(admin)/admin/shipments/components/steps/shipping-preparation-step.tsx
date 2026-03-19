@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Checkbox, TextField, Input, Label, Surface } from '@heroui/react';
+import { Button, Checkbox } from '@heroui/react';
 import { Ship, ExternalLink } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { ShipmentDocumentField } from '../shipment-document-field';
@@ -72,50 +72,52 @@ function BookingTrackingCard({ shipment, readOnly }: BookingTrackingCardProps) {
   };
 
   return (
-    <Surface variant="secondary" className="p-4 space-y-4">
+    <div className="rounded-lg border border-border bg-surface p-4 space-y-4 bg-">
       <p className="text-sm font-semibold text-foreground">{t('bookingTracking')}</p>
 
       {/* Booking Number */}
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <TextField variant="primary" isDisabled={readOnly}>
-            <Label>{t('bookingNumber')}</Label>
-            <Input
-              value={bookingNumber}
-              onChange={(e) => setBookingNumber(e.target.value)}
-            />
-          </TextField>
+      <div className="space-y-1">
+        <label className="block text-xs text-muted">{t('bookingNumber')}</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={bookingNumber}
+            onChange={(e) => setBookingNumber(e.target.value)}
+            disabled={readOnly}
+            className="flex-1 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50"
+          />
+          {!readOnly && (
+            <Button size="sm" variant="primary" onPress={handleSaveBooking} isPending={isPending}>
+              {t('save')}
+            </Button>
+          )}
         </div>
-        {!readOnly && (
-          <Button size="sm" variant="primary" onPress={handleSaveBooking} isPending={isPending}>
-            {t('save')}
-          </Button>
-        )}
       </div>
 
       {/* MBL */}
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <TextField variant="primary" isDisabled={readOnly}>
-            <Label>{t('mbl')}</Label>
-            <Input
-              value={mbl}
-              onChange={(e) => setMbl(e.target.value)}
-            />
-          </TextField>
+      <div className="space-y-1">
+        <label className="block text-xs text-muted">{t('mbl')}</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={mbl}
+            onChange={(e) => setMbl(e.target.value)}
+            disabled={readOnly}
+            className="flex-1 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50"
+          />
+          {!readOnly && (
+            <Button size="sm" variant="outline" onPress={handleRegisterMbl} isPending={isPending}>
+              {t('registerShipsGo')}
+            </Button>
+          )}
         </div>
-        {!readOnly && (
-          <Button size="sm" variant="outline" onPress={handleRegisterMbl} isPending={isPending}>
-            {t('registerShipsGo')}
-          </Button>
-        )}
       </div>
 
       {/* ShipsGo data card */}
       {shipment.shipsGoId && (
-        <div className="rounded-md border border-default-200 p-3 space-y-2">
-          <p className="text-xs font-semibold text-muted">{t('shipsGoData')}</p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-muted">
+        <div className="rounded-md border border-border p-3 space-y-2">
+          <p className="text-xs font-semibold text-foreground/90">{t('shipsGoData')}</p>
+          <div className="grid grid-cols-2 gap-2 text-xs text-foreground/90">
             <div>
               <span className="text-muted">{t('carrier')}: </span>
               <span>{shipment.freightReceipt?.carrierId ?? '—'}</span>
@@ -172,7 +174,7 @@ function BookingTrackingCard({ shipment, readOnly }: BookingTrackingCardProps) {
           </ul>
         </div>
       )}
-    </Surface>
+    </div>
   );
 }
 
@@ -197,7 +199,7 @@ function FreightCard({ shipment, readOnly }: FreightCardProps) {
   };
 
   return (
-    <Surface variant="secondary" className="p-4 space-y-3">
+    <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('freight')}</p>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted">{t('freightCost')}:</span>
@@ -207,26 +209,26 @@ function FreightCard({ shipment, readOnly }: FreightCardProps) {
             : '—'}
         </span>
       </div>
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <TextField variant="primary" isDisabled={readOnly}>
-            <Label>{t('freightSellPrice')}</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={freightSellPrice}
-              onChange={(e) => setFreightSellPrice(e.target.value)}
-            />
-          </TextField>
+      <div className="space-y-1">
+        <label className="block text-xs text-muted">{t('freightSellPrice')}</label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={freightSellPrice}
+            onChange={(e) => setFreightSellPrice(e.target.value)}
+            disabled={readOnly}
+            className="flex-1 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50"
+          />
+          {!readOnly && (
+            <Button size="sm" variant="primary" onPress={handleSaveFreight} isPending={isPending}>
+              {t('save')}
+            </Button>
+          )}
         </div>
-        {!readOnly && (
-          <Button size="sm" variant="primary" onPress={handleSaveFreight} isPending={isPending}>
-            {t('save')}
-          </Button>
-        )}
       </div>
-    </Surface>
+    </div>
   );
 }
 
@@ -242,7 +244,7 @@ function DocumentsCard({ shipment, readOnly }: DocumentsCardProps) {
   const hblDocument = (shipment.documents ?? []).find((d) => d.type === 'HBL_DOCUMENT');
 
   return (
-    <Surface variant="secondary" className="p-4 space-y-4">
+    <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <p className="text-sm font-semibold text-foreground">{t('documents')}</p>
 
       <ShipmentDocumentField
@@ -262,7 +264,7 @@ function DocumentsCard({ shipment, readOnly }: DocumentsCardProps) {
         readOnly={readOnly}
         acceptedFormats="PDF (máx. 10MB)"
       />
-    </Surface>
+    </div>
   );
 }
 

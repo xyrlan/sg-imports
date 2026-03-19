@@ -55,7 +55,7 @@ function ProgressBar({
           {formatVal(value)} / {formatVal(max)}
         </span>
       </div>
-      <div className="h-1 w-full rounded-full bg-accent-soft-hover overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-border overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
@@ -75,10 +75,10 @@ function MetricCard({
   icon: React.ElementType;
 }) {
   return (
-    <div className="rounded-lg border border-default-200 p-3 flex items-center gap-3">
-      <Icon className="size-5 text-default-500" />
+    <div className="rounded-lg border border-border p-3 flex items-center gap-3">
+      <Icon className="size-5 text-muted" />
       <div>
-        <p className="text-xs text-default-500">{label}</p>
+        <p className="text-xs text-muted">{label}</p>
         <p className="font-medium">{value}</p>
       </div>
     </div>

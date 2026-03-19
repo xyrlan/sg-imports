@@ -50,7 +50,7 @@ export function ContractCreationStep({ shipment }: ContractCreationStepProps) {
       {/* Contract signed status */}
       <div className="flex items-center gap-3">
         <FileCheck className="h-5 w-5 text-muted shrink-0" />
-        <span className="text-sm text-muted">{t('contractSigned')}</span>
+        <span className="text-sm text-foreground/90">{t('contractSigned')}</span>
         <Chip
           color={isContractSigned ? 'success' : 'warning'}
           variant="soft"

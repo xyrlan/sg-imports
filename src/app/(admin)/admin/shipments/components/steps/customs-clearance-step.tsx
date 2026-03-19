@@ -183,7 +183,7 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
                   <thead>
-                    <tr className="border-b border-default-200">
+                    <tr className="border-b border-border">
                       <th className="py-1.5 px-2 text-left text-xs text-muted font-medium">
                         {t('taxCategory')}
                       </th>
@@ -194,7 +194,7 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
                   </thead>
                   <tbody>
                     {taxExpenses.map((exp) => (
-                      <tr key={exp.id} className="border-b border-default-100 last:border-0">
+                      <tr key={exp.id} className="border-b border-border last:border-0">
                         <td className="py-1.5 px-2 text-foreground">
                           {exp.category?.replace('TAX_', '') ?? exp.category}
                         </td>

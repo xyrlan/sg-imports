@@ -15,19 +15,24 @@
 ## File Structure
 
 ### Schema
+
 - **Modify:** `src/db/schema/financial.ts` — add `supplierId` to `exchangeContracts`
 - **Modify:** `src/db/schema/relations.ts` — add supplier relation to exchangeContracts
 
 ### Service
+
 - **Create:** `src/services/admin/shipments.service.ts` — admin queries for shipment list and detail
 
 ### DataTable Enhancement
+
 - **Modify:** `src/components/ui/data-table.tsx` — add `onRowClick` prop
 
 ### Admin Sidebar
+
 - **Modify:** `src/components/admin/admin-sidebar.tsx` — add "Pedidos" nav item
 
 ### Pages & Components
+
 - **Create:** `src/app/(admin)/admin/shipments/page.tsx` — list page (Server)
 - **Create:** `src/app/(admin)/admin/shipments/components/shipments-page-content.tsx` — list (Client)
 - **Create:** `src/app/(admin)/admin/shipments/[id]/page.tsx` — detail page (Server)
@@ -43,6 +48,7 @@
 - **Create:** `src/app/(admin)/admin/shipments/components/steps/completion-step.tsx` — placeholder
 
 ### i18n
+
 - **Modify:** `messages/pt.json` — add `Admin.Shipments.*` and `Admin.Sidebar.shipments` keys
 
 ---
@@ -50,6 +56,7 @@
 ## Task 1: Schema — Add supplierId to exchangeContracts
 
 **Files:**
+
 - Modify: `src/db/schema/financial.ts`
 - Modify: `src/db/schema/relations.ts`
 
@@ -95,6 +102,7 @@ git commit -m "feat(schema): add supplierId to exchangeContracts"
 ## Task 2: DataTable — Add onRowClick prop
 
 **Files:**
+
 - Modify: `src/components/ui/data-table.tsx`
 
 - [ ] **Step 1: Add prop to interface**
@@ -114,8 +122,8 @@ Add `onRowClick` to the destructured props in the `DataTable` function signature
   key={row.id}
   onClick={() => onRowClick?.(row.original)}
   className={`
-    border-b border-default-200 transition-colors
-    ${onRowClick ? 'cursor-pointer hover:bg-default-100' : ''}
+    border-b border-border transition-colors
+    ${onRowClick ? 'cursor-pointer hover:bg-accent-soft-hover' : ''}
   `}
 >
 ```
@@ -138,20 +146,23 @@ git commit -m "feat(ui): add onRowClick prop to DataTable"
 ## Task 3: Admin Service — Shipment Queries
 
 **Files:**
+
 - Create: `src/services/admin/shipments.service.ts`
 
 - [ ] **Step 1: Create the service**
 
 ```typescript
-import { db } from '@/db';
-import { shipments } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { db } from "@/db";
+import { shipments } from "@/db/schema";
+import { desc, eq } from "drizzle-orm";
 
 /** Fetch all shipments for admin list view */
 export async function getAllShipments() {
   return db.query.shipments.findMany({
     with: {
-      clientOrganization: { columns: { id: true, name: true, orderType: true } },
+      clientOrganization: {
+        columns: { id: true, name: true, orderType: true },
+      },
       sellerOrganization: { columns: { id: true, name: true } },
     },
     orderBy: [desc(shipments.createdAt)],
@@ -165,8 +176,18 @@ export async function getShipmentDetail(shipmentId: string) {
     with: {
       clientOrganization: true,
       sellerOrganization: true,
-      quote: { with: { items: { with: { variant: { with: { product: { with: { supplier: true } } } } } } } },
-      transactions: { with: { exchangeContracts: { with: { broker: true, supplier: true } } } },
+      quote: {
+        with: {
+          items: {
+            with: {
+              variant: { with: { product: { with: { supplier: true } } } },
+            },
+          },
+        },
+      },
+      transactions: {
+        with: { exchangeContracts: { with: { broker: true, supplier: true } } },
+      },
       documents: true,
       containers: true,
       expenses: true,
@@ -182,7 +203,7 @@ export async function getShipmentDetail(shipmentId: string) {
 In `src/services/admin/index.ts`, add:
 
 ```typescript
-export * from './shipments.service';
+export * from "./shipments.service";
 ```
 
 - [ ] **Step 3: Verify TypeScript compiles**
@@ -203,6 +224,7 @@ git commit -m "feat: add admin shipment service with list and detail queries"
 ## Task 4: Admin Sidebar — Add Shipments Link
 
 **Files:**
+
 - Modify: `src/components/admin/admin-sidebar.tsx`
 - Modify: `messages/pt.json`
 
@@ -244,6 +266,7 @@ git commit -m "feat: add Pedidos link to admin sidebar"
 ## Task 5: i18n — Add All Shipment Translation Keys
 
 **Files:**
+
 - Modify: `messages/pt.json`
 
 - [ ] **Step 1: Add Admin.Shipments section**
@@ -336,6 +359,7 @@ Add the following under a new `"Admin"` key (or merge into existing `Admin` if i
 ```
 
 Notes:
+
 - Merge into existing `Admin` key if it already exists in `pt.json`. Do NOT overwrite other `Admin.*` keys.
 - The `Shipments.Status.*` and `Shipments.Steps.*` keys already exist at the top-level `Shipments` namespace (added in the backend PR). Do NOT duplicate them under `Admin.Shipments`. The list/detail components use `useTranslations('Shipments.Status')` to access those.
 - Add error keys for server actions:
@@ -362,28 +386,34 @@ git commit -m "feat(i18n): add admin shipment dashboard translation keys"
 ## Task 6: Shared Constants and Types
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/components/shipment-utils.ts`
 
 - [ ] **Step 1: Create shared constants and types**
 
 ```typescript
 // src/app/(admin)/admin/shipments/components/shipment-utils.ts
-import type { getShipmentDetail } from '@/services/admin/shipments.service';
+import type { getShipmentDetail } from "@/services/admin/shipments.service";
 
 /** Shipment detail type — used across all step components and the detail page */
-export type ShipmentDetail = NonNullable<Awaited<ReturnType<typeof getShipmentDetail>>>;
+export type ShipmentDetail = NonNullable<
+  Awaited<ReturnType<typeof getShipmentDetail>>
+>;
 
 /** Status chip color mapping — used in list page and summary card */
-export const STATUS_COLORS: Record<string, 'default' | 'warning' | 'secondary' | 'primary' | 'success' | 'danger'> = {
-  PENDING: 'default',
-  PRODUCTION: 'warning',
-  BOOKED: 'secondary',
-  IN_TRANSIT: 'primary',
-  CUSTOMS_CLEARANCE: 'warning',
-  RELEASED: 'success',
-  DELIVERED: 'success',
-  FINISHED: 'success',
-  CANCELED: 'danger',
+export const STATUS_COLORS: Record<
+  string,
+  "default" | "warning" | "secondary" | "primary" | "success" | "danger"
+> = {
+  PENDING: "default",
+  PRODUCTION: "warning",
+  BOOKED: "secondary",
+  IN_TRANSIT: "primary",
+  CUSTOMS_CLEARANCE: "warning",
+  RELEASED: "success",
+  DELIVERED: "success",
+  FINISHED: "success",
+  CANCELED: "danger",
 };
 ```
 
@@ -399,6 +429,7 @@ git commit -m "feat: add shared shipment types and constants"
 ## Task 7: List Page — Server Component + Client Content
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/page.tsx`
 - Create: `src/app/(admin)/admin/shipments/components/shipments-page-content.tsx`
 
@@ -547,6 +578,7 @@ git commit -m "feat: add admin shipments list page with DataTable"
 ## Task 8: Stepper Component
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/components/shipment-stepper.tsx`
 
 - [ ] **Step 1: Create the stepper**
@@ -598,7 +630,7 @@ export function ShipmentStepper({ currentStep, viewingStep, onStepClick, isCance
         const isViewing = step === viewingStep;
         const isClickable = isCompleted || isCurrent;
 
-        let bgClass = 'bg-default-100 text-muted';
+        let bgClass = 'bg-border text-muted';
         if (isCanceled) bgClass = 'bg-danger/10 text-danger';
         else if (isCompleted) bgClass = 'bg-success/10 text-success';
         else if (isCurrent) bgClass = 'bg-accent/10 text-accent';
@@ -622,7 +654,7 @@ export function ShipmentStepper({ currentStep, viewingStep, onStepClick, isCance
               <span className="hidden sm:inline">{t(step)}</span>
             </button>
             {idx < STEP_ORDER.length - 1 && (
-              <div className={`w-4 h-px mx-1 ${isCompleted ? 'bg-success' : 'bg-default-200'}`} />
+              <div className={`w-4 h-px mx-1 ${isCompleted ? 'bg-success' : 'bg-surface'}`} />
             )}
           </div>
         );
@@ -646,6 +678,7 @@ git commit -m "feat: add shipment stepper component"
 ## Task 9: Summary Card Component
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/components/shipment-summary-card.tsx`
 
 - [ ] **Step 1: Create the summary card**
@@ -683,7 +716,7 @@ export function ShipmentSummaryCard({
   const etaStr = eta ? new Date(eta).toLocaleDateString('pt-BR') : '—';
 
   return (
-    <div className="flex flex-wrap gap-4 p-4 rounded-lg bg-default-50 border border-default-200">
+    <div className="flex flex-wrap gap-4 p-4 rounded-lg bg-surface border border-border">
       <Metric icon={<DollarSign className="size-4" />} label={t('fobTotal')} value={`$${fob.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
       <Metric icon={<Percent className="size-4" />} label={t('paid')} value={`${paidPct}%`} />
       <Metric icon={<CalendarClock className="size-4" />} label={t('eta')} value={etaStr} />
@@ -723,6 +756,7 @@ git commit -m "feat: add shipment summary card component"
 ## Task 10: Placeholder Step Components
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/components/steps/contract-creation-step.tsx`
 - Create: `src/app/(admin)/admin/shipments/components/steps/merchandise-payment-step.tsx`
 - Create: `src/app/(admin)/admin/shipments/components/steps/shipping-preparation-step.tsx`
@@ -755,7 +789,7 @@ export function ContractCreationStep({ shipment }: { shipment: ShipmentDetail; r
         <FileCheck className="size-5" />
         {t('title')}
       </h3>
-      <div className="p-4 rounded-lg bg-default-50 border border-default-200 space-y-3">
+      <div className="p-4 rounded-lg bg-surface border border-border space-y-3">
         <div className="flex items-center gap-2">
           <Chip size="sm" color="success" variant="flat">{t('contractSigned')}</Chip>
         </div>
@@ -799,7 +833,7 @@ export function MerchandisePaymentStep({ shipment, readOnly }: { shipment: Shipm
         <DollarSign className="size-5" />
         {t('title')}
       </h3>
-      <div className="p-6 rounded-lg border border-dashed border-default-300 text-center text-muted">
+      <div className="p-6 rounded-lg border border-dashed border-border text-center text-muted">
         {t('placeholder')}
       </div>
     </div>
@@ -808,6 +842,7 @@ export function MerchandisePaymentStep({ shipment, readOnly }: { shipment: Shipm
 ```
 
 Create the same pattern for:
+
 - `shipping-preparation-step.tsx` — icon: `Ship`, key: `ShippingPreparation`
 - `document-preparation-step.tsx` — icon: `FileText`, key: `DocumentPreparation`
 - `customs-clearance-step.tsx` — icon: `Shield`, key: `CustomsClearance`
@@ -825,70 +860,95 @@ git commit -m "feat: add step components (contract creation + 5 placeholders)"
 ## Task 11: Server Actions — General Actions
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/[id]/actions.ts`
 
 - [ ] **Step 1: Create server actions**
 
 ```typescript
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { getTranslations } from 'next-intl/server';
-import { advanceStep, cancelShipment as cancelShipmentService, finalizeShipment as finalizeShipmentService } from '@/services/shipment-workflow.service';
-import { requireSuperAdmin } from '@/services/auth.service';
-import { z } from 'zod';
+import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
+import {
+  advanceStep,
+  cancelShipment as cancelShipmentService,
+  finalizeShipment as finalizeShipmentService,
+} from "@/services/shipment-workflow.service";
+import { requireSuperAdmin } from "@/services/auth.service";
+import { z } from "zod";
 
-export async function advanceShipmentStepAction(shipmentId: string, currentStep: string) {
+export async function advanceShipmentStepAction(
+  shipmentId: string,
+  currentStep: string,
+) {
   const { profileId } = await requireSuperAdmin();
-  const t = await getTranslations('Admin.Shipments.Errors');
+  const t = await getTranslations("Admin.Shipments.Errors");
 
   try {
     const result = await advanceStep(shipmentId, currentStep as any, profileId);
     revalidatePath(`/admin/shipments/${shipmentId}`);
     return { success: true, data: result };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : t('advanceFailed') };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : t("advanceFailed"),
+    };
   }
 }
 
 export async function cancelShipmentAction(formData: FormData) {
   const { profileId } = await requireSuperAdmin();
-  const t = await getTranslations('Admin.Shipments.Errors');
+  const t = await getTranslations("Admin.Shipments.Errors");
 
   const cancelSchema = z.object({
     shipmentId: z.string().uuid(),
-    reason: z.string().min(1, t('reasonRequired')),
+    reason: z.string().min(1, t("reasonRequired")),
   });
 
   const raw = {
-    shipmentId: formData.get('shipmentId') as string,
-    reason: formData.get('reason') as string,
+    shipmentId: formData.get("shipmentId") as string,
+    reason: formData.get("reason") as string,
   };
 
   const parsed = cancelSchema.safeParse(raw);
   if (!parsed.success) {
-    return { success: false, error: t('invalidData'), fieldErrors: parsed.error.flatten().fieldErrors };
+    return {
+      success: false,
+      error: t("invalidData"),
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
   }
 
   try {
-    const result = await cancelShipmentService(parsed.data.shipmentId, parsed.data.reason, profileId);
+    const result = await cancelShipmentService(
+      parsed.data.shipmentId,
+      parsed.data.reason,
+      profileId,
+    );
     revalidatePath(`/admin/shipments/${parsed.data.shipmentId}`);
     return { success: true, data: result };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : t('cancelFailed') };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : t("cancelFailed"),
+    };
   }
 }
 
 export async function finalizeShipmentAction(shipmentId: string) {
   const { profileId } = await requireSuperAdmin();
-  const t = await getTranslations('Admin.Shipments.Errors');
+  const t = await getTranslations("Admin.Shipments.Errors");
 
   try {
     const result = await finalizeShipmentService(shipmentId, profileId);
     revalidatePath(`/admin/shipments/${shipmentId}`);
     return { success: true, data: result };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : t('finalizeFailed') };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : t("finalizeFailed"),
+    };
   }
 }
 ```
@@ -907,6 +967,7 @@ git commit -m "feat: add shipment general server actions (advance, cancel, final
 ## Task 12: Detail Page — Server Component + Client Content
 
 **Files:**
+
 - Create: `src/app/(admin)/admin/shipments/[id]/page.tsx`
 - Create: `src/app/(admin)/admin/shipments/components/shipment-detail-content.tsx`
 
@@ -1178,6 +1239,7 @@ Task 13 runs last.
 ## What This Plan Produces
 
 After this plan, you have:
+
 - Navigable admin shipments list at `/admin/shipments`
 - Shipment detail page at `/admin/shipments/[id]` with working stepper, summary card, and cancel flow
 - 6 step components (1 real + 5 placeholders)

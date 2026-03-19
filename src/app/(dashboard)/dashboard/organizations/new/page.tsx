@@ -49,7 +49,7 @@ export default function CreateOrganizationPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <Card variant="default" className="w-full max-w-md">
+      <Card variant="secondary" className="w-full max-w-md">
         <Card.Content className="p-8">
           <div className="mb-6">
             <NextLink

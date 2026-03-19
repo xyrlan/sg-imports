@@ -22,11 +22,11 @@ export function TaxBreakdownSection({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-lg border border-default-200 p-3 space-y-2">
+    <div className="rounded-lg border border-border p-3 space-y-2">
       <div className="flex items-center gap-3">
         <Receipt className="size-5 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-default-500">{t('totalTaxesBrl')}</p>
+          <p className="text-xs text-muted">{t('totalTaxesBrl')}</p>
           <p className="font-medium">{formatBrl(totalTaxesBrl)}</p>
         </div>
         {hasTaxBreakdown && (
@@ -47,7 +47,7 @@ export function TaxBreakdownSection({
           style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
         >
           <div className="overflow-hidden">
-            <div className="pt-2 space-y-1 border-t border-default-200">
+            <div className="pt-2 space-y-1 border-t border-border">
               {taxBreakdown.ii > 0 && (
                 <div className="flex justify-between text-sm">
                   <span>{t('taxII')}</span>

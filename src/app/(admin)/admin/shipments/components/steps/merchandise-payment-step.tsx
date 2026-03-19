@@ -167,7 +167,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-default-200">
+              <tr className="border-b border-border">
                 <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('transactionTable.number')}
                 </th>
@@ -187,7 +187,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
             </thead>
             <tbody>
               {merchandiseTxns.map((tx, idx) => (
-                <tr key={tx.id} className="border-b border-default-100 last:border-0">
+                <tr key={tx.id} className="border-b border-border last:border-0">
                   <td className="py-2 px-2 text-muted">{idx + 1}</td>
                   <td className="py-2 px-2 text-foreground font-medium">
                     {tx.amountUsd ? `$${tx.amountUsd}` : '—'}
@@ -276,7 +276,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-default-200">
+              <tr className="border-b border-border">
                 <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.supplier')}
                 </th>
@@ -302,7 +302,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
             </thead>
             <tbody>
               {allContracts.map((ec) => (
-                <tr key={ec.id} className="border-b border-default-100 last:border-0">
+                <tr key={ec.id} className="border-b border-border last:border-0">
                   <td className="py-2 px-2 text-muted">{ec.supplier?.name ?? '—'}</td>
                   <td className="py-2 px-2 text-foreground font-medium">{ec.contractNumber}</td>
                   <td className="py-2 px-2 text-muted">

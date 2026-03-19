@@ -217,7 +217,7 @@ export function QuoteWorkflowButtons({
         {simulation.status === 'REJECTED' && isSeller && simulation.rejectionReason && (
           <div className="rounded-lg border border-warning bg-warning/10 px-3 py-2 text-sm text-warning-600">
             <p className="font-medium">{t('rejectedBy')}</p>
-            <p className="text-default-600">
+            <p className="text-foreground/90">
               {t('rejectionReasonLabel', { reason: simulation.rejectionReason })}
             </p>
           </div>
@@ -281,7 +281,7 @@ function RejectQuoteModal({ open, onOpenChange, onReject, isPending, error }: Re
               <Modal.Heading>{t('rejectModalTitle')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="space-y-4 p-0.5">
-              <p className="text-sm text-default-500">{t('rejectModalDescription')}</p>
+              <p className="text-sm text-muted">{t('rejectModalDescription')}</p>
               <TextField variant="primary" value={reason} onChange={setReason}>
                 <Label>{t('rejectionReason')}</Label>
                 <TextArea placeholder={t('rejectionReasonPlaceholder')} rows={3} />
@@ -361,13 +361,13 @@ function SendQuoteModal({
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Icon className="bg-default text-foreground">
+              <Modal.Icon className="bg-surface text-foreground">
                 <Send size={20} />
               </Modal.Icon>
               <Modal.Heading>{t('sendModalTitle')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="space-y-4 p-0.5">
-              <p className="text-sm text-default-500">{t('sendModalDescription')}</p>
+              <p className="text-sm text-muted">{t('sendModalDescription')}</p>
               <div className='flex flex-col gap-2'>
                 <Label>{t('clientOrganization')}</Label>
                 <Autocomplete

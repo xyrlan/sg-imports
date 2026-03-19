@@ -130,7 +130,7 @@ export function ProductPhotosUpload({
               {existingUrls.map((url, index) => (
                 <div
                   key={`existing-${index}-${url}`}
-                  className="relative group aspect-square rounded-lg overflow-hidden bg-default-100 border border-divider"
+                  className="relative group aspect-square rounded-lg overflow-hidden bg-border border border-divider"
                 >
                   <img
                     src={url}
@@ -153,7 +153,7 @@ export function ProductPhotosUpload({
               {files.map((file, index) => (
                 <div
                   key={`${file.name}-${index}`}
-                  className="relative group aspect-square rounded-lg overflow-hidden bg-default-100 border border-divider"
+                  className="relative group aspect-square rounded-lg overflow-hidden bg-border border border-divider"
                 >
                   {previewUrls[index] && (
                     <img

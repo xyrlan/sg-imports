@@ -14,7 +14,7 @@ export function StorageRuleMinValueSection({ rule }: StorageRuleMinValueSectionP
   const currency = rule.currency ?? 'BRL';
 
   return (
-    <div className="pt-2 border-t border-default-200 space-y-1">
+    <div className="pt-2 border-t border-border space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span>{t('StorageRuleForm.minValue')}:</span>
         <span className="font-medium">

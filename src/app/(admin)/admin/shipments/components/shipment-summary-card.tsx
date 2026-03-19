@@ -54,7 +54,7 @@ export function ShipmentSummaryCard({
     <Surface variant="transparent" className="p-4 flex flex-wrap gap-8">
       {/* FOB Total */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-border text-muted">
           <DollarSign className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
@@ -65,7 +65,7 @@ export function ShipmentSummaryCard({
 
       {/* % Paid */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-border text-muted">
           <Percent className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
@@ -78,7 +78,7 @@ export function ShipmentSummaryCard({
 
       {/* ETA */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-border text-muted">
           <CalendarClock className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
@@ -89,7 +89,7 @@ export function ShipmentSummaryCard({
 
       {/* Modality */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-border text-muted">
           <Ship className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">

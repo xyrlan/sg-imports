@@ -130,7 +130,7 @@ export function CarriersSection({ carriers }: CarriersSectionProps) {
         className="mb-4"
       />
       {syncResult && (
-        <div className="mb-4 p-3 rounded-lg bg-default-100 text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-border text-sm">
           {syncResult.errors.length > 0 ? (
             <p className="text-danger">
               {t('Carriers.syncError')}: {syncResult.errors.slice(0, 3).join(', ')}

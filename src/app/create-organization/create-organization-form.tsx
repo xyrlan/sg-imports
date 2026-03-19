@@ -22,7 +22,7 @@ export function CreateOrganizationForm() {
   };
 
   return (
-    <Card variant="default" className="w-full max-w-md shadow-lg border border-default-200/50">
+    <Card variant="secondary" className="w-full max-w-md shadow-lg border border-border/50">
       <Card.Content className="p-8">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-foreground">

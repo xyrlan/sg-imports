@@ -37,7 +37,7 @@ export function PlatformRateFormRow({ rateType, rate, t }: PlatformRateFormRowPr
   const defaultValue = parseValue(rate?.value, unit);
 
   return (
-    <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 items-center px-4 py-3 transition-colors hover:bg-default-50">
+    <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 items-center px-4 py-3 transition-colors hover:bg-surface">
       <span className="font-medium">{label}</span>
       <div className="min-w-[140px]">
         <NumberField

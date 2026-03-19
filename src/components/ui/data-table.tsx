@@ -191,7 +191,7 @@ function DataTableSearch({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? 'Buscar...'}
-        className="w-full rounded-lg border border-default-200 bg-default-50 py-2 pl-9 pr-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
+        className="w-full rounded-lg border border-border bg-surface py-2 pl-9 pr-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
       />
     </div>
   );
@@ -240,13 +240,13 @@ function DataTableFilterDropdown<TData>({
         onClick={() => setIsOpen((prev) => !prev)}
         className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors cursor-pointer select-none ${
           activeCount > 0
-            ? 'border-accent bg-accent/10 text-accent'
-            : 'border-default-200 bg-default-50 text-muted hover:bg-default-100 hover:text-foreground'
+            ? 'border-accent bg-surface text-accent'
+            : 'border-border bg-surface text-muted hover:bg-border hover:text-foreground'
         }`}
       >
         <Filter className="size-4" />
         {activeCount > 0 && (
-          <span className="inline-flex items-center justify-center size-5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">
+          <span className="inline-flex items-center justify-center size-4 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">
             {activeCount}
           </span>
         )}
@@ -261,7 +261,7 @@ function DataTableFilterDropdown<TData>({
           />
 
           {/* Dropdown panel */}
-          <div className="absolute right-0 top-full mt-2 z-50 min-w-[280px] rounded-xl border border-default-200 bg-background shadow-lg p-4 space-y-4">
+          <div className="absolute right-0 top-full mt-2 z-50 min-w-[280px] rounded-xl border border-border bg-background shadow-lg p-4 space-y-4">
             {filters.map((filter) => {
               const column = table.getColumn(filter.columnId);
               const selectedValues = (column?.getFilterValue() as string[] | undefined) ?? [];
@@ -282,7 +282,7 @@ function DataTableFilterDropdown<TData>({
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer select-none border ${
                             isActive
                               ? 'bg-accent text-accent-foreground border-accent'
-                              : 'bg-background text-muted border-default-200 hover:bg-default-100 hover:text-foreground'
+                              : 'bg-background text-muted border-border hover:bg-border hover:text-foreground'
                           }`}
                         >
                           {option.icon}
@@ -297,7 +297,7 @@ function DataTableFilterDropdown<TData>({
 
             {/* Clear all button */}
             {activeCount > 0 && (
-              <div className="pt-2 border-t border-default-200">
+              <div className="pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={clearAll}
@@ -343,7 +343,7 @@ function DataTablePagination<TData>({ table }: { table: Table<TData> }) {
           <select
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
-            className="rounded-md border border-default-200 bg-default-50 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
+            className="rounded-md border border-border bg-surface px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
           >
             {[10, 20, 30, 50, 100].map((size) => (
               <option key={size} value={size}>
@@ -410,10 +410,10 @@ function DataTableSkeleton({ columnCount }: { columnCount: number }) {
   return (
     <>
       {Array.from({ length: 5 }).map((_, rowIdx) => (
-        <tr key={rowIdx} className="border-b border-default-100">
+        <tr key={rowIdx} className="border-b border-border">
           {Array.from({ length: columnCount }).map((_, colIdx) => (
             <td key={colIdx} className="px-4 py-3">
-              <div className="h-4 w-3/4 animate-pulse rounded bg-default-200" />
+              <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
             </td>
           ))}
         </tr>
@@ -520,10 +520,10 @@ export function DataTable<TData>({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-default-200 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-default-100">
+            <thead className="bg-surface border-b">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -542,7 +542,7 @@ export function DataTable<TData>({
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-default-100">
+            <tbody className="divide-y">
               {isLoading ? (
                 <DataTableSkeleton columnCount={allColumns.length} />
               ) : table.getRowModel().rows.length > 0 ? (
@@ -551,8 +551,8 @@ export function DataTable<TData>({
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
                     className={`
-                      border-b border-default-200 transition-colors
-                      ${onRowClick ? 'cursor-pointer hover:bg-default-100' : ''}
+                      border-b border-border transition-colors
+                      ${onRowClick ? 'cursor-pointer hover:bg-accent-soft-hover/20' : ''}
                       ${row.getIsSelected() ? 'bg-accent/5' : ''}
                     `}
                   >

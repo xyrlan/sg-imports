@@ -205,7 +205,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm border-collapse">
                         <thead>
-                          <tr className="border-b border-default-200">
+                          <tr className="border-b border-border">
                             <th className="py-2 px-2 text-left text-xs font-medium text-muted">
                               {t('product')}
                             </th>
@@ -235,7 +235,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                             return (
                               <tr
                                 key={item.id}
-                                className={`border-b border-default-100 last:border-0 transition-opacity ${isRemoved ? 'opacity-40' : ''}`}
+                                className={`border-b border-border last:border-0 transition-opacity ${isRemoved ? 'opacity-40' : ''}`}
                               >
                                 <td className="py-2 px-2 text-foreground">
                                   {item.variant?.product?.name ?? '—'}

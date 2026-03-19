@@ -74,7 +74,7 @@ export function ShipmentStepper({
           } else if (isCurrent) {
             buttonClasses += 'bg-accent/10 text-accent cursor-pointer hover:bg-accent/20';
           } else {
-            buttonClasses += 'bg-default-100 text-muted cursor-not-allowed';
+            buttonClasses += 'bg-border text-muted cursor-not-allowed';
           }
 
           if (isViewing && !isCanceled) {
@@ -104,7 +104,7 @@ export function ShipmentStepper({
               {!isLastStep && (
                 <div
                   className={`h-0.5 w-6 mx-1 shrink-0 transition-colors ${
-                    connectorCompleted ? 'bg-success' : 'bg-default-200'
+                    connectorCompleted ? 'bg-success' : 'bg-surface'
                   }`}
                 />
               )}

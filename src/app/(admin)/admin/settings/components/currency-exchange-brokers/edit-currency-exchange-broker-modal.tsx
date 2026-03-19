@@ -44,7 +44,7 @@ export function EditCurrencyExchangeBrokerModal({
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
               <Modal.Header>
-                <Modal.Icon className="bg-default text-foreground">
+                <Modal.Icon className="bg-surface text-foreground">
                   <Landmark className="size-5" />
                 </Modal.Icon>
                 <Modal.Heading>{t('CurrencyExchangeBrokers.edit')} - {broker.name}</Modal.Heading>

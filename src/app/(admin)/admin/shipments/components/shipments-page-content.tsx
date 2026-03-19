@@ -97,7 +97,7 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
     }),
     columnHelper.accessor('createdAt', {
       header: t('columns.created'),
-      cell: (info) => <span className="text-sm">{formatDateBR(info.getValue())}</span>,
+      cell: (info) => <span className="text-sm text-muted">{formatDateBR(info.getValue())}</span>,
     }),
   ];
 
@@ -140,9 +140,9 @@ export function ShipmentsPageContent({ shipments }: ShipmentsPageContentProps) {
   ];
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted mt-1">{t('description')}</p>
       </div>
 

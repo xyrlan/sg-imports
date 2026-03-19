@@ -22,7 +22,7 @@ export function NavbarMobileMenu({ links }: NavbarMobileMenuProps) {
   return (
     <Dropdown>
       <Dropdown.Trigger
-        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-default-100 transition-colors outline-none"
+        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-border transition-colors outline-none"
         aria-label={unreadCount > 0 ? `${t('menu')} - ${unreadCount} ${t('notifications')}` : t('menu')}
       >
         <Menu className="w-5 h-5 text-foreground" aria-hidden />
