@@ -86,10 +86,9 @@ export function GenerateInvoiceModal({
   const showAmountField = type === 'MERCHANDISE' || (type === 'BALANCE' && !readOnlyAmount);
 
   return (
-    <>
+    <Modal>
       <span onClick={() => setIsOpen(true)}>{trigger}</span>
-      <Modal>
-        <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
           <Modal.Container>
             <Modal.Dialog>
               <Modal.CloseTrigger />
@@ -152,7 +151,6 @@ export function GenerateInvoiceModal({
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>
-      </Modal>
-    </>
+    </Modal>
   );
 }

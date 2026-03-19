@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label } from '@heroui/react';
 import { DollarSign, ExternalLink, Pencil } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { GenerateInvoiceModal } from '../modals/generate-invoice-modal';
@@ -68,17 +68,17 @@ function ProductionCard({ shipment, readOnly }: ProductionCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
-      <p className="text-sm font-semibold text-default-700">{t('production')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('production')}</p>
       <div className="flex items-end gap-3">
-        <div className="flex-1 space-y-1">
-          <label className="block text-xs text-default-500">{t('productionReadyDate')}</label>
-          <input
-            type="date"
-            value={productionDate}
-            onChange={(e) => setProductionDate(e.target.value)}
-            disabled={readOnly}
-            className="w-full rounded-md border border-default-300 px-3 py-1.5 text-sm disabled:opacity-50"
-          />
+        <div className="flex-1">
+          <TextField variant="primary" isDisabled={readOnly}>
+            <Label>{t('productionReadyDate')}</Label>
+            <Input
+              type="date"
+              value={productionDate}
+              onChange={(e) => setProductionDate(e.target.value)}
+            />
+          </TextField>
         </div>
         {!readOnly && (
           <Button size="sm" variant="primary" onPress={handleSave} isPending={isPending}>
@@ -87,8 +87,8 @@ function ProductionCard({ shipment, readOnly }: ProductionCardProps) {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-default-500">{t('fobAdvancePercentage')}:</span>
-        <span className="text-sm font-medium text-default-700">
+        <span className="text-xs text-muted">{t('fobAdvancePercentage')}:</span>
+        <span className="text-sm font-medium text-foreground">
           {shipment.fobAdvancePercentage ?? '—'}%
         </span>
       </div>
@@ -114,11 +114,11 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
-      <p className="text-sm font-semibold text-default-700">{t('payments')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('payments')}</p>
 
       {/* Progress */}
       <div className="space-y-1.5">
-        <div className="flex justify-between text-xs text-default-500">
+        <div className="flex justify-between text-xs text-muted">
           <span>
             {t('progress', {
               paid: `$${paidAmount.toFixed(2)}`,
@@ -167,19 +167,19 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-default-200">
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('transactionTable.number')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('transactionTable.amountUsd')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('transactionTable.status')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('transactionTable.date')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('transactionTable.proof')}
                 </th>
               </tr>
@@ -187,8 +187,8 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
             <tbody>
               {merchandiseTxns.map((tx, idx) => (
                 <tr key={tx.id} className="border-b border-default-100 last:border-0">
-                  <td className="py-2 px-2 text-default-600">{idx + 1}</td>
-                  <td className="py-2 px-2 text-default-700 font-medium">
+                  <td className="py-2 px-2 text-muted">{idx + 1}</td>
+                  <td className="py-2 px-2 text-foreground font-medium">
                     {tx.amountUsd ? `$${tx.amountUsd}` : '—'}
                   </td>
                   <td className="py-2 px-2">
@@ -200,7 +200,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
                       {tx.status}
                     </Chip>
                   </td>
-                  <td className="py-2 px-2 text-default-600">{formatDate(tx.paidAt)}</td>
+                  <td className="py-2 px-2 text-muted">{formatDate(tx.paidAt)}</td>
                   <td className="py-2 px-2">
                     {tx.proofUrl ? (
                       <a
@@ -213,7 +213,7 @@ function FobPaymentsCard({ shipment, readOnly }: FobPaymentsCardProps) {
                         Ver
                       </a>
                     ) : (
-                      <span className="text-default-400">—</span>
+                      <span className="text-muted">—</span>
                     )}
                   </td>
                 </tr>
@@ -251,7 +251,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-default-700">{t('exchangeContracts')}</p>
+        <p className="text-sm font-semibold text-foreground">{t('exchangeContracts')}</p>
         {!readOnly && (
           <CreateExchangeContractModal
             shipmentId={shipment.id}
@@ -276,25 +276,25 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-default-200">
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.supplier')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.contractNumber')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.broker')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.amountUsd')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.exchangeRate')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.swift')}
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('contractTable.contract')}
                 </th>
               </tr>
@@ -302,13 +302,13 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
             <tbody>
               {allContracts.map((ec) => (
                 <tr key={ec.id} className="border-b border-default-100 last:border-0">
-                  <td className="py-2 px-2 text-default-600">{ec.supplier?.name ?? '—'}</td>
-                  <td className="py-2 px-2 text-default-700 font-medium">{ec.contractNumber}</td>
-                  <td className="py-2 px-2 text-default-600">
+                  <td className="py-2 px-2 text-muted">{ec.supplier?.name ?? '—'}</td>
+                  <td className="py-2 px-2 text-foreground font-medium">{ec.contractNumber}</td>
+                  <td className="py-2 px-2 text-muted">
                     {ec.broker?.name ?? ec.brokerName ?? '—'}
                   </td>
-                  <td className="py-2 px-2 text-default-700">${ec.amountUsd}</td>
-                  <td className="py-2 px-2 text-default-600">{ec.exchangeRate}</td>
+                  <td className="py-2 px-2 text-foreground">${ec.amountUsd}</td>
+                  <td className="py-2 px-2 text-muted">{ec.exchangeRate}</td>
                   <td className="py-2 px-2">
                     {ec.swiftFileUrl ? (
                       <a
@@ -321,7 +321,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
                         Swift
                       </a>
                     ) : (
-                      <span className="text-default-400">—</span>
+                      <span className="text-muted">—</span>
                     )}
                   </td>
                   <td className="py-2 px-2">
@@ -336,7 +336,7 @@ function ExchangeContractsCard({ shipment, readOnly }: ExchangeContractsCardProp
                         PDF
                       </a>
                     ) : (
-                      <span className="text-default-400">—</span>
+                      <span className="text-muted">—</span>
                     )}
                   </td>
                 </tr>
@@ -361,8 +361,8 @@ export function MerchandisePaymentStep({ shipment, readOnly = false }: Merchandi
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-default-400" />
-          <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
+          <DollarSign className="h-5 w-5 text-muted" />
+          <h3 className="text-base font-semibold text-foreground">{t('title')}</h3>
         </div>
         {!readOnly && (
           <EditItemsModal

@@ -74,7 +74,7 @@ export function ShipmentStepper({
           } else if (isCurrent) {
             buttonClasses += 'bg-accent/10 text-accent cursor-pointer hover:bg-accent/20';
           } else {
-            buttonClasses += 'bg-default-100 text-default-400 cursor-not-allowed';
+            buttonClasses += 'bg-default-100 text-muted cursor-not-allowed';
           }
 
           if (isViewing && !isCanceled) {

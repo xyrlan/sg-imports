@@ -54,23 +54,23 @@ export function ShipmentSummaryCard({
     <div className="flex flex-wrap gap-4 p-4 rounded-lg bg-default-50 border border-default-200">
       {/* FOB Total */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-default-500">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
           <DollarSign className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
-          <span className="text-xs text-default-400">{t('fobTotal')}</span>
-          <span className="text-sm font-semibold text-default-700">{formatUsd(totalProductsUsd)}</span>
+          <span className="text-xs text-muted">{t('fobTotal')}</span>
+          <span className="text-sm font-semibold text-foreground">{formatUsd(totalProductsUsd)}</span>
         </div>
       </div>
 
       {/* % Paid */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-default-500">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
           <Percent className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
-          <span className="text-xs text-default-400">{t('paid')}</span>
-          <span className="text-sm font-semibold text-default-700">
+          <span className="text-xs text-muted">{t('paid')}</span>
+          <span className="text-sm font-semibold text-foreground">
             {calcPaidPercent(totalProductsUsd, totalPaidUsd)}
           </span>
         </div>
@@ -78,23 +78,23 @@ export function ShipmentSummaryCard({
 
       {/* ETA */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-default-500">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
           <CalendarClock className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
-          <span className="text-xs text-default-400">{t('eta')}</span>
-          <span className="text-sm font-semibold text-default-700">{formatDateBR(eta)}</span>
+          <span className="text-xs text-muted">{t('eta')}</span>
+          <span className="text-sm font-semibold text-foreground">{formatDateBR(eta)}</span>
         </div>
       </div>
 
       {/* Modality */}
       <div className="flex items-center gap-2">
-        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-default-500">
+        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-default-100 text-muted">
           <Ship className="h-3.5 w-3.5" />
         </span>
         <div className="flex flex-col">
-          <span className="text-xs text-default-400">{t('modality')}</span>
-          <span className="text-sm font-semibold text-default-700">{shipmentType.replace(/_/g, ' ')}</span>
+          <span className="text-xs text-muted">{t('modality')}</span>
+          <span className="text-sm font-semibold text-foreground">{shipmentType.replace(/_/g, ' ')}</span>
         </div>
       </div>
 

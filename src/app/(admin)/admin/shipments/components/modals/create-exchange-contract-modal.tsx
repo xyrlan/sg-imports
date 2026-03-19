@@ -114,10 +114,9 @@ export function CreateExchangeContractModal({
   };
 
   return (
-    <>
+    <Modal>
       <span onClick={() => setIsOpen(true)}>{trigger}</span>
-      <Modal>
-        <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
           <Modal.Container>
             <Modal.Dialog>
               <Modal.CloseTrigger />
@@ -306,7 +305,6 @@ export function CreateExchangeContractModal({
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>
-      </Modal>
-    </>
+    </Modal>
   );
 }

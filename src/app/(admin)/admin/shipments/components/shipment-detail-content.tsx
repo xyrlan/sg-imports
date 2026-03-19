@@ -166,13 +166,13 @@ export function ShipmentDetailContent({
         <div className="flex items-center gap-3">
           <Link
             href="/admin/shipments"
-            className="inline-flex items-center gap-1.5 text-sm text-default-500 hover:text-default-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             {t('back')}
           </Link>
-          <span className="text-default-300">/</span>
-          <h1 className="text-lg font-semibold text-default-900">
+          <span className="text-muted">/</span>
+          <h1 className="text-lg font-semibold text-foreground">
             {t('title', { code: shipmentCode })} — {clientName}
           </h1>
         </div>

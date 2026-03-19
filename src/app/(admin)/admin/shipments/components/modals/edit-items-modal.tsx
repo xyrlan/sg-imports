@@ -176,10 +176,9 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
   };
 
   return (
-    <>
+    <Modal>
       <span onClick={() => setIsOpen(true)}>{trigger}</span>
-      <Modal>
-        <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
           <Modal.Container>
             <Modal.Dialog>
               <Modal.CloseTrigger />
@@ -202,25 +201,25 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
 
                   {/* Items table */}
                   {quoteItems.length === 0 ? (
-                    <p className="text-sm text-default-500 text-center py-4">—</p>
+                    <p className="text-sm text-muted text-center py-4">—</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm border-collapse">
                         <thead>
                           <tr className="border-b border-default-200">
-                            <th className="py-2 px-2 text-left text-xs font-medium text-default-500">
+                            <th className="py-2 px-2 text-left text-xs font-medium text-muted">
                               {t('product')}
                             </th>
-                            <th className="py-2 px-2 text-left text-xs font-medium text-default-500">
+                            <th className="py-2 px-2 text-left text-xs font-medium text-muted">
                               {t('variant')}
                             </th>
-                            <th className="py-2 px-2 text-left text-xs font-medium text-default-500 w-24">
+                            <th className="py-2 px-2 text-left text-xs font-medium text-muted w-24">
                               {t('quantity')}
                             </th>
-                            <th className="py-2 px-2 text-left text-xs font-medium text-default-500 w-28">
+                            <th className="py-2 px-2 text-left text-xs font-medium text-muted w-28">
                               {t('priceUsd')}
                             </th>
-                            <th className="py-2 px-2 text-left text-xs font-medium text-default-500 w-24">
+                            <th className="py-2 px-2 text-left text-xs font-medium text-muted w-24">
                               {t('total')}
                             </th>
                             <th className="py-2 px-2 w-10" />
@@ -239,15 +238,15 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                                 key={item.id}
                                 className={`border-b border-default-100 last:border-0 transition-opacity ${isRemoved ? 'opacity-40' : ''}`}
                               >
-                                <td className="py-2 px-2 text-default-700">
+                                <td className="py-2 px-2 text-foreground">
                                   {item.variant?.product?.name ?? '—'}
                                 </td>
-                                <td className="py-2 px-2 text-default-600">
+                                <td className="py-2 px-2 text-muted">
                                   {item.variant?.name ?? '—'}
                                 </td>
                                 <td className="py-2 px-2">
                                   {isRemoved ? (
-                                    <span className="text-default-400 line-through">{originalQty}</span>
+                                    <span className="text-muted line-through">{originalQty}</span>
                                   ) : (
                                     <TextField variant="primary">
                                       <Input
@@ -266,7 +265,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                                 </td>
                                 <td className="py-2 px-2">
                                   {isRemoved ? (
-                                    <span className="text-default-400 line-through">
+                                    <span className="text-muted line-through">
                                       ${parseFloat(item.priceUsd ?? '0').toFixed(2)}
                                     </span>
                                   ) : (
@@ -285,9 +284,9 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
                                     </TextField>
                                   )}
                                 </td>
-                                <td className="py-2 px-2 text-default-700 font-medium">
+                                <td className="py-2 px-2 text-foreground font-medium">
                                   {isRemoved ? (
-                                    <span className="text-default-400">—</span>
+                                    <span className="text-muted">—</span>
                                   ) : (
                                     `$${total}`
                                   )}
@@ -323,7 +322,7 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
 
                   {/* Feedback */}
                   {noChangesMessage && (
-                    <p className="text-sm text-default-500 text-center">{t('noChanges')}</p>
+                    <p className="text-sm text-muted text-center">{t('noChanges')}</p>
                   )}
                   {error && <FormError message={error} />}
                 </div>
@@ -350,7 +349,6 @@ export function EditItemsModal({ shipment, onSuccess, trigger }: EditItemsModalP
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>
-      </Modal>
-    </>
+    </Modal>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label } from '@heroui/react';
 import { FileText, ExternalLink } from 'lucide-react';
 import { FileUpload } from '@/components/ui/file-upload';
 import type { ShipmentDetail } from '../shipment-utils';
@@ -104,8 +104,8 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-default-700">{t('exchangeSummary')}</p>
-        <span className="text-xs text-default-500">
+        <p className="text-sm font-semibold text-foreground">{t('exchangeSummary')}</p>
+        <span className="text-xs text-muted">
           {t('numContracts')}: {totalContracts}
         </span>
       </div>
@@ -115,13 +115,13 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-default-200">
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   Fornecedor
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('totalPaid')} (USD)
                 </th>
-                <th className="py-2 px-2 text-left text-xs text-default-500 font-medium">
+                <th className="py-2 px-2 text-left text-xs text-muted font-medium">
                   {t('avgRate')}
                 </th>
               </tr>
@@ -129,11 +129,11 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
             <tbody>
               {supplierRows.map(([id, data]) => (
                 <tr key={id} className="border-b border-default-100 last:border-0">
-                  <td className="py-2 px-2 text-default-700">{data.name}</td>
-                  <td className="py-2 px-2 text-default-700 font-medium">
+                  <td className="py-2 px-2 text-foreground">{data.name}</td>
+                  <td className="py-2 px-2 text-foreground font-medium">
                     ${data.totalUsd.toFixed(2)}
                   </td>
-                  <td className="py-2 px-2 text-default-600">
+                  <td className="py-2 px-2 text-muted">
                     {data.rateCount > 0
                       ? (data.rateSum / data.rateCount).toFixed(4)
                       : '—'}
@@ -144,7 +144,7 @@ function ExchangeSummaryCard({ shipment }: ExchangeSummaryCardProps) {
           </table>
         </div>
       ) : (
-        <p className="text-xs text-default-400">—</p>
+        <p className="text-xs text-muted">—</p>
       )}
     </div>
   );
@@ -173,12 +173,12 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
-      <p className="text-sm font-semibold text-default-700">{supplier.name}</p>
+      <p className="text-sm font-semibold text-foreground">{supplier.name}</p>
 
       {/* Commercial Invoice */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <p className="text-xs text-default-500">{t('invoice')}</p>
+          <p className="text-xs text-muted">{t('invoice')}</p>
           {existingInvoice && (
             <Chip size="sm" variant="soft" color="success">
               {t('uploaded')}
@@ -201,7 +201,7 @@ function SupplierDocumentsCard({ shipment, supplier, readOnly }: SupplierDocumen
       {/* Packing List */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <p className="text-xs text-default-500">{t('packingList')}</p>
+          <p className="text-xs text-muted">{t('packingList')}</p>
           {existingPackingList && (
             <Chip size="sm" variant="soft" color="success">
               {t('uploaded')}
@@ -260,7 +260,7 @@ function OtherDocumentsCard({ shipment, readOnly }: OtherDocumentsCardProps) {
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-default-700">{t('otherDocuments')}</p>
+        <p className="text-sm font-semibold text-foreground">{t('otherDocuments')}</p>
         {!readOnly && !isAdding && (
           <Button size="sm" variant="outline" onPress={() => setIsAdding(true)}>
             {t('addDocument')}
@@ -287,17 +287,15 @@ function OtherDocumentsCard({ shipment, readOnly }: OtherDocumentsCardProps) {
       )}
 
       {isAdding && (
-        <div className="space-y-3 rounded-md border border-default-200 bg-white p-3">
-          <div className="space-y-1">
-            <label className="block text-xs text-default-500">{t('documentName')}</label>
-            <input
-              type="text"
+        <div className="space-y-3 rounded-md border border-default-200 p-3">
+          <TextField variant="primary">
+            <Label>{t('documentName')}</Label>
+            <Input
               value={docName}
               onChange={(e) => setDocName(e.target.value)}
-              className="w-full rounded-md border border-default-300 px-3 py-1.5 text-sm"
               placeholder={t('documentName')}
             />
-          </div>
+          </TextField>
           <FileUpload
             label=""
             name="otherDocFile"
@@ -359,7 +357,7 @@ function ChecklistCard({ shipment, suppliers }: ChecklistCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-2">
-      <p className="text-sm font-semibold text-default-700">{t('checklist')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('checklist')}</p>
       {pendingCount > 0 ? (
         <Chip size="sm" variant="soft" color="warning">
           {t('pendingDocs', { count: pendingCount })}
@@ -387,15 +385,15 @@ export function DocumentPreparationStep({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <FileText className="h-5 w-5 text-default-400" />
-        <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
+        <FileText className="h-5 w-5 text-muted" />
+        <h3 className="text-base font-semibold text-foreground">{t('title')}</h3>
       </div>
 
       <ExchangeSummaryCard shipment={shipment} />
 
       {suppliers.length > 0 && (
         <div className="space-y-3">
-          <p className="text-sm font-semibold text-default-700">{t('documentsPerSupplier')}</p>
+          <p className="text-sm font-semibold text-foreground">{t('documentsPerSupplier')}</p>
           {suppliers.map((supplier) => (
             <SupplierDocumentsCard
               key={supplier.id}

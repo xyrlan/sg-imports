@@ -49,8 +49,8 @@ export function ContractCreationStep({ shipment }: ContractCreationStepProps) {
     <div className="space-y-4">
       {/* Contract signed status */}
       <div className="flex items-center gap-3">
-        <FileCheck className="h-5 w-5 text-default-400 shrink-0" />
-        <span className="text-sm text-default-600">{t('contractSigned')}</span>
+        <FileCheck className="h-5 w-5 text-muted shrink-0" />
+        <span className="text-sm text-muted">{t('contractSigned')}</span>
         <Chip
           color={isContractSigned ? 'success' : 'warning'}
           variant="soft"
@@ -63,8 +63,8 @@ export function ContractCreationStep({ shipment }: ContractCreationStepProps) {
       {/* Signature date (only when signed) */}
       {isContractSigned && (
         <div className="flex items-center gap-3">
-          <span className="text-sm text-default-400">{t('signatureDate')}:</span>
-          <span className="text-sm font-medium text-default-700">{formatDate(signatureDate)}</span>
+          <span className="text-sm text-muted">{t('signatureDate')}:</span>
+          <span className="text-sm font-medium text-foreground">{formatDate(signatureDate)}</span>
         </div>
       )}
 

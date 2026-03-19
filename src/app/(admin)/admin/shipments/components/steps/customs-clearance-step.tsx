@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label } from '@heroui/react';
 import { Shield } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { generate90InvoiceAction, registerDuimpAction } from '../../[id]/actions';
@@ -73,30 +73,30 @@ function Invoice90Card({ shipment, readOnly }: Invoice90CardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
-      <p className="text-sm font-semibold text-default-700">{t('invoice90')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('invoice90')}</p>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
-          <span className="text-xs text-default-500">{t('totalCosts')}: </span>
-          <span className="font-medium text-default-700">{formatBrl(shipment.totalCostsBrl)}</span>
+          <span className="text-xs text-muted">{t('totalCosts')}: </span>
+          <span className="font-medium text-foreground">{formatBrl(shipment.totalCostsBrl)}</span>
         </div>
         <div>
-          <span className="text-xs text-default-500">{t('paidFobBrl')}: </span>
-          <span className="font-medium text-default-700">{formatBrl(String(paidFobBrl))}</span>
+          <span className="text-xs text-muted">{t('paidFobBrl')}: </span>
+          <span className="font-medium text-foreground">{formatBrl(String(paidFobBrl))}</span>
         </div>
         <div>
-          <span className="text-xs text-default-500">{t('remaining')}: </span>
-          <span className="font-medium text-default-700">{formatBrl(String(remaining))}</span>
+          <span className="text-xs text-muted">{t('remaining')}: </span>
+          <span className="font-medium text-foreground">{formatBrl(String(remaining))}</span>
         </div>
         <div>
-          <span className="text-xs text-default-500">{t('invoice90Value')}: </span>
-          <span className="font-medium text-default-700">{formatBrl(String(invoice90Value))}</span>
+          <span className="text-xs text-muted">{t('invoice90Value')}: </span>
+          <span className="font-medium text-foreground">{formatBrl(String(invoice90Value))}</span>
         </div>
       </div>
 
       {balanceTxn && (
         <div className="flex items-center gap-2">
-          <span className="text-xs text-default-500">{t('invoiceStatus')}: </span>
+          <span className="text-xs text-muted">{t('invoiceStatus')}: </span>
           <Chip
             size="sm"
             variant="soft"
@@ -144,38 +144,37 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
-      <p className="text-sm font-semibold text-default-700">{t('duimp')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('duimp')}</p>
 
       {/* DUIMP number input */}
-      <div className="space-y-1">
-        <label className="block text-xs text-default-500">{t('duimpNumber')}</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={duimpNumber}
-            onChange={(e) => setDuimpNumber(e.target.value)}
-            disabled={readOnly || hasDuimp}
-            className="flex-1 rounded-md border border-default-300 px-3 py-1.5 text-sm disabled:opacity-50"
-          />
-          {!readOnly && !hasDuimp && (
-            <Button
-              size="sm"
-              variant="primary"
-              onPress={handleRegister}
-              isPending={isPending}
-              isDisabled={!duimpNumber.trim()}
-            >
-              {t('register')}
-            </Button>
-          )}
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <TextField variant="primary" isDisabled={readOnly || hasDuimp}>
+            <Label>{t('duimpNumber')}</Label>
+            <Input
+              value={duimpNumber}
+              onChange={(e) => setDuimpNumber(e.target.value)}
+            />
+          </TextField>
         </div>
+        {!readOnly && !hasDuimp && (
+          <Button
+            size="sm"
+            variant="primary"
+            onPress={handleRegister}
+            isPending={isPending}
+            isDisabled={!duimpNumber.trim()}
+          >
+            {t('register')}
+          </Button>
+        )}
       </div>
 
       {/* Channel + Tax breakdown (shown when DUIMP + channel exist) */}
       {hasDuimp && hasChannel && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-default-500">{t('channel')}: </span>
+            <span className="text-xs text-muted">{t('channel')}: </span>
             <Chip
               size="sm"
               variant="soft"
@@ -187,15 +186,15 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
 
           {taxExpenses.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-default-600">{t('taxBreakdown')}</p>
+              <p className="text-xs font-medium text-muted">{t('taxBreakdown')}</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="border-b border-default-200">
-                      <th className="py-1.5 px-2 text-left text-xs text-default-500 font-medium">
+                      <th className="py-1.5 px-2 text-left text-xs text-muted font-medium">
                         {t('taxCategory')}
                       </th>
-                      <th className="py-1.5 px-2 text-left text-xs text-default-500 font-medium">
+                      <th className="py-1.5 px-2 text-left text-xs text-muted font-medium">
                         {t('taxValue')}
                       </th>
                     </tr>
@@ -203,10 +202,10 @@ function DuimpCard({ shipment, readOnly }: DuimpCardProps) {
                   <tbody>
                     {taxExpenses.map((exp) => (
                       <tr key={exp.id} className="border-b border-default-100 last:border-0">
-                        <td className="py-1.5 px-2 text-default-700">
+                        <td className="py-1.5 px-2 text-foreground">
                           {exp.category?.replace('TAX_', '') ?? exp.category}
                         </td>
-                        <td className="py-1.5 px-2 text-default-700 font-medium">
+                        <td className="py-1.5 px-2 text-foreground font-medium">
                           {formatBrl(exp.value)}
                         </td>
                       </tr>
@@ -235,8 +234,8 @@ export function CustomsClearanceStep({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-default-400" />
-        <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
+        <Shield className="h-5 w-5 text-muted" />
+        <h3 className="text-base font-semibold text-foreground">{t('title')}</h3>
       </div>
 
       <Invoice90Card shipment={shipment} readOnly={readOnly} />

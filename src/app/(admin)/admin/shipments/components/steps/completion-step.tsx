@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, Chip } from '@heroui/react';
+import { Button, Chip, TextField, Input, Label } from '@heroui/react';
 import { CheckCircle } from 'lucide-react';
 import type { ShipmentDetail } from '../shipment-utils';
 import { ShipmentDocumentField } from '../shipment-document-field';
@@ -63,13 +63,13 @@ function FiscalDocumentsCard({ shipment, readOnly }: FiscalDocumentsCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-4">
-      <p className="text-sm font-semibold text-default-700">{t('fiscalDocuments')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('fiscalDocuments')}</p>
 
       {FISCAL_DOC_TYPES.map(({ type, labelKey, accept }) => {
         const existing = getDocument(type);
         return (
           <div key={type} className="space-y-1">
-            <p className="text-xs text-default-500">{t(labelKey)}</p>
+            <p className="text-xs text-muted">{t(labelKey)}</p>
             <ShipmentDocumentField
               shipmentId={shipment.id}
               documentType={type}
@@ -108,45 +108,39 @@ function FinalCostsCard({ shipment, readOnly }: FinalCostsCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
-      <p className="text-sm font-semibold text-default-700">{t('finalCosts')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('finalCosts')}</p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="space-y-1">
-          <label className="block text-xs text-default-500">{t('icmsExitTaxes')}</label>
-          <input
+        <TextField variant="primary" isDisabled={readOnly}>
+          <Label>{t('icmsExitTaxes')}</Label>
+          <Input
             type="number"
             step="0.01"
             min="0"
             value={icmsExitTaxes}
             onChange={(e) => setIcmsExitTaxes(e.target.value)}
-            disabled={readOnly}
-            className="w-full rounded-md border border-default-300 px-3 py-1.5 text-sm disabled:opacity-50"
           />
-        </div>
-        <div className="space-y-1">
-          <label className="block text-xs text-default-500">{t('storageCost')}</label>
-          <input
+        </TextField>
+        <TextField variant="primary" isDisabled={readOnly}>
+          <Label>{t('storageCost')}</Label>
+          <Input
             type="number"
             step="0.01"
             min="0"
             value={storageCost}
             onChange={(e) => setStorageCost(e.target.value)}
-            disabled={readOnly}
-            className="w-full rounded-md border border-default-300 px-3 py-1.5 text-sm disabled:opacity-50"
           />
-        </div>
-        <div className="space-y-1">
-          <label className="block text-xs text-default-500">{t('discounts')}</label>
-          <input
+        </TextField>
+        <TextField variant="primary" isDisabled={readOnly}>
+          <Label>{t('discounts')}</Label>
+          <Input
             type="number"
             step="0.01"
             min="0"
             value={discounts}
             onChange={(e) => setDiscounts(e.target.value)}
-            disabled={readOnly}
-            className="w-full rounded-md border border-default-300 px-3 py-1.5 text-sm disabled:opacity-50"
           />
-        </div>
+        </TextField>
       </div>
 
       {!readOnly && (
@@ -200,19 +194,19 @@ function PLCard({ shipment, readOnly }: PLCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
-      <p className="text-sm font-semibold text-default-700">{t('pl')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('pl')}</p>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
-          <span className="text-xs text-default-500">{t('estimatedCost')}: </span>
-          <span className="font-medium text-default-700">{formatBrl(shipment.totalCostsBrl)}</span>
+          <span className="text-xs text-muted">{t('estimatedCost')}: </span>
+          <span className="font-medium text-foreground">{formatBrl(shipment.totalCostsBrl)}</span>
         </div>
         <div>
-          <span className="text-xs text-default-500">{t('totalRealized')}: </span>
-          <span className="font-medium text-default-700">{formatBrl(String(totalRealized))}</span>
+          <span className="text-xs text-muted">{t('totalRealized')}: </span>
+          <span className="font-medium text-foreground">{formatBrl(String(totalRealized))}</span>
         </div>
         <div>
-          <span className="text-xs text-default-500">{t('finalBalance')}: </span>
+          <span className="text-xs text-muted">{t('finalBalance')}: </span>
           <span className={`font-medium ${finalBalance > 0 ? 'text-danger' : finalBalance < 0 ? 'text-warning' : 'text-success'}`}>
             {formatBrl(String(Math.abs(finalBalance)))}
           </span>
@@ -251,7 +245,7 @@ function PLCard({ shipment, readOnly }: PLCardProps) {
 
       {existingBalanceTxn && (
         <div className="flex items-center gap-2">
-          <span className="text-xs text-default-500">Status: </span>
+          <span className="text-xs text-muted">Status: </span>
           <Chip
             size="sm"
             variant="soft"
@@ -314,31 +308,31 @@ function ServiceFeeCard({ shipment, readOnly }: ServiceFeeCardProps) {
 
   return (
     <div className="rounded-lg border border-default-200 bg-default-50 p-4 space-y-3">
-      <p className="text-sm font-semibold text-default-700">{t('serviceFee')}</p>
+      <p className="text-sm font-semibold text-foreground">{t('serviceFee')}</p>
 
       {isLoadingFee ? (
-        <p className="text-xs text-default-400">{t('loadingFee')}</p>
+        <p className="text-xs text-muted">{t('loadingFee')}</p>
       ) : feePreview ? (
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <span className="text-xs text-default-500">{t('base')}: </span>
-            <span className="text-default-700">{feePreview.calculationBase}</span>
+            <span className="text-xs text-muted">{t('base')}: </span>
+            <span className="text-foreground">{feePreview.calculationBase}</span>
           </div>
           <div>
-            <span className="text-xs text-default-500">{t('percentage')}: </span>
-            <span className="text-default-700">{feePreview.percentage}%</span>
+            <span className="text-xs text-muted">{t('percentage')}: </span>
+            <span className="text-foreground">{feePreview.percentage}%</span>
           </div>
           <div>
-            <span className="text-xs text-default-500">{t('calculatedValue')}: </span>
-            <span className="font-medium text-default-700">{formatBrl(String(feePreview.percentageValue))}</span>
+            <span className="text-xs text-muted">{t('calculatedValue')}: </span>
+            <span className="font-medium text-foreground">{formatBrl(String(feePreview.percentageValue))}</span>
           </div>
           <div>
-            <span className="text-xs text-default-500">{t('minimumFloor')}: </span>
-            <span className="text-default-700">{formatBrl(String(feePreview.minimumValue))}</span>
+            <span className="text-xs text-muted">{t('minimumFloor')}: </span>
+            <span className="text-foreground">{formatBrl(String(feePreview.minimumValue))}</span>
           </div>
           <div className="col-span-2">
-            <span className="text-xs text-default-500">{t('finalFee')}: </span>
-            <span className="font-semibold text-default-700">
+            <span className="text-xs text-muted">{t('finalFee')}: </span>
+            <span className="font-semibold text-foreground">
               {formatBrl(String(feePreview.serviceFee))}
               {feePreview.usedMinimum && (
                 <span className="ml-1 text-xs text-warning font-normal">{t('usedMinimum')}</span>
@@ -379,8 +373,8 @@ export function CompletionStep({ shipment, readOnly = false }: CompletionStepPro
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <CheckCircle className="h-5 w-5 text-default-400" />
-        <h3 className="text-base font-semibold text-default-700">{t('title')}</h3>
+        <CheckCircle className="h-5 w-5 text-muted" />
+        <h3 className="text-base font-semibold text-foreground">{t('title')}</h3>
       </div>
 
       <FiscalDocumentsCard shipment={shipment} readOnly={readOnly} />
