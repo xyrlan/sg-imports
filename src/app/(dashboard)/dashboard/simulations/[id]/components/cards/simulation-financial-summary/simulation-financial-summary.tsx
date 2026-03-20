@@ -69,6 +69,7 @@ export function SimulationFinancialSummary({
       totalFreightUsd,
       totalInsuranceUsd,
       totalTaxesBrl,
+      totalServiceFeeBrl,
       totalLandedCostBrl,
       effectiveDolar,
     } = summary;
@@ -80,22 +81,22 @@ export function SimulationFinancialSummary({
       productPct: totalBrl > 0 ? (fobBrl / totalBrl) * 100 : 0,
       logisticsPct: totalBrl > 0 ? (logisticsBrl / totalBrl) * 100 : 0,
       taxesPct: totalBrl > 0 ? (totalTaxesBrl / totalBrl) * 100 : 0,
+      feePct: totalBrl > 0 ? (totalServiceFeeBrl / totalBrl) * 100 : 0,
     };
   }, [summary]);
 
   if (!summary) return null;
 
-  const { totalFobUsd, totalFreightUsd, totalInsuranceUsd, totalTaxesBrl, totalLandedCostBrl } =
+  const { totalFobUsd, totalFreightUsd, totalInsuranceUsd, totalTaxesBrl, totalServiceFeeBrl, totalLandedCostBrl } =
     summary;
 
   const productPct = financialMetrics?.productPct ?? 0;
   const logisticsPct = financialMetrics?.logisticsPct ?? 0;
   const taxesPct = financialMetrics?.taxesPct ?? 0;
+  const feePct = financialMetrics?.feePct ?? 0;
 
   const FreightIcon =
     selectedModality === 'AIR' || selectedModality === 'EXPRESS' ? Plane : Ship;
-
-  const serviceFeeSnapshot = Number(simulation?.serviceFeeSnapshot ?? 0);
 
   const metadata = (simulation?.metadata as ShippingMetadata | null) ?? {};
   const additionalFreightUsd = metadata.additionalFreightUsd ?? 0;
@@ -142,17 +143,18 @@ export function SimulationFinancialSummary({
             productPct={productPct}
             logisticsPct={logisticsPct}
             taxesPct={taxesPct}
+            feePct={feePct}
           />
 
           <div className="pt-2 mt-2 border-t border-border">
-          {serviceFeeSnapshot > 0 && (
+          {totalServiceFeeBrl > 0 && (
             <>
               <p className="text-xs font-medium text-muted">{t('feeSection')}</p>
               <div className="my-2 mb-4">
                 <FinancialSummaryItem
                   icon={<Coffee className="size-5" />}
                   label={t('totalServiceFee')}
-                  value={formatBrl(serviceFeeSnapshot)}
+                  value={formatBrl(totalServiceFeeBrl)}
                 />
               </div>
             </>

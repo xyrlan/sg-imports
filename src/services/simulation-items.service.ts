@@ -482,6 +482,7 @@ export interface QuoteFinancialSummary {
   totalFreightUsd: number;
   totalInsuranceUsd: number;
   totalTaxesBrl: number;
+  totalServiceFeeBrl: number;
   totalLandedCostBrl: number;
   effectiveDolar: number;
 }
@@ -569,13 +570,15 @@ export async function getQuoteFinancialSummary(
 
   const totalCifBrl =
     (totalFobUsd + totalFreightUsd + totalInsuranceUsd) * effectiveDolar;
-  const totalLandedCostBrl = totalCifBrl + totalTaxesBrl;
+  const totalServiceFeeBrl = Number(simulation.serviceFeeSnapshot ?? 0);
+  const totalLandedCostBrl = totalCifBrl + totalTaxesBrl + totalServiceFeeBrl;
 
   return {
     totalFobUsd,
     totalFreightUsd,
     totalInsuranceUsd,
     totalTaxesBrl,
+    totalServiceFeeBrl,
     totalLandedCostBrl,
     effectiveDolar,
   };

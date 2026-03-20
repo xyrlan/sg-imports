@@ -30,6 +30,7 @@ import {
   runAndPersistEngineResults,
 } from './landed-cost-helpers';
 import { calculateServiceFee } from '@/services/service-fee.service';
+import { apportionByFobUsd } from '../engine/apportionment';
 
 export interface CalculateAndPersistResult {
   success: boolean;
@@ -50,32 +51,69 @@ async function runEngineAndPersist(
   const context = await buildEngineContext({ simulation, engineInputs, uniqueNcms, icmsRate });
   await runAndPersistEngineResults(tx, context, engineInputs, icmsRate);
 
-  // Calculate and persist service fee snapshot after engine results
+  // Calculate and persist service fee snapshot after engine results,
+  // then apportion the fee across items by FOB USD
   if (simulation.id) {
-    const updatedItems = await tx.select().from(quoteItems).where(eq(quoteItems.quoteId, simulation.id));
-    const totalProductsUsd = updatedItems.reduce(
-      (sum, i) => sum + parseFloat(i.priceUsd ?? '0') * i.quantity,
-      0,
-    );
-    const totalCostsBrl = updatedItems.reduce(
-      (sum, i) => sum + parseFloat(i.landedCostTotalSnapshot ?? '0'),
-      0,
-    );
-    const exchangeRate = Number(simulation.targetDolar ?? 0);
+    await calculateAndApportionServiceFee(tx, simulation.id, Number(simulation.targetDolar ?? 0));
+  }
+}
 
-    try {
-      const feeResult = await calculateServiceFee({
-        quoteId: simulation.id,
-        totalProductsUsd,
-        exchangeRate,
-        totalCostsBrl,
-      });
-      await tx.update(quotes).set({
-        serviceFeeSnapshot: feeResult.serviceFee.toFixed(4),
-      }).where(eq(quotes.id, simulation.id));
-    } catch {
-      // Non-blocking: global config may not exist yet
+// ==========================================
+// INTERNAL: Calculate service fee, apportion across items, update snapshots
+// ==========================================
+
+async function calculateAndApportionServiceFee(
+  tx: DbTransaction,
+  quoteId: string,
+  exchangeRate: number,
+): Promise<void> {
+  const updatedItems = await tx.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+  const totalProductsUsd = updatedItems.reduce(
+    (sum, i) => sum.plus(new Decimal(i.priceUsd ?? '0').times(i.quantity)),
+    new Decimal(0),
+  );
+  const totalCostsBrl = updatedItems.reduce(
+    (sum, i) => sum.plus(new Decimal(i.landedCostTotalSnapshot ?? '0')),
+    new Decimal(0),
+  );
+
+  try {
+    const feeResult = await calculateServiceFee({
+      quoteId,
+      totalProductsUsd: totalProductsUsd.toNumber(),
+      exchangeRate,
+      totalCostsBrl: totalCostsBrl.toNumber(),
+    });
+
+    const serviceFee = new Decimal(feeResult.serviceFee);
+    await tx.update(quotes).set({
+      serviceFeeSnapshot: serviceFee.toFixed(4),
+    }).where(eq(quotes.id, quoteId));
+
+    // Apportion service fee across items proportional to FOB USD
+    if (serviceFee.greaterThan(0) && updatedItems.length > 0) {
+      const fobItems = updatedItems.map(i => ({
+        id: i.id,
+        fobUsd: new Decimal(i.priceUsd ?? '0').times(i.quantity).toNumber(),
+      }));
+      const feeShares = apportionByFobUsd(serviceFee.toNumber(), fobItems);
+
+      for (const item of updatedItems) {
+        const feeShare = feeShares.get(item.id) ?? new Decimal(0);
+        const currentTotal = new Decimal(item.landedCostTotalSnapshot ?? '0');
+        const newTotal = currentTotal.plus(feeShare);
+        const newUnit = item.quantity > 0
+          ? newTotal.div(item.quantity)
+          : new Decimal(0);
+
+        await tx.update(quoteItems).set({
+          landedCostTotalSnapshot: newTotal.toDecimalPlaces(4).toFixed(4),
+          landedCostUnitSnapshot: newUnit.toDecimalPlaces(4).toFixed(4),
+        }).where(eq(quoteItems.id, item.id));
+      }
     }
+  } catch {
+    // Non-blocking: global config may not exist yet
   }
 }
 
@@ -522,34 +560,10 @@ export async function calculateAndPersistLandedCost(
   await db.transaction(async (tx) => {
     await runAndPersistEngineResults(tx, context, engineInputs, icmsRate);
 
-    // Service fee is now calculated inside runEngineAndPersist via simulation.id
-    // But calculateAndPersistLandedCost calls runAndPersistEngineResults directly (not runEngineAndPersist)
-    // so we still need to calculate it here
-    const updatedItems = await tx.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
-    const totalProductsUsd = updatedItems.reduce(
-      (sum, i) => sum + parseFloat(i.priceUsd ?? '0') * i.quantity,
-      0,
-    );
-    const totalCostsBrl = updatedItems.reduce(
-      (sum, i) => sum + parseFloat(i.landedCostTotalSnapshot ?? '0'),
-      0,
-    );
+    // Calculate service fee and apportion across items
     const exchangeRate = Number(simulation.targetDolar ?? 0);
-
-    try {
-      const feeResult = await calculateServiceFee({
-        quoteId,
-        totalProductsUsd,
-        exchangeRate,
-        totalCostsBrl,
-      });
-      await tx.update(quotes).set({
-        serviceFeeSnapshot: feeResult.serviceFee.toFixed(4),
-        isRecalculationNeeded: false,
-      }).where(eq(quotes.id, quoteId));
-    } catch {
-      await tx.update(quotes).set({ isRecalculationNeeded: false }).where(eq(quotes.id, quoteId));
-    }
+    await calculateAndApportionServiceFee(tx, quoteId, exchangeRate);
+    await tx.update(quotes).set({ isRecalculationNeeded: false }).where(eq(quotes.id, quoteId));
   });
 
   return {

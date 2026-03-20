@@ -1773,7 +1773,7 @@
       "commissionLabel": "Comissão",
       "totalFreightUsd": "Total Frete (USD)",
       "additionalFreightLabel": "Despesas adicionais",
-      "configureFreightHint": "Configure o frete em Configurações para personalizar",
+      "configureFreightHint": "Este frete não esta configurado no Sistema",
       "totalInsuranceUsd": "Total Seguro (USD)",
       "totalTaxesBrl": "Total Impostos (BRL)",
       "totalLandedCostBrl": "Custo Posto Total (BRL)",
@@ -1796,7 +1796,9 @@
       "taxAFRMM": "AFRMM",
       "taxICMS": "ICMS",
       "feeSection": "Honorários",
-      "totalServiceFee": "Total Honorários"
+      "totalServiceFee": "Total Honorários",
+      "feeIncludedInTotal": "Incluso no custo posto total",
+      "feeShare": "Honorários"
     },
     "SimulatedProduct": {
       "name": "Nome do produto",

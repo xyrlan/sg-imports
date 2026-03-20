@@ -6,12 +6,14 @@ interface CostBreakdownBarProps {
   productPct: number;
   logisticsPct: number;
   taxesPct: number;
+  feePct: number;
 }
 
 export function CostBreakdownBar({
   productPct,
   logisticsPct,
   taxesPct,
+  feePct,
 }: CostBreakdownBarProps) {
   const t = useTranslations('Simulations.FinancialSummary');
 
@@ -40,6 +42,13 @@ export function CostBreakdownBar({
             title={`${t('taxesShare')}: ${taxesPct.toFixed(1)}%`}
           />
         )}
+        {feePct > 0 && (
+          <div
+            className="h-full bg-purple-500 transition-all"
+            style={{ width: `${feePct}%` }}
+            title={`${t('feeShare')}: ${feePct.toFixed(1)}%`}
+          />
+        )}
       </div>
       <div className="flex flex-wrap gap-4 text-xs">
         <span className="flex items-center gap-1.5">
@@ -54,6 +63,12 @@ export function CostBreakdownBar({
           <span className="size-2 rounded-full bg-warning" />
           {t('taxesShare')} ({taxesPct.toFixed(1)}%)
         </span>
+        {feePct > 0 && (
+          <span className="flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-purple-500" />
+            {t('feeShare')} ({feePct.toFixed(1)}%)
+          </span>
+        )}
       </div>
     </div>
   );
