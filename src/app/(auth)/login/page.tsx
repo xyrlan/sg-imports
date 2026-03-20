@@ -81,18 +81,18 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Logout / Switch account */}
+          {/* Logout / Switch account
           <div className="mb-4">
             <Link href="/logout" className="text-sm text-muted hover:text-foreground">
               {t('logoutAndSwitchAccount')}
             </Link>
-          </div>
+          </div> */}
 
           {/* Registration Links */}
           <div className="flex flex-col gap-2">
             <Link href={`/register/owner${next ? '?next=' + encodeURIComponent(next) : ''}`}>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="w-full"
                 size="lg"
               >
@@ -102,7 +102,7 @@ export default function LoginPage() {
             
             <Link href={`/register/seller${next ? '?next=' + encodeURIComponent(next) : ''}`}>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="w-full"
                 size="lg"
               >
