@@ -741,6 +741,8 @@ export async function generateBalanceInvoiceAction(
 
 /**
  * Calculate the service fee and generate a SERVICE_FEE transaction.
+ * Prefers the pre-calculated serviceFeeSnapshot from the quote; falls back to live calculation
+ * for backward compatibility with shipments created before the snapshot was introduced.
  */
 export async function generateServiceFeeInvoiceAction(
   shipmentId: string,
@@ -754,43 +756,49 @@ export async function generateServiceFeeInvoiceAction(
         clientOrganizationId: true,
         totalProductsUsd: true,
         totalCostsBrl: true,
+        quoteId: true,
       },
       with: {
-        quote: { columns: { exchangeRateIof: true } },
+        quote: { columns: { exchangeRateIof: true, serviceFeeSnapshot: true } },
         clientOrganization: { columns: { orderType: true } },
       },
     });
 
     if (!shipment) return { success: false, error: 'Shipment not found.' };
 
-    // Prefer the exchange rate recorded at simulation time (quote.exchangeRateIof).
-    // Falls back to 5.0 only when no linked quote exists (edge case: manually created shipments).
-    const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
+    let serviceFeeAmount: number;
 
-    const feeResult = await calculateServiceFee({
-      clientOrganizationId: shipment.clientOrganizationId,
-      totalProductsUsd: parseFloat(shipment.totalProductsUsd ?? '0'),
-      exchangeRate,
-      totalCostsBrl: parseFloat(shipment.totalCostsBrl ?? '0'),
-    });
+    // Use snapshot if available, otherwise fallback to live calculation
+    if (shipment.quote?.serviceFeeSnapshot) {
+      serviceFeeAmount = parseFloat(shipment.quote.serviceFeeSnapshot);
+    } else {
+      const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
+      const feeResult = await calculateServiceFee({
+        quoteId: shipment.quoteId ?? '',
+        totalProductsUsd: parseFloat(shipment.totalProductsUsd ?? '0'),
+        exchangeRate,
+        totalCostsBrl: parseFloat(shipment.totalCostsBrl ?? '0'),
+      });
+      serviceFeeAmount = feeResult.serviceFee;
+    }
 
     const txn = await createShipmentTransaction({
       shipmentId,
       organizationId: shipment.clientOrganizationId,
       type: 'SERVICE_FEE',
-      amountBrl: String(feeResult.serviceFee),
+      amountBrl: String(serviceFeeAmount),
     });
 
     await tryAttachAsaasInvoice({
       orderType: shipment.clientOrganization?.orderType,
       clientOrganizationId: shipment.clientOrganizationId,
       transactionId: txn.id,
-      amountBrl: feeResult.serviceFee,
+      amountBrl: serviceFeeAmount,
       description: `Honorários — Embarque ${shipmentId}`,
     });
 
     revalidatePath(`/admin/shipments/${shipmentId}`);
-    return { success: true, data: { id: txn.id, serviceFee: feeResult.serviceFee } };
+    return { success: true, data: { id: txn.id, serviceFee: serviceFeeAmount } };
   } catch (error) {
     console.error('Error generating service fee invoice:', error);
     return { success: false, error: 'Failed to generate service fee invoice.' };
@@ -832,6 +840,7 @@ export async function editShipmentItemsAction(
 
 /**
  * Preview the service fee calculation without creating a transaction.
+ * Uses the pre-calculated snapshot from the quote when available.
  */
 export async function getServiceFeePreviewAction(shipmentId: string): Promise<{
   success: boolean;
@@ -855,24 +864,28 @@ export async function getServiceFeePreviewAction(shipmentId: string): Promise<{
         clientOrganizationId: true,
         totalProductsUsd: true,
         totalCostsBrl: true,
+        quoteId: true,
       },
       with: {
-        quote: { columns: { exchangeRateIof: true } },
+        quote: { columns: { exchangeRateIof: true, serviceFeeSnapshot: true } },
       },
     });
 
     if (!shipment) return { success: false, error: 'Shipment not found.' };
 
-    // Prefer the exchange rate recorded at simulation time (quote.exchangeRateIof).
-    // Falls back to 5.0 only when no linked quote exists (edge case: manually created shipments).
     const exchangeRate = parseFloat(shipment.quote?.exchangeRateIof ?? '5.0');
 
     const feeResult = await calculateServiceFee({
-      clientOrganizationId: shipment.clientOrganizationId,
+      quoteId: shipment.quoteId ?? '',
       totalProductsUsd: parseFloat(shipment.totalProductsUsd ?? '0'),
       exchangeRate,
       totalCostsBrl: parseFloat(shipment.totalCostsBrl ?? '0'),
     });
+
+    // Override with snapshot value if available
+    if (shipment.quote?.serviceFeeSnapshot) {
+      feeResult.serviceFee = parseFloat(shipment.quote.serviceFeeSnapshot);
+    }
 
     return { success: true, data: feeResult };
   } catch (error) {

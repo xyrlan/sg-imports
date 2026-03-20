@@ -3,7 +3,7 @@ const ZAPSIGN_API_TOKEN = process.env.ZAPSIGN_API_TOKEN;
 const ZAPSIGN_TEMPLATE_ORDER = process.env.ZAPSIGN_TEMPLATE_ORDER;
 const ZAPSIGN_TEMPLATE_DIRECT_ORDER = process.env.ZAPSIGN_TEMPLATE_DIRECT_ORDER;
 
-const ZAPSIGN_BASE_URL = 'https://api.zapsign.com.br/api/v1';
+const ZAPSIGN_BASE_URL = process.env.ZAPSIGN_BASE_URL ?? 'https://api.zapsign.com.br/api/v1';
 
 type OrderType = 'ORDER' | 'DIRECT_ORDER';
 
@@ -62,6 +62,7 @@ export async function createDocumentFromTemplate(
         send_automatic_email: false,
         send_automatic_whatsapp: false,
         lang: 'pt-br',
+        data: [],
       }),
     });
 

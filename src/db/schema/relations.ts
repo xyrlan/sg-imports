@@ -23,10 +23,6 @@ export const organizationsRelations = relations(organizations, ({ many, one }) =
   quotesAsClient: many(quotes, { relationName: 'quotesAsClient' }),
   suppliers: many(suppliers),
   freightProposals: many(freightProposals),
-  feeConfig: one(serviceFeeConfigs, {
-    fields: [organizations.id],
-    references: [serviceFeeConfigs.organizationId]
-  }),
   billingAddress: one(addresses, { fields: [organizations.billingAddressId], references: [addresses.id] }),
   deliveryAddress: one(addresses, { fields: [organizations.deliveryAddressId], references: [addresses.id] }),
 }));
@@ -88,6 +84,10 @@ export const quotesRelations = relations(quotes, ({ one, many }) => ({
   items: many(quoteItems),
   observations: many(quoteObservations),
   generatedShipment: one(shipments, { fields: [quotes.generatedShipmentId], references: [shipments.id] }),
+  feeConfig: one(serviceFeeConfigs, {
+    fields: [quotes.id],
+    references: [serviceFeeConfigs.quoteId],
+  }),
 }));
 
 export const quoteItemsRelations = relations(quoteItems, ({ one }) => ({

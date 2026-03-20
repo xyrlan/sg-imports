@@ -4,9 +4,9 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { startTransition } from 'react';
-import { Button, Input, Modal, Label, Select, ListBox, TextField } from '@heroui/react';
+import { Button, Input, Modal, Label, Select, ListBox, TextField, NumberField, Checkbox } from '@heroui/react';
 import { Settings } from 'lucide-react';
-import { updateSimulationAction } from '../../../actions';
+import { updateSimulationAction, updateServiceFeeConfigAction } from '../../../actions';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 import type { Simulation } from '@/services/simulation.service';
 import type { ShippingMetadata } from '@/db/types';
@@ -34,10 +34,17 @@ const INCOTERM_OPTIONS = [
 
 type IncotermValue = 'EXW' | 'FOB' | 'CIF' | 'DDP';
 
+interface FeeConfig {
+  percentage: string | null;
+  minimumValueMultiplier: number;
+  applyToChinaProducts: boolean | null;
+}
+
 interface SettingsModalProps {
   simulation: Simulation;
   organizationId: string;
   defaultDestinationState?: string | null;
+  feeConfig?: FeeConfig | null;
   onMutate?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,6 +54,7 @@ export function SettingsModal({
   simulation,
   organizationId,
   defaultDestinationState,
+  feeConfig,
   onMutate,
   open,
   onOpenChange,
@@ -76,7 +84,13 @@ export function SettingsModal({
     () => String(existingMetadata.firstPaymentFobPercent ?? ''),
   );
 
+  // Fee config state
+  const [applyToChina, setApplyToChina] = useState(feeConfig?.applyToChinaProducts ?? true);
+
   const [state, formAction, isPending] = useActionState(updateSimulationAction, null);
+  const [feeState, feeFormAction, isFeePending] = useActionState(updateServiceFeeConfigAction, null);
+
+  const isBusy = isPending || isFeePending;
 
   useEffect(() => {
     if (open) {
@@ -88,9 +102,10 @@ export function SettingsModal({
         setAdditionalFreightUsd(String(meta.additionalFreightUsd ?? ''));
         setCommissionPercent(String(meta.commissionPercent ?? ''));
         setFirstPaymentFobPercent(String(meta.firstPaymentFobPercent ?? ''));
+        setApplyToChina(feeConfig?.applyToChinaProducts ?? true);
       });
     }
-  }, [open, simulation.metadata, simulation.shippingModality, simulation.incoterm, defaultDestinationState]);
+  }, [open, simulation.metadata, simulation.shippingModality, simulation.incoterm, defaultDestinationState, feeConfig]);
 
   useEffect(() => {
     if (
@@ -146,6 +161,8 @@ export function SettingsModal({
           ? firstPaymentFobNum
           : undefined,
     };
+
+    // Submit simulation settings
     const formData = new FormData();
     formData.set('simulationId', simulation.id);
     formData.set('organizationId', organizationId);
@@ -155,12 +172,26 @@ export function SettingsModal({
     startTransition(() => {
       formAction(formData);
     });
+
+    // Submit fee config in parallel
+    const feeFormData = new FormData();
+    feeFormData.set('simulationId', simulation.id);
+    feeFormData.set('organizationId', organizationId);
+    const percentageInput = (e.currentTarget.querySelector('[name="feePercentage"]') as HTMLInputElement)?.value ?? '';
+    const multiplierInput = (e.currentTarget.querySelector('[name="feeMultiplier"]') as HTMLSelectElement)?.dataset?.selectedKey
+      ?? String(feeConfig?.minimumValueMultiplier ?? 2);
+    feeFormData.set('percentage', percentageInput);
+    feeFormData.set('minimumValueMultiplier', multiplierInput);
+    feeFormData.set('applyToChinaProducts', applyToChina ? 'true' : 'false');
+    startTransition(() => {
+      feeFormAction(feeFormData);
+    });
   }
 
   return (
     <Modal>
-      <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange} isDismissable={!isPending}>
-        <Modal.Container>
+      <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange} isDismissable={!isBusy}>
+        <Modal.Container size='cover' className="max-w-6xl h-fit ">
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header className="mb-6">
@@ -171,7 +202,7 @@ export function SettingsModal({
             </Modal.Header>
             <form onSubmit={handleSubmit}>
               <Modal.Body className="p-2">
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>{t('modalityLabel')}</Label>
                     <Select
@@ -179,7 +210,7 @@ export function SettingsModal({
                       placeholder={t('modalityPlaceholder')}
                       value={shippingModality}
                       onChange={(k) => setShippingModality((k as 'SEA_LCL' | 'AIR' | 'EXPRESS') ?? 'SEA_LCL')}
-                      isDisabled={isPending}
+                      isDisabled={isBusy}
                     >
                       <Select.Trigger>
                         <Select.Value />
@@ -203,7 +234,7 @@ export function SettingsModal({
                       placeholder={t('incotermPlaceholder')}
                       value={incoterm}
                       onChange={(k) => setIncoterm((k as IncotermValue) ?? 'FOB')}
-                      isDisabled={isPending}
+                      isDisabled={isBusy}
                     >
                       <Select.Trigger>
                         <Select.Value />
@@ -226,7 +257,7 @@ export function SettingsModal({
                       variant="primary"
                       value={additionalFreightUsd}
                       onChange={(v) => setAdditionalFreightUsd(v)}
-                      isDisabled={isPending}
+                      isDisabled={isBusy}
                     >
                       <Input
                         type="text"
@@ -241,7 +272,7 @@ export function SettingsModal({
                       variant="primary"
                       value={commissionPercent}
                       onChange={(v) => setCommissionPercent(v)}
-                      isDisabled={isPending}
+                      isDisabled={isBusy}
                     >
                       <Input
                         type="text"
@@ -256,7 +287,7 @@ export function SettingsModal({
                       variant="primary"
                       value={firstPaymentFobPercent}
                       onChange={(v) => setFirstPaymentFobPercent(v)}
-                      isDisabled={isPending}
+                      isDisabled={isBusy}
                     >
                       <Input
                         type="text"
@@ -276,7 +307,7 @@ export function SettingsModal({
                         setDestinationStateTouched(true);
                       }}
                       onBlur={() => setDestinationStateTouched(true)}
-                      isDisabled={isPending}
+                      isDisabled={isBusy}
                       isInvalid={
                         !!state?.fieldErrors?.destinationState ||
                         (destinationStateTouched && !destinationState)
@@ -303,8 +334,76 @@ export function SettingsModal({
                       </p>
                     )}
                   </div>
+
+                  {/* Service Fee (Honorários) */}
+                  <div className="border-t border-border pt-4 mt-4">
+                    <p className="text-sm font-medium mb-3">{t('feeSection')}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <NumberField
+                        variant="primary"
+                        isDisabled={isBusy}
+                        name="feePercentage"
+                        defaultValue={parseFloat(feeConfig?.percentage ?? '2.5') / 100}
+                        minValue={0}
+                        maxValue={1}
+                        step={0.001}
+                        formatOptions={{ style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 2 }}
+                      >
+                        <Label>{t('feePercentage')}</Label>
+                        <NumberField.Group>
+                          <NumberField.DecrementButton />
+                          <NumberField.Input className="min-w-0 flex-1" />
+                          <NumberField.IncrementButton />
+                        </NumberField.Group>
+                      </NumberField>
+
+                      <Select
+                        name="feeMultiplier"
+                        variant="primary"
+                        isDisabled={isBusy}
+                        defaultSelectedKey={String(feeConfig?.minimumValueMultiplier ?? 2)}
+                      >
+                        <Label>{t('feeMultiplier')}</Label>
+                        <Select.Trigger>
+                          <Select.Value />
+                          <Select.Indicator />
+                        </Select.Trigger>
+                        <Select.Popover>
+                          <ListBox>
+                            <ListBox.Item key="2" id="2" textValue={t('feeMultiplier2x')}>
+                              {t('feeMultiplier2x')}
+                            </ListBox.Item>
+                            <ListBox.Item key="3" id="3" textValue={t('feeMultiplier3x')}>
+                              {t('feeMultiplier3x')}
+                            </ListBox.Item>
+                            <ListBox.Item key="4" id="4" textValue={t('feeMultiplier4x')}>
+                              {t('feeMultiplier4x')}
+                            </ListBox.Item>
+                          </ListBox>
+                        </Select.Popover>
+                      </Select>
+                    </div>
+
+                    <div className="mt-3">
+                      <Checkbox
+                        isSelected={applyToChina}
+                        onChange={setApplyToChina}
+                      >
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        <Checkbox.Content>
+                          <Label>{t('feeApplyToChina')}</Label>
+                        </Checkbox.Content>
+                      </Checkbox>
+                    </div>
+                  </div>
+
                   {state?.error && (
                     <p className="text-sm text-danger mt-2">{state.error}</p>
+                  )}
+                  {feeState?.error && (
+                    <p className="text-sm text-danger mt-2">{feeState.error}</p>
                   )}
                 </div>
               </Modal.Body>
@@ -312,14 +411,14 @@ export function SettingsModal({
                 <Button
                   variant="tertiary"
                   onPress={() => onOpenChange(false)}
-                  isDisabled={isPending}
+                  isDisabled={isBusy}
                 >
                   {t('cancel')}
                 </Button>
                 <Button
                   variant="primary"
                   type="submit"
-                  isPending={isPending}
+                  isPending={isBusy}
                   isDisabled={!destinationState}
                 >
                   {t('save')}

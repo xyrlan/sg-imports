@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@heroui/react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Badge, Button } from '@heroui/react';
+import { ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { formatBrl } from '@/app/(admin)/admin/shipments/components/shipment-utils';
 import type { SimulationItem } from '@/services/simulation.service';
 
@@ -20,14 +20,20 @@ function getItemDisplayName(item: SimulationItem, fallback: string): string {
 
 export function LandedCostPerItemList({ items }: LandedCostPerItemListProps) {
   const t = useTranslations('Simulations.FinancialSummary');
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   if (items.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="rounded-lg border border-border p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
+        <Badge.Anchor >
+          <Package className="size-5 shrink-0" />
+          <Badge size='sm' color='accent'>{items.length}</Badge>
+        </Badge.Anchor>
+        <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted">{t('landedCostPerItem')}</p>
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -43,7 +49,7 @@ export function LandedCostPerItemList({ items }: LandedCostPerItemListProps) {
         style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="space-y-1 max-h-32 overflow-y-auto rounded-lg border border-border p-2">
+          <div className="space-y-1 max-h-100 overflow-y-auto border-t border-border pt-2">
             {items.map((item) => {
               const name = getItemDisplayName(item, t('itemFallback'));
               const landedUnit = Number(

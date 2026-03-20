@@ -29,6 +29,7 @@ import {
   buildEngineContext,
   runAndPersistEngineResults,
 } from './landed-cost-helpers';
+import { calculateServiceFee } from '@/services/service-fee.service';
 
 export interface CalculateAndPersistResult {
   success: boolean;
@@ -41,13 +42,41 @@ export interface CalculateAndPersistResult {
 
 async function runEngineAndPersist(
   tx: DbTransaction,
-  simulation: { targetDolar: string | null; exchangeRateIof: string | null; shippingModality: string | null; metadata: unknown },
+  simulation: { id?: string; targetDolar: string | null; exchangeRateIof: string | null; shippingModality: string | null; metadata: unknown },
   items: Awaited<ReturnType<typeof loadItemsForEngine>>,
   icmsRate: number,
 ): Promise<void> {
   const { engineInputs, uniqueNcms } = await buildEngineInputs({ items, tx });
   const context = await buildEngineContext({ simulation, engineInputs, uniqueNcms, icmsRate });
   await runAndPersistEngineResults(tx, context, engineInputs, icmsRate);
+
+  // Calculate and persist service fee snapshot after engine results
+  if (simulation.id) {
+    const updatedItems = await tx.select().from(quoteItems).where(eq(quoteItems.quoteId, simulation.id));
+    const totalProductsUsd = updatedItems.reduce(
+      (sum, i) => sum + parseFloat(i.priceUsd ?? '0') * i.quantity,
+      0,
+    );
+    const totalCostsBrl = updatedItems.reduce(
+      (sum, i) => sum + parseFloat(i.landedCostTotalSnapshot ?? '0'),
+      0,
+    );
+    const exchangeRate = Number(simulation.targetDolar ?? 0);
+
+    try {
+      const feeResult = await calculateServiceFee({
+        quoteId: simulation.id,
+        totalProductsUsd,
+        exchangeRate,
+        totalCostsBrl,
+      });
+      await tx.update(quotes).set({
+        serviceFeeSnapshot: feeResult.serviceFee.toFixed(4),
+      }).where(eq(quotes.id, simulation.id));
+    } catch {
+      // Non-blocking: global config may not exist yet
+    }
+  }
 }
 
 // ==========================================
@@ -489,10 +518,38 @@ export async function calculateAndPersistLandedCost(
     commissionPercent: commissionPercent > 0 ? commissionPercent : undefined,
   });
 
-  // Run engine and persist in transaction
+  // Run engine and persist in transaction (service fee is calculated inside runEngineAndPersist)
   await db.transaction(async (tx) => {
     await runAndPersistEngineResults(tx, context, engineInputs, icmsRate);
-    await tx.update(quotes).set({ isRecalculationNeeded: false }).where(eq(quotes.id, quoteId));
+
+    // Service fee is now calculated inside runEngineAndPersist via simulation.id
+    // But calculateAndPersistLandedCost calls runAndPersistEngineResults directly (not runEngineAndPersist)
+    // so we still need to calculate it here
+    const updatedItems = await tx.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+    const totalProductsUsd = updatedItems.reduce(
+      (sum, i) => sum + parseFloat(i.priceUsd ?? '0') * i.quantity,
+      0,
+    );
+    const totalCostsBrl = updatedItems.reduce(
+      (sum, i) => sum + parseFloat(i.landedCostTotalSnapshot ?? '0'),
+      0,
+    );
+    const exchangeRate = Number(simulation.targetDolar ?? 0);
+
+    try {
+      const feeResult = await calculateServiceFee({
+        quoteId,
+        totalProductsUsd,
+        exchangeRate,
+        totalCostsBrl,
+      });
+      await tx.update(quotes).set({
+        serviceFeeSnapshot: feeResult.serviceFee.toFixed(4),
+        isRecalculationNeeded: false,
+      }).where(eq(quotes.id, quoteId));
+    } catch {
+      await tx.update(quotes).set({ isRecalculationNeeded: false }).where(eq(quotes.id, quoteId));
+    }
   });
 
   return {

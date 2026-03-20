@@ -1649,7 +1649,11 @@
       "addItemFailed": "Falha ao adicionar item",
       "removeItemFailed": "Falha ao remover item",
       "updateItemFailed": "Falha ao atualizar item",
-      "quoteLockedEdit": "Esta cotação foi enviada. Puxe de volta para rascunho para editar."
+      "quoteLockedEdit": "Esta cotação foi enviada. Puxe de volta para rascunho para editar.",
+      "invalidData": "Dados inválidos",
+      "forbidden": "Sem permissão",
+      "invalidPercentage": "Porcentagem deve estar entre 0 e 100",
+      "feeUpdateFailed": "Erro ao atualizar configuração de honorários"
     },
     "AddProduct": {
       "addProduct": "Adicionar produto",
@@ -1733,7 +1737,16 @@
       "firstPaymentFobPercentLabel": "Primeiro Pagamento FOB (%)",
       "firstPaymentFobPercentPlaceholder": "0",
       "save": "Salvar",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "feeSection": "Honorários",
+      "feePercentage": "Percentual (%)",
+      "feeMultiplier": "Valor mínimo (multiplicador)",
+      "feeApplyToChina": "Aplicar a produtos da China",
+      "feeMultiplier2x": "2× salário mínimo",
+      "feeMultiplier3x": "3× salário mínimo",
+      "feeMultiplier4x": "4× salário mínimo",
+      "feeSaving": "Salvando...",
+      "feeSaved": "Honorários salvos"
     },
     "ShippingSelection": {
       "confirmModality": "Confirmar Modalidade",
@@ -1781,7 +1794,9 @@
       "taxCOFINS": "COFINS",
       "taxSiscomex": "Siscomex",
       "taxAFRMM": "AFRMM",
-      "taxICMS": "ICMS"
+      "taxICMS": "ICMS",
+      "feeSection": "Honorários",
+      "totalServiceFee": "Total Honorários"
     },
     "SimulatedProduct": {
       "name": "Nome do produto",

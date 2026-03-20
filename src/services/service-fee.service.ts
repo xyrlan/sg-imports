@@ -4,13 +4,13 @@ import { eq } from 'drizzle-orm';
 import { roundMoney } from '@/lib/currency';
 
 interface ServiceFeeInput {
-  clientOrganizationId: string;
+  quoteId: string;
   totalProductsUsd: number;
   exchangeRate: number;
   totalCostsBrl: number;
 }
 
-interface ServiceFeeResult {
+export interface ServiceFeeResult {
   serviceFee: number;
   calculationBase: 'FOB' | 'INVOICE';
   baseValue: number;
@@ -21,26 +21,28 @@ interface ServiceFeeResult {
 }
 
 /**
- * Calculate service fee (honorários) for a shipment.
+ * Calculate service fee (honorários) for a quote.
  *
  * Logic:
- * 1. Fetch org-specific config, fallback to global
+ * 1. Fetch quote-specific config, fallback to global
  * 2. Base = FOB in BRL (if applyToChina) or totalCostsBrl (NF)
  * 3. percentageValue = base × (percentage / 100)
  * 4. minimumValue = minimumWageBrl × multiplier
  * 5. serviceFee = MAX(percentageValue, minimumValue)
  */
 export async function calculateServiceFee(input: ServiceFeeInput): Promise<ServiceFeeResult> {
-  const orgConfig = await db.query.serviceFeeConfigs.findFirst({
-    where: eq(serviceFeeConfigs.organizationId, input.clientOrganizationId),
-  });
+  const [quoteConfig, global] = await Promise.all([
+    db.query.serviceFeeConfigs.findFirst({
+      where: eq(serviceFeeConfigs.quoteId, input.quoteId),
+    }),
+    db.query.globalServiceFeeConfig.findFirst(),
+  ]);
 
-  const global = await db.query.globalServiceFeeConfig.findFirst();
   if (!global) throw new Error('Global service fee config not found');
 
-  const applyToChina = orgConfig?.applyToChinaProducts ?? global.defaultApplyToChina ?? true;
-  const percentage = parseFloat(orgConfig?.percentage ?? global.defaultPercentage ?? '2.5');
-  const multiplier = orgConfig?.minimumValueMultiplier ?? global.defaultMultiplier ?? 2;
+  const applyToChina = quoteConfig?.applyToChinaProducts ?? global.defaultApplyToChina ?? true;
+  const percentage = parseFloat(quoteConfig?.percentage ?? global.defaultPercentage ?? '2.5');
+  const multiplier = quoteConfig?.minimumValueMultiplier ?? global.defaultMultiplier ?? 2;
   const minimumWageBrl = parseFloat(global.minimumWageBrl);
 
   const calculationBase = applyToChina ? 'FOB' : 'INVOICE';
@@ -63,4 +65,3 @@ export async function calculateServiceFee(input: ServiceFeeInput): Promise<Servi
     usedMinimum,
   };
 }
-

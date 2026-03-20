@@ -58,6 +58,9 @@ export const quotes = pgTable('quotes', {
   totalWeight: decimal('total_weight', { precision: 12, scale: 3 }),
   totalChargeableWeight: decimal('total_chargeable_weight', { precision: 12, scale: 3 }).default('0').notNull(),
 
+  // Service Fee (honorários) — valor calculado na simulação
+  serviceFeeSnapshot: decimal('service_fee_snapshot', { precision: 12, scale: 4 }),
+
   /** Flag: set when PTAX fetch or recalc fails; UI shows banner to recalculate */
   isRecalculationNeeded: boolean('is_recalculation_needed').default(false).notNull(),
 

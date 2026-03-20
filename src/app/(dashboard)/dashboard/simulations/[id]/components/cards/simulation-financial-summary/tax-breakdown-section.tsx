@@ -19,7 +19,7 @@ export function TaxBreakdownSection({
   hasTaxBreakdown,
 }: TaxBreakdownSectionProps) {
   const t = useTranslations('Simulations.FinancialSummary');
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <div className="rounded-lg border border-border p-3 space-y-2">

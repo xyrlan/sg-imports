@@ -37,15 +37,11 @@ export {
   getOrganizationMembers,
   updateOrganizationAsAdmin,
   updateMembershipRole,
-  getServiceFeeConfig,
-  upsertServiceFeeConfig,
   type OrganizationWithMemberCount,
   type OrganizationWithAddresses,
   type OrganizationAddress,
   type OrganizationMember,
   type AdminUpdateOrgData,
-  type ServiceFeeConfig,
-  type UpsertServiceFeeData,
 } from './organizations.service';
 
 // Dashboard stats

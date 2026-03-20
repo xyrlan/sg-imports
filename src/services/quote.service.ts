@@ -128,6 +128,11 @@ export async function createProformaQuote(
     })
     .returning();
 
+  if (created) {
+    const { createServiceFeeConfig } = await import('@/services/config.service');
+    await createServiceFeeConfig(created.id);
+  }
+
   return created ?? null;
 }
 

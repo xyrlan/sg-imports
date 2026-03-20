@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@heroui/react';
-import { DollarSign, Package, Ship, Plane, Shield } from 'lucide-react';
+import { DollarSign, Package, Ship, Plane, Shield, Coffee } from 'lucide-react';
 import { formatBrl, formatUsd } from '@/app/(admin)/admin/shipments/components/shipment-utils';
 import { computeFreightDisplayFromQuote } from '@/lib/simulation/freight-display';
 import { FreightCapacityProgress } from '../../freight-capacity-progress';
@@ -95,6 +95,8 @@ export function SimulationFinancialSummary({
   const FreightIcon =
     selectedModality === 'AIR' || selectedModality === 'EXPRESS' ? Plane : Ship;
 
+  const serviceFeeSnapshot = Number(simulation?.serviceFeeSnapshot ?? 0);
+
   const metadata = (simulation?.metadata as ShippingMetadata | null) ?? {};
   const additionalFreightUsd = metadata.additionalFreightUsd ?? 0;
   const commissionPercent = metadata.commissionPercent ?? 0;
@@ -142,9 +144,21 @@ export function SimulationFinancialSummary({
             taxesPct={taxesPct}
           />
 
-          {/* Section: Costs in USD - 2 col grid, subtle USD zone styling */}
           <div className="pt-2 mt-2 border-t border-border">
-            <p className="text-xs font-medium text-muted mb-2">{t('costsUsdSection')}</p>
+          {serviceFeeSnapshot > 0 && (
+            <>
+              <p className="text-xs font-medium text-muted">{t('feeSection')}</p>
+              <div className="my-2 mb-4">
+                <FinancialSummaryItem
+                  icon={<Coffee className="size-5" />}
+                  label={t('totalServiceFee')}
+                  value={formatBrl(serviceFeeSnapshot)}
+                />
+              </div>
+            </>
+          )}
+          {/* Section: Costs in USD - 2 col grid, subtle USD zone styling */}
+            <p className="text-xs font-medium text-muted ">{t('costsUsdSection')}</p>
             <div className="rounded-lg py-2 grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
               <FinancialSummaryItem
                 icon={<Package className="size-5" />}

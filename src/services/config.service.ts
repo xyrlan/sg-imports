@@ -1,10 +1,9 @@
 import { db } from '@/db';
-import { serviceFeeConfigs } from '@/db/schema';
+import { serviceFeeConfigs, globalServiceFeeConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 type ServiceFeeConfig = InferSelectModel<typeof serviceFeeConfigs>;
-type ServiceFeeConfigInsert = InferInsertModel<typeof serviceFeeConfigs>;
 
 export interface ServiceFeeConfigData {
   percentage?: string;
@@ -13,53 +12,65 @@ export interface ServiceFeeConfigData {
 }
 
 /**
- * Create service fee config for an organization with default or custom values
- * @param organizationId - Organization UUID
- * @param data - Optional custom configuration
- * @returns Created service fee config
+ * Create service fee config for a quote, using global defaults as base.
  */
 export async function createServiceFeeConfig(
-  organizationId: string,
+  quoteId: string,
   data?: ServiceFeeConfigData
 ): Promise<ServiceFeeConfig> {
-  const configData: ServiceFeeConfigInsert = {
-    organizationId,
-    percentage: data?.percentage || '2.5',
-    minimumValueMultiplier: data?.minimumValueMultiplier ?? 2,
-    applyToChinaProducts: data?.applyToChinaProducts ?? true,
+  let defaults: ServiceFeeConfigData = {
+    percentage: '2.5',
+    minimumValueMultiplier: 2,
+    applyToChinaProducts: true,
   };
+
+  // Fetch global defaults
+  const global = await db.query.globalServiceFeeConfig.findFirst();
+  if (global) {
+    defaults = {
+      percentage: global.defaultPercentage ?? '2.5',
+      minimumValueMultiplier: global.defaultMultiplier ?? 2,
+      applyToChinaProducts: global.defaultApplyToChina ?? true,
+    };
+  }
 
   const [config] = await db
     .insert(serviceFeeConfigs)
-    .values(configData)
+    .values({
+      quoteId,
+      percentage: data?.percentage ?? defaults.percentage,
+      minimumValueMultiplier: data?.minimumValueMultiplier ?? defaults.minimumValueMultiplier,
+      applyToChinaProducts: data?.applyToChinaProducts ?? defaults.applyToChinaProducts,
+    })
+    .onConflictDoNothing({ target: serviceFeeConfigs.quoteId })
     .returning();
+
+  // If conflict occurred (already exists), fetch existing
+  if (!config) {
+    return (await getServiceFeeConfig(quoteId))!;
+  }
 
   return config;
 }
 
 /**
- * Get service fee config for an organization
- * @param organizationId - Organization UUID
- * @returns Service fee config or null if not found
+ * Get service fee config for a quote.
  */
 export async function getServiceFeeConfig(
-  organizationId: string
+  quoteId: string
 ): Promise<ServiceFeeConfig | null> {
   const config = await db.query.serviceFeeConfigs.findFirst({
-    where: eq(serviceFeeConfigs.organizationId, organizationId),
+    where: eq(serviceFeeConfigs.quoteId, quoteId),
   });
 
   return config || null;
 }
 
 /**
- * Update service fee config for an organization
- * @param organizationId - Organization UUID
- * @param data - Updated configuration data
- * @returns Updated service fee config or null if not found
+ * Update service fee config for a quote.
  */
 export async function updateServiceFeeConfig(
-  organizationId: string,
+  quoteId: string,
   data: ServiceFeeConfigData
 ): Promise<ServiceFeeConfig | null> {
   const [config] = await db
@@ -68,26 +79,24 @@ export async function updateServiceFeeConfig(
       ...data,
       updatedAt: new Date(),
     })
-    .where(eq(serviceFeeConfigs.organizationId, organizationId))
+    .where(eq(serviceFeeConfigs.quoteId, quoteId))
     .returning();
 
   return config || null;
 }
 
 /**
- * Get or create service fee config for an organization
- * If config doesn't exist, creates one with default values
- * @param organizationId - Organization UUID
- * @returns Service fee config
+ * Get or create service fee config for a quote.
+ * If config doesn't exist, creates one with global defaults.
  */
 export async function getOrCreateServiceFeeConfig(
-  organizationId: string
+  quoteId: string
 ): Promise<ServiceFeeConfig> {
-  const existing = await getServiceFeeConfig(organizationId);
-  
+  const existing = await getServiceFeeConfig(quoteId);
+
   if (existing) {
     return existing;
   }
 
-  return createServiceFeeConfig(organizationId);
+  return createServiceFeeConfig(quoteId);
 }

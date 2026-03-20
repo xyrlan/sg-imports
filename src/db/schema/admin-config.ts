@@ -20,7 +20,7 @@ import {
   rateTypeEnum,
   rateUnitEnum,
 } from './enums';
-import { organizations } from './auth';
+import { quotes } from './quotes';
 import { StorageRuleAdditionalFee } from '../types';
 
 // ==========================================
@@ -133,10 +133,10 @@ export const globalServiceFeeConfig = pgTable('global_service_fee_config', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-/** Organization-specific override. Admin can customize multiplier, percentage, applyToChina. */
+/** Quote-specific service fee config. Created with global defaults when quote is created. */
 export const serviceFeeConfigs = pgTable('service_fee_configs', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).unique().notNull(),
+  quoteId: uuid('quote_id').references(() => quotes.id, { onDelete: 'cascade' }).unique().notNull(),
 
   /** Multiplier: 2x, 3x or 4x of minimum wage. Minimum value = global.minimumWageBrl × multiplier */
   minimumValueMultiplier: integer('minimum_value_multiplier').notNull().default(2),

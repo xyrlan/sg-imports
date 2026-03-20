@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Boxes, Weight, Info, CircleAlert, Plane, Ship, Box } from 'lucide-react';
+import { Boxes, Weight, Info, CircleAlert, Plane, Ship, Box, Container } from 'lucide-react';
 import { LCL_VIABILITY_THRESHOLDS } from '@/lib/logistics';
+import { Badge } from '@heroui/react';
 
 type Modality = 'AIR' | 'SEA_LCL' | 'SEA_FCL' | 'EXPRESS';
 
@@ -108,10 +109,15 @@ export function FreightCapacityProgress({
     return (
       <div className="space-y-6">
         <h3 className="font-semibold flex items-center gap-2">
-          <Ship className="size-5" />
+          <Badge.Anchor>
+          <Container className="size-5" />
+          <Badge size='sm' color='accent' hidden={containerQuantity === 1}>
+            {containerQuantity}
+          </Badge>
+          </Badge.Anchor>
           {containerType && (
             <span className="text-sm font-semibold ">
-              {containerType} {containerQuantity > 1 && `× ${containerQuantity}`}
+              {containerType}
             </span>
           )}
         </h3>

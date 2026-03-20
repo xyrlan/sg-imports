@@ -48,6 +48,10 @@
     @apply mb-4;
   }
 
+  .modal__dialog {
+    @apply bg-surface-secondary
+  }
+
   .modal__icon {
     background-color: var(--default);
     color: var(--foreground);

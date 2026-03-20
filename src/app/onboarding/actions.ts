@@ -5,13 +5,12 @@ import { revalidatePath } from 'next/cache';
 import { requireAuth, updateUserMetadata } from '@/services/auth.service';
 import { updateOrganization, getOrganizationById } from '@/services/organization.service';
 import { createAddress, fetchAddressFromCEP, type ViaCEPResponse } from '@/services/address.service';
-import { createServiceFeeConfig, getOrCreateServiceFeeConfig } from '@/services/config.service';
 import { setOrganizationCookie, getOrganizationCookie } from '@/app/(dashboard)/actions';
 import { uploadProfileDocument, uploadOrganizationDocument } from '@/services/upload.service';
 import { updateProfile, getProfile } from '@/services/profile.service';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 import { linkPendingQuotesToOrganization } from '@/services/quote-workflow.service';
-import { organizationDetailsSchema, addressSchema, serviceFeeConfigSchema } from './schemas';
+import { organizationDetailsSchema, addressSchema } from './schemas';
 
 export interface ActionState {
   error?: string;
@@ -192,49 +191,6 @@ export async function fetchCEPData(cep: string): Promise<ViaCEPResponse | null> 
 }
 
 /**
- * Server Action: Save Service Fee Config (Step 3 - OWNER only)
- * Creates or updates service fee configuration
- */
-export async function saveServiceFeeConfig(
-  prevState: ActionState | null,
-  formData: FormData
-): Promise<ActionState> {
-  try {
-    const user = await requireAuth();
-    const orgId = await getCurrentOrganizationId();
-
-    if (!orgId) {
-      return { error: 'Organização não encontrada' };
-    }
-
-    // Extract form data
-    const rawData = {
-      percentage: formData.get('percentage') as string || '2.5',
-      minimumValueMultiplier: formData.get('minimumValueMultiplier') as string || '2',
-      applyToChinaProducts: formData.get('applyToChinaProducts') === 'true',
-    };
-
-    // Validate with Zod
-    const validatedData = serviceFeeConfigSchema.parse(rawData);
-
-    // Create or update config
-    await createServiceFeeConfig(orgId, {
-      percentage: validatedData.percentage.toString(),
-      minimumValueMultiplier: validatedData.minimumValueMultiplier,
-      applyToChinaProducts: validatedData.applyToChinaProducts,
-    });
-
-    return { success: true };
-  } catch (error) {
-    if (error && typeof error === 'object' && 'issues' in error) {
-      const zodError = error as { issues: Array<{ message: string }> };
-      return { error: zodError.issues[0]?.message || 'Dados inválidos' };
-    }
-    return { error: 'Erro ao salvar configurações' };
-  }
-}
-
-/**
  * Server Action: Upload Documents (Step 4)
  * Uploads profile and organization documents to Supabase Storage
  * When profile already has documentPhoto and addressProof, only socialContract is required for non-SELLER
@@ -329,9 +285,6 @@ export async function completeOnboarding(next?: string): Promise<void> {
     if (orgData.membership.role !== 'SELLER' && !orgData.organization.socialContractUrl) {
       throw new Error('Contrato social não enviado');
     }
-
-    // Ensure service fee config exists (create with defaults if not)
-    await getOrCreateServiceFeeConfig(orgId);
 
     // Set organization cookie
     await setOrganizationCookie(orgId);

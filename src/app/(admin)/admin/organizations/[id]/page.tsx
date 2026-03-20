@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import {
   getOrganizationWithAddresses,
   getOrganizationMembers,
-  getServiceFeeConfig,
 } from '@/services/admin';
 import { OrganizationEditForm } from './organization-edit-form';
 
@@ -15,10 +14,9 @@ export default async function AdminOrganizationPage({
 }: AdminOrganizationPageProps) {
   const { id } = await params;
 
-  const [organization, members, feeConfig] = await Promise.all([
+  const [organization, members] = await Promise.all([
     getOrganizationWithAddresses(id),
     getOrganizationMembers(id),
-    getServiceFeeConfig(id),
   ]);
 
   if (!organization) {
@@ -29,7 +27,6 @@ export default async function AdminOrganizationPage({
     <OrganizationEditForm
       organization={organization}
       members={members}
-      feeConfig={feeConfig}
     />
   );
 }

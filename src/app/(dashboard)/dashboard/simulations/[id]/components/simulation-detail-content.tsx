@@ -23,6 +23,12 @@ import { QuoteWorkflowButtons } from './quote-workflow-buttons';
 
 import type { QuoteObservation } from './modals/add-observation-modal';
 
+interface FeeConfig {
+  percentage: string | null;
+  minimumValueMultiplier: number;
+  applyToChinaProducts: boolean | null;
+}
+
 interface SimulationDetailContentProps {
   simulation: Simulation;
   items: SimulationItem[];
@@ -32,6 +38,7 @@ interface SimulationDetailContentProps {
   financialSummary?: QuoteFinancialSummary | null;
   defaultDestinationState?: string | null;
   observations?: QuoteObservation[];
+  feeConfig?: FeeConfig | null;
   backHref?: string;
 }
 
@@ -44,6 +51,7 @@ export function SimulationDetailContent({
   financialSummary = null,
   defaultDestinationState = null,
   observations = [],
+  feeConfig = null,
   backHref = '/dashboard/simulations',
 }: SimulationDetailContentProps) {
   const t = useTranslations('Simulations.Detail');
@@ -143,6 +151,7 @@ export function SimulationDetailContent({
                 simulation={simulation}
                 organizationId={organizationId}
                 defaultDestinationState={defaultDestinationState}
+                feeConfig={feeConfig}
                 onMutate={handleMutate}
                 open={settingsOpen}
                 onOpenChange={setSettingsOpen}

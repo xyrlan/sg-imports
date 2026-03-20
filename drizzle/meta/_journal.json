@@ -15,6 +15,13 @@
       "when": 1731340800000,
       "tag": "0001_quote_shipment_seller_client",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773963758818,
+      "tag": "0002_service-fee-to-quote",
+      "breakpoints": true
     }
   ]
 }

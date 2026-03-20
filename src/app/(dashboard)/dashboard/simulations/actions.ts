@@ -390,6 +390,88 @@ export async function updateSimulationAction(
   }
 }
 
+// ============================================
+// Service Fee Config
+// ============================================
+
+export interface UpdateServiceFeeConfigState {
+  success?: boolean;
+  error?: string;
+}
+
+const updateServiceFeeConfigSchema = z.object({
+  simulationId: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  percentage: z.string(),
+  minimumValueMultiplier: z.coerce.number().int().min(2).max(4),
+  applyToChinaProducts: z.enum(['true', 'false']).transform((v) => v === 'true'),
+});
+
+export async function updateServiceFeeConfigAction(
+  _prevState: UpdateServiceFeeConfigState | null,
+  formData: FormData,
+): Promise<UpdateServiceFeeConfigState> {
+  const t = await getTranslations('Simulations.errors');
+  try {
+    const user = await requireAuthOrRedirect();
+
+    const validated = updateServiceFeeConfigSchema.safeParse({
+      simulationId: formData.get('simulationId'),
+      organizationId: formData.get('organizationId'),
+      percentage: formData.get('percentage'),
+      minimumValueMultiplier: formData.get('minimumValueMultiplier'),
+      applyToChinaProducts: formData.get('applyToChinaProducts'),
+    });
+
+    if (!validated.success) {
+      return { error: validated.error.issues[0]?.message ?? t('invalidData') };
+    }
+
+    const access = await getOrganizationById(validated.data.organizationId, user.id);
+    if (!access) {
+      return { error: t('forbidden') };
+    }
+
+    // NumberField with formatOptions percent uses 0-1 range (0.025 = 2.5%)
+    const rawPercentage = parseFloat(validated.data.percentage);
+    const parsedPercentage = rawPercentage <= 1 ? rawPercentage * 100 : rawPercentage;
+    if (isNaN(parsedPercentage) || parsedPercentage < 0 || parsedPercentage > 100) {
+      return { error: t('invalidPercentage') };
+    }
+
+    const { getOrCreateServiceFeeConfig, updateServiceFeeConfig } = await import('@/services/config.service');
+
+    // Ensure config exists
+    await getOrCreateServiceFeeConfig(validated.data.simulationId);
+
+    await updateServiceFeeConfig(validated.data.simulationId, {
+      percentage: parsedPercentage.toFixed(2),
+      minimumValueMultiplier: validated.data.minimumValueMultiplier,
+      applyToChinaProducts: validated.data.applyToChinaProducts,
+    });
+
+    // Recalculate landed cost (includes service fee) if items exist
+    const [itemCount] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(quoteItems)
+      .where(eq(quoteItems.quoteId, validated.data.simulationId));
+
+    if ((itemCount?.count ?? 0) > 0) {
+      await calculateAndPersistLandedCost(
+        validated.data.simulationId,
+        validated.data.organizationId,
+        user.id,
+      );
+    }
+
+    revalidatePath(`/dashboard/simulations/${validated.data.simulationId}`);
+    return { success: true };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    return { error: err instanceof Error ? err.message : t('feeUpdateFailed') };
+  }
+}
+
 export interface DeleteSimulationResult {
   success?: boolean;
   error?: string;
