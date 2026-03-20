@@ -190,6 +190,12 @@ export async function pullQuoteBackToDraft(
 
   if (!quote) return { success: false, error: 'Cotação não encontrada ou não pode ser puxada de volta' };
 
+  // Cancel ZapSign document if pulling back from PENDING_SIGNATURE
+  if (quote.zapSignDocToken) {
+    const { cancelDocument } = await import('@/services/zapsign.service');
+    await cancelDocument(quote.zapSignDocToken);
+  }
+
   await db
     .update(quotes)
     .set({
@@ -229,15 +235,27 @@ export async function rejectQuote(
     where: and(
       eq(quotes.id, quoteId),
       eq(quotes.clientOrganizationId, organizationId),
-      eq(quotes.status, 'SENT')
+      inArray(quotes.status, ['SENT', 'PENDING_SIGNATURE'])
     ),
   });
 
-  if (!quote) return { success: false, error: 'Cotação não encontrada ou não está em SENT' };
+  if (!quote) return { success: false, error: 'Cotação não encontrada ou não pode ser rejeitada' };
+
+  // Cancel ZapSign document if rejecting from PENDING_SIGNATURE
+  if (quote.status === 'PENDING_SIGNATURE' && quote.zapSignDocToken) {
+    const { cancelDocument } = await import('@/services/zapsign.service');
+    await cancelDocument(quote.zapSignDocToken);
+  }
 
   await db
     .update(quotes)
-    .set({ status: 'REJECTED', rejectionReason: reason, updatedAt: new Date() })
+    .set({
+      status: 'REJECTED',
+      rejectionReason: reason,
+      zapSignDocToken: null,
+      zapSignSignerToken: null,
+      updatedAt: new Date(),
+    })
     .where(eq(quotes.id, quoteId));
 
   const { notifyOrganizationMembers } = await import('@/services/notification.service');
@@ -290,26 +308,59 @@ export async function initiateContractSigning(
     return { success: false, error: calcResult.errors?.[0] ?? 'Falha ao calcular custo' };
   }
 
-  // Fetch signer info and orderType from client organization
+  // Fetch signer info, org details, and billing address
   const clientOrg = await db.query.organizations.findFirst({
     where: eq(organizations.id, organizationId),
-    columns: { name: true, orderType: true },
+    columns: { name: true, orderType: true, document: true, billingAddressId: true },
+    with: { billingAddress: true },
   });
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, userId),
-    columns: { fullName: true, email: true },
+    columns: { fullName: true, email: true, phone: true, id: true, taxId: true },
   });
 
-  const signerName = profile?.fullName || clientOrg?.name || 'Cliente';
-  const signerEmail = profile?.email || '';
-
-  if (!signerEmail) {
+  if (!profile?.email) {
     return { success: false, error: 'E-mail do assinante não encontrado' };
   }
 
-  const { createDocumentFromTemplate } = await import('@/services/zapsign.service');
   const orderType = clientOrg?.orderType ?? 'ORDER';
-  const docResult = await createDocumentFromTemplate(signerName, signerEmail, orderType);
+
+  // Build address string from billing address
+  const addr = clientOrg?.billingAddress;
+  const enderecoCompleto = addr
+    ? [addr.street, addr.number, addr.complement, addr.neighborhood, addr.city, addr.state, addr.postalCode]
+        .filter(Boolean)
+        .join(', ')
+    : '';
+
+  // Get financial summary for contract variables
+  const { getQuoteFinancialSummary } = await import('@/services/simulation-items.service');
+  const financial = await getQuoteFinancialSummary(quoteId, organizationId, userId);
+  if (!financial) {
+    return { success: false, error: 'Falha ao calcular resumo financeiro' };
+  }
+
+  // Compute valorSemFrete for ORDER type: totalLandedCostBrl - (totalFreightUsd * effectiveDolar)
+  const { formatCNPJ, formatCurrency, formatDate } = await import('@/lib/utils');
+
+  // Build contract data and generate PDF
+  const { generateContractPdfBase64 } = await import('@/lib/pdf/contract-pdf');
+  const contractData = {
+    orderType: orderType as 'ORDER' | 'DIRECT_ORDER',
+    companyName: clientOrg?.name ?? '',
+    cnpj: clientOrg?.document ? formatCNPJ(clientOrg.document) : '',
+    fullAddress: enderecoCompleto,
+    serviceFee: formatCurrency(Number(simulation.serviceFeeSnapshot ?? 0), 'pt-BR', 'BRL'),
+    totalLandedCost: formatCurrency(Number(financial.totalLandedCostBrl ?? 0), 'pt-BR', 'BRL'),
+    orderNumber: orderType === 'DIRECT_ORDER' ? quoteId : undefined,
+    formattedDate: formatDate(new Date()),
+  };
+
+  const pdfBase64 = await generateContractPdfBase64(contractData);
+
+  const { createDocumentFromPdf } = await import('@/services/zapsign.service');
+  const documentName = `Contrato ${orderType === 'DIRECT_ORDER' ? 'Assessoria' : 'Encomenda'} - ${clientOrg?.name ?? 'Cliente'}`;
+  const docResult = await createDocumentFromPdf(pdfBase64, documentName, profile);
 
   if (!docResult.success) {
     return { success: false, error: docResult.error };
@@ -489,6 +540,7 @@ export interface PublicQuoteData {
     quantity: number;
     priceUsd: string;
     landedCostTotalSnapshot: string;
+    landedCostUnitSnapshot: string;
   }>;
   summary: {
     totalFobUsd: number;
@@ -545,6 +597,7 @@ export async function getQuoteByPublicToken(
       quantity: i.quantity,
       priceUsd: String(i.priceUsd ?? 0),
       landedCostTotalSnapshot: String(i.landedCostTotalSnapshot ?? 0),
+      landedCostUnitSnapshot: String(i.landedCostUnitSnapshot ?? 0),
     };
   });
 
@@ -671,10 +724,10 @@ export async function linkPendingQuotesToOrganization(input: {
   orgPhone?: string | null;
   organizationId: string;
   userId: string;
-}): Promise<{ linkedCount: number }> {
-  const { userEmail, orgPhone, organizationId, userId } = input;
+}): Promise<{ linkedCount: number; linkedQuoteIds: string[] }> {
+  const { userEmail, orgPhone, organizationId } = input;
 
-  if (!userEmail && !orgPhone) return { linkedCount: 0 };
+  if (!userEmail && !orgPhone) return { linkedCount: 0, linkedQuoteIds: [] };
 
   // Build match conditions: email OR phone
   const matchConditions: ReturnType<typeof sql>[] = [];
@@ -692,7 +745,7 @@ export async function linkPendingQuotesToOrganization(input: {
     }
   }
 
-  if (matchConditions.length === 0) return { linkedCount: 0 };
+  if (matchConditions.length === 0) return { linkedCount: 0, linkedQuoteIds: [] };
 
   const pendingQuotes = await db
     .select({ id: quotes.id })
@@ -706,7 +759,7 @@ export async function linkPendingQuotesToOrganization(input: {
       )
     );
 
-  if (pendingQuotes.length === 0) return { linkedCount: 0 };
+  if (pendingQuotes.length === 0) return { linkedCount: 0, linkedQuoteIds: [] };
 
   const quoteIds = pendingQuotes.map((q) => q.id);
 
@@ -733,5 +786,5 @@ export async function linkPendingQuotesToOrganization(input: {
     );
   }
 
-  return { linkedCount: pendingQuotes.length };
+  return { linkedCount: pendingQuotes.length, linkedQuoteIds: quoteIds };
 }

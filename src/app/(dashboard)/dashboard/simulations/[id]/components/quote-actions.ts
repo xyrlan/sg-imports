@@ -149,6 +149,50 @@ export async function rejectQuoteAction(
   }
 }
 
+export interface GetSignUrlActionResult {
+  success?: boolean;
+  signUrl?: string;
+  error?: string;
+}
+
+export async function getSignUrlAction(
+  quoteId: string,
+  organizationId: string,
+): Promise<GetSignUrlActionResult> {
+  try {
+    const user = await requireAuthOrRedirect();
+    const access = await getOrganizationById(organizationId, user.id);
+    if (!access) return { error: 'Acesso negado' };
+
+    const { db } = await import('@/db');
+    const { quotes } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+    const quote = await db.query.quotes.findFirst({
+      where: eq(quotes.id, quoteId),
+      columns: { zapSignDocToken: true, status: true, clientOrganizationId: true },
+    });
+
+    if (!quote || quote.status !== 'PENDING_SIGNATURE') {
+      return { error: 'Cotação não está aguardando assinatura' };
+    }
+    if (quote.clientOrganizationId !== organizationId) {
+      return { error: 'Acesso negado' };
+    }
+    if (!quote.zapSignDocToken) {
+      return { error: 'Token do documento não encontrado' };
+    }
+
+    const { getSignerSignUrl } = await import('@/services/zapsign.service');
+    const result = await getSignerSignUrl(quote.zapSignDocToken);
+    if (!result.success) return { error: result.error };
+
+    return { success: true, signUrl: result.signUrl };
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    return { error: err instanceof Error ? err.message : 'Falha ao obter link de assinatura' };
+  }
+}
+
 export interface InitiateContractSigningActionResult {
   success?: boolean;
   signUrl?: string;

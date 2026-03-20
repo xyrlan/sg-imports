@@ -24,6 +24,7 @@ export interface QuoteDisplayData {
     quantity: number;
     priceUsd: string;
     landedCostTotalSnapshot: string;
+    landedCostUnitSnapshot: string;
   }>;
   summary: {
     totalFobUsd: number;
@@ -93,9 +94,9 @@ export function QuoteDetailView({ data, backHref, actions }: QuoteDetailViewProp
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-4 py-2 text-left font-medium">{t('product')}</th>
-                    <th className="px-4 py-2 text-left font-medium">{t('sku')}</th>
                     <th className="px-4 py-2 text-right font-medium">{t('qty')}</th>
                     <th className="px-4 py-2 text-right font-medium">{t('unitPrice')}</th>
+                    <th className="px-4 py-2 text-right font-medium">{t('landedCostUnit')}</th>
                     <th className="px-4 py-2 text-right font-medium">{t('totalBrl')}</th>
                   </tr>
                 </thead>
@@ -103,10 +104,12 @@ export function QuoteDetailView({ data, backHref, actions }: QuoteDetailViewProp
                   {data.items.map((item) => (
                     <tr key={item.id} className="border-b border-border/50">
                       <td className="px-4 py-2">{item.name}</td>
-                      <td className="px-4 py-2 text-muted-foreground">{item.sku ?? '—'}</td>
                       <td className="px-4 py-2 text-right">{item.quantity}</td>
                       <td className="px-4 py-2 text-right">
                         {formatCurrency(Number(item.priceUsd), 'en-US', 'USD')}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        {formatCurrency(Number(item.landedCostUnitSnapshot), 'pt-BR', 'BRL')}
                       </td>
                       <td className="px-4 py-2 text-right">
                         {formatCurrency(Number(item.landedCostTotalSnapshot), 'pt-BR', 'BRL')}
@@ -126,14 +129,18 @@ export function QuoteDetailView({ data, backHref, actions }: QuoteDetailViewProp
             <Card key={item.id} className="p-4">
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-sm leading-tight">{item.name}</p>
-                  {item.sku && (
+                  <p className="font-medium text-sm leading-tight line-clamp-1">{item.name}</p>
+                  {/* {item.sku && (
                     <span className="text-xs text-muted-foreground shrink-0">{item.sku}</span>
-                  )}
+                  )} */}
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t('qty')}: {item.quantity}</span>
                   <span>{formatCurrency(Number(item.priceUsd), 'en-US', 'USD')}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t('landedCostUnit')}</span>
+                  <span>{formatCurrency(Number(item.landedCostUnitSnapshot), 'pt-BR', 'BRL')}/un</span>
                 </div>
                 <div className="flex items-center justify-between text-sm font-semibold border-t border-border/50 pt-2">
                   <span className="text-muted-foreground">{t('totalBrl')}</span>

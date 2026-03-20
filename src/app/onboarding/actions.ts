@@ -292,15 +292,23 @@ export async function completeOnboarding(next?: string): Promise<void> {
     await updateUserMetadata({ onboarded: true });
 
     // Auto-link pending quotes by email or phone match
-    await linkPendingQuotesToOrganization({
+    const linkResult = await linkPendingQuotesToOrganization({
       userEmail: user.email,
       orgPhone: orgData.organization.phone,
       organizationId: orgId,
       userId: user.id,
     });
 
-    // Revalidate and redirect with hint for AuthSessionRefresher
+    // Revalidate and redirect
     revalidatePath('/dashboard', 'layout');
+
+    // If a quote was auto-linked, redirect to it instead of the dead public URL
+    if (linkResult.linkedQuoteIds.length === 1) {
+      redirect(`/dashboard/proposals/${linkResult.linkedQuoteIds[0]}`);
+    }
+    if (linkResult.linkedQuoteIds.length > 1) {
+      redirect('/dashboard/proposals');
+    }
     redirect(getSafeRedirect(next, '/dashboard?from=onboarding'));
   } catch (error) {
     // NEXT_REDIRECT is thrown by redirect() - re-throw, do not treat as error

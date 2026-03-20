@@ -200,8 +200,8 @@ export async function getProposalsForClient(
     orderBy: desc(quotes.updatedAt),
   });
 
-  const pending = data.filter((q) => q.status === 'SENT') as ProposalWithSeller[];
-  const history = data.filter((q) => q.status !== 'SENT') as ProposalWithSeller[];
+  const pending = data.filter((q) => q.status === 'SENT' || q.status === 'PENDING_SIGNATURE') as ProposalWithSeller[];
+  const history = data.filter((q) => q.status !== 'SENT' && q.status !== 'PENDING_SIGNATURE') as ProposalWithSeller[];
 
   return { pending, history };
 }

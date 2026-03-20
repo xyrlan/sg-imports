@@ -1510,6 +1510,7 @@
       "sku": "SKU",
       "qty": "Qtd",
       "unitPrice": "Preço unit.",
+      "landedCostUnit": "Valor Posto/un",
       "totalBrl": "Total (BRL)",
       "summary": "Resumo",
       "totalFobUsd": "Total FOB (USD)",
@@ -1637,6 +1638,7 @@
       "rejectionReasonPlaceholder": "Descreva o motivo...",
       "confirmReject": "Confirmar Recusa",
       "awaitingSignature": "Aguardando Assinatura",
+      "resumeSigning": "Continuar Assinatura",
       "rejectedBy": "Proposta recusada pelo cliente",
       "rejectionReasonLabel": "Motivo: {reason}",
       "pullBackFromRejected": "Reabrir como Rascunho",
@@ -1846,7 +1848,8 @@
       "APPROVED": "Aprovada",
       "REJECTED": "Rejeitada",
       "PENDING_SIGNATURE": "Aguardando Assinatura",
-      "CONVERTED": "Convertida em Pedido"
+      "CONVERTED": "Convertida em Pedido",
+      "SENT": "Enviado"
     }
   },
   "Common": {

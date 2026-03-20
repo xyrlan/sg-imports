@@ -1,17 +1,13 @@
 // ZapSign API configuration
 const ZAPSIGN_API_TOKEN = process.env.ZAPSIGN_API_TOKEN;
-const ZAPSIGN_TEMPLATE_ORDER = process.env.ZAPSIGN_TEMPLATE_ORDER;
-const ZAPSIGN_TEMPLATE_DIRECT_ORDER = process.env.ZAPSIGN_TEMPLATE_DIRECT_ORDER;
 
 const ZAPSIGN_BASE_URL = process.env.ZAPSIGN_BASE_URL ?? 'https://api.zapsign.com.br/api/v1';
 
-type OrderType = 'ORDER' | 'DIRECT_ORDER';
+const brand_logo_url = new URL('/logo-white.png', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
 
-function getTemplateId(orderType: OrderType): string | undefined {
-  return orderType === 'DIRECT_ORDER'
-    ? ZAPSIGN_TEMPLATE_DIRECT_ORDER
-    : ZAPSIGN_TEMPLATE_ORDER;
-}
+const brand_primary_color = "#407BFF"
+
+const redirect_url = new URL('/dashboard/after-signature', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
 
 interface ZapSignSigner {
   token: string;
@@ -28,41 +24,55 @@ interface ZapSignResponse {
   signers: ZapSignSigner[];
 }
 
-type CreateDocumentResult =
+export type CreateDocumentResult =
   | { success: true; docToken: string; signerToken: string; signUrl: string }
   | { success: false; error: string };
 
 /**
- * Create a document from the configured ZapSign template.
- * Graceful degradation: returns an error result (never throws) if env vars are missing or the API call fails.
+ * Create a document by uploading a base64-encoded PDF to ZapSign.
+ * @see https://docs.zapsign.com.br/documentos/criar-documento
  */
-export async function createDocumentFromTemplate(
-  signerName: string,
-  signerEmail: string,
-  orderType: OrderType = 'ORDER'
+export async function createDocumentFromPdf(
+  pdfBase64: string,
+  documentName: string,
+  profile: {
+    id: string;
+    email: string;
+    phone: string | null;
+    fullName: string | null;
+    taxId: string | null
+}
 ): Promise<CreateDocumentResult> {
-  const templateId = getTemplateId(orderType);
-
-  if (!ZAPSIGN_API_TOKEN || !templateId) {
-    console.warn('ZapSign not configured — missing ZAPSIGN_API_TOKEN or template for', orderType);
+  if (!ZAPSIGN_API_TOKEN) {
+    console.warn('ZapSign not configured — missing ZAPSIGN_API_TOKEN');
     return { success: false, error: 'ZapSign is not configured' };
   }
 
   try {
-    const response = await fetch(`${ZAPSIGN_BASE_URL}/models/create-doc/`, {
+    const response = await fetch(`${ZAPSIGN_BASE_URL}/docs/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${ZAPSIGN_API_TOKEN}`,
       },
       body: JSON.stringify({
-        template_id: templateId,
-        signer_name: signerName,
-        signer_email: signerEmail,
-        send_automatic_email: false,
-        send_automatic_whatsapp: false,
-        lang: 'pt-br',
-        data: [],
+        name: documentName,
+        base64_pdf: pdfBase64,
+        signers: [
+          { name: profile.fullName,
+            email: profile.email,
+            external_id: profile.id,
+            phone_country: "55",
+            phone_number: profile.phone,
+            cpf: profile.taxId,
+            redirect_link: redirect_url
+          }
+        ],
+        lang: "pt-br",
+        brand_name: "Soulglobal",
+        brand_logo: brand_logo_url,
+        brand_primary_color: brand_primary_color,
+
       }),
     });
 
@@ -126,6 +136,70 @@ export async function addDocumentAttachment(
     return { success: true };
   } catch (error) {
     return { success: false, error: `Failed to connect to ZapSign: ${error}` };
+  }
+}
+
+/**
+ * Cancel (delete) a document on ZapSign.
+ * Fire-and-forget safe — logs errors but does not throw.
+ * @see https://docs.zapsign.com.br/documentos/deletar-documento
+ */
+export async function cancelDocument(
+  docToken: string,
+): Promise<{ success: boolean; error?: string }> {
+  if (!ZAPSIGN_API_TOKEN) {
+    return { success: false, error: 'ZapSign is not configured' };
+  }
+
+  try {
+    const response = await fetch(`${ZAPSIGN_BASE_URL}/docs/${docToken}/`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${ZAPSIGN_API_TOKEN}` },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      console.error('ZapSign cancel-doc failed:', response.status, body);
+      return { success: false, error: `ZapSign API error: ${response.status}` };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('ZapSign cancel-doc error:', error);
+    return { success: false, error: 'Failed to connect to ZapSign API' };
+  }
+}
+
+/**
+ * Retrieve the signer's sign_url from an existing ZapSign document.
+ * Used to let clients resume signing after navigating away.
+ */
+export async function getSignerSignUrl(
+  docToken: string,
+): Promise<{ success: true; signUrl: string } | { success: false; error: string }> {
+  if (!ZAPSIGN_API_TOKEN) {
+    return { success: false, error: 'ZapSign is not configured' };
+  }
+
+  try {
+    const response = await fetch(`${ZAPSIGN_BASE_URL}/docs/${docToken}/`, {
+      headers: { Authorization: `Bearer ${ZAPSIGN_API_TOKEN}` },
+    });
+
+    if (!response.ok) {
+      return { success: false, error: `ZapSign API error: ${response.status}` };
+    }
+
+    const data = await response.json() as ZapSignResponse;
+    const signer = data.signers?.[0];
+    if (!signer?.sign_url) {
+      return { success: false, error: 'Sign URL not found' };
+    }
+
+    return { success: true, signUrl: signer.sign_url };
+  } catch (error) {
+    console.error('ZapSign get-sign-url error:', error);
+    return { success: false, error: 'Failed to connect to ZapSign API' };
   }
 }
 

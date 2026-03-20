@@ -44,6 +44,7 @@ export function ProposalDetailContent({
       quantity: item.quantity,
       priceUsd: String(item.priceUsd ?? 0),
       landedCostTotalSnapshot: String(item.landedCostTotalSnapshot ?? 0),
+      landedCostUnitSnapshot: String(item.landedCostUnitSnapshot ?? 0),
     })),
     summary: { totalFobUsd, totalLandedCostBrl },
   };

@@ -24,6 +24,7 @@ import {
   pullQuoteBackToDraftAction,
   rejectQuoteAction,
   initiateContractSigningAction,
+  getSignUrlAction,
   getOrganizationsForQuoteTargetAction,
 } from './quote-actions';
 import type { Simulation } from '@/services/simulation.service';
@@ -127,6 +128,21 @@ export function QuoteWorkflowButtons({
     }
   };
 
+  const handleResumeSigning = async () => {
+    setSignError(null);
+    setIsPending(true);
+    try {
+      const result = await getSignUrlAction(simulation.id, organizationId);
+      if (result.success && result.signUrl) {
+        window.location.href = result.signUrl;
+      } else {
+        setSignError(result.error ?? 'Falha ao obter link de assinatura');
+      }
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   if (simulation.status === 'CONVERTED' && simulation.generatedShipmentId) {
     return (
       <Link href={`/dashboard?shipment=${simulation.generatedShipmentId}`}>
@@ -207,10 +223,47 @@ export function QuoteWorkflowButtons({
             </Button>
           )}
 
-          {simulation.status === 'PENDING_SIGNATURE' && (isSeller || isClient) && (
-            <Chip size="sm" variant="secondary" color="warning">
-              {t('awaitingSignature')}
-            </Chip>
+          {simulation.status === 'PENDING_SIGNATURE' && isSeller && (
+            <>
+              <Chip size="sm" variant="secondary" color="warning">
+                {t('awaitingSignature')}
+              </Chip>
+              <Button
+                variant="outline"
+                size="sm"
+                isPending={isPending}
+                onPress={handlePullBack}
+                className="inline-flex gap-2"
+              >
+                <RotateCcw className="size-4" />
+                {t('pullBack')}
+              </Button>
+            </>
+          )}
+
+          {simulation.status === 'PENDING_SIGNATURE' && isClient && (
+            <>
+            <Button
+                variant="outline"
+                size="sm"
+                isPending={isPending}
+                onPress={() => setRejectModalOpen(true)}
+                className="inline-flex gap-2 border-danger text-danger"
+              >
+                <XCircle className="size-4" />
+                {t('rejectQuote')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                isPending={isPending}
+                onPress={handleResumeSigning}
+                className="inline-flex gap-2"
+              >
+                <FileSignature className="size-4" />
+                {t('resumeSigning')}
+              </Button>
+            </>
           )}
         </div>
 
